@@ -1,7 +1,7 @@
 // Web port of the recovered KartRider Demo rigid-body update path.
-// Evidence source: work/physics/analysis/RECOVERY_NOTES.md and the checked-in
-// C reconstruction. P5136's native physics code was not available to REA here;
-// the decrypted P5136 BodyParam values below only tune the recovered model.
+// Evidence: work/physics/analysis/RECOVERY_NOTES.md and reader.md. P5136's
+// live client tick is now decompiled; its 2 ms substep is used below. The force
+// model still derives from the demo and P5136 BodyParam, pending full port.
 const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
 const add=(a,b)=>[a[0]+b[0],a[1]+b[1],a[2]+b[2]], sub=(a,b)=>[a[0]-b[0],a[1]-b[1],a[2]-b[2]], mul=(a,s)=>[a[0]*s,a[1]*s,a[2]*s];
 const dot=(a,b)=>a[0]*b[0]+a[1]*b[1]+a[2]*b[2], cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]], len=a=>Math.sqrt(dot(a,a));
@@ -10,7 +10,9 @@ const quatNorm=q=>{const l=Math.hypot(...q);return l>1e-12?q.map(x=>x/l):[0,0,0,
 const quatMul=(a,b)=>[a[3]*b[0]+a[0]*b[3]+a[1]*b[2]-a[2]*b[1],a[3]*b[1]-a[0]*b[2]+a[1]*b[3]+a[2]*b[0],a[3]*b[2]+a[0]*b[1]-a[1]*b[0]+a[2]*b[3],a[3]*b[3]-a[0]*b[0]-a[1]*b[1]-a[2]*b[2]];
 const rotate=(q,v)=>{const u=q.slice(0,3),t=mul(cross(u,v),2);return add(v,add(mul(t,q[3]),cross(u,t)))};
 const fromYaw=h=>[0,0,Math.sin((Math.PI-h)/2),Math.cos((Math.PI-h)/2)];
-const STEP=.005,G=9.8,WORLD_G=-58.8,MASS=100,PI=Math.PI;
+// P5136's live GoKart tick subdivides elapsed milliseconds in chunks of at
+// most 2 ms before converting each chunk to seconds (RVA 0x633420).
+const STEP=.002,G=9.8,WORLD_G=-58.8,MASS=100,PI=Math.PI;
 
 export class DrivingState{
  constructor(stats={},geometry={}){this.stats=stats||{};this.geometry={halfWidth:geometry.halfWidth??1,halfLength:geometry.halfLength??1,suspensionRange:geometry.suspensionRange??.5,groundedDragScale:geometry.groundedDragScale??1};this.reset();}
@@ -37,6 +39,9 @@ export class DrivingState{
   if(forward&&!this.previousForward&&this.instantWindow>0){this.instantTime=.5;this.instantWindow=0;}this.previousForward=!!forward;this.instantWindow=Math.max(0,this.instantWindow-dt);this.instantTime=Math.max(0,this.instantTime-dt);
   if(input.boost&&!this.previousBoost&&this.nitro>0&&this.nitroTime<=0){this.nitro--;this.nitroTime=cfg.normalBoosterTime;}this.previousBoost=!!input.boost;this.nitroTime=Math.max(0,this.nitroTime-dt);
   const axes=this.axes();let v=this.linearVelocity;const forwardV=dot(v,axes.forward),sideV=dot(v,axes.right),speed=len(v),planarSpeed=Math.hypot(forwardV,sideV);const wheel=this.queryWheels(input.groundQuery,axes);this.grounded=wheel.contacts.length>0;this.lastContacts=wheel.contacts.length;let force=[0,0,0],torque=[0,0,0];
+  // P5136 VA 0xA36E30 and initializer 0xA2E7C0 confirm zero compression
+  // damping and rebound damping = spring coefficient * 0.2. A live race kart
+  // had gravity -58.8, mass 100, spring 2940 and rebound damping 588.
   if(this.grounded){force[2]+=WORLD_G*cfg.mass;for(const c of wheel.contacts){const stat=Math.abs(WORLD_G)*cfg.mass*.5,damping=c.delta<=0?stat*.2:0;let f=(c.delta/dt)*damping+stat*c.compression;if(f<=0)continue;f*=dot(c.normal,axes.up);force=add(force,mul(axes.up,f));const lever=[this.geometry.halfWidth*c.sx,-this.geometry.halfLength*c.sy,0];torque=add(torque,mul(cross(lever,[0,0,f]),.1));}
   const launch=this.startBoostTime>0;this.startBoostTime=Math.max(0,this.startBoostTime-dt);const boostMultiplier=this.nitroTime>0?cfg.boostAccel:(this.instantTime>0?cfg.driftBoostAccel:1);let drive=0;
    if(forward){

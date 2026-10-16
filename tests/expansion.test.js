@@ -19,13 +19,13 @@ test('the original local forward axis maps to the visible nose and ground contac
  const turn=new DrivingState();turn.reset({heading:.7});assert.ok(Math.abs(turn.heading-.7)<1e-8);
 });
 test('airborne motion uses recovered gravity and has no ground-drive force',()=>{
- const k=new DrivingState();const m=k.step(.005,{forward:true,groundQuery:()=>null});assert.ok(Math.abs(k.linearVelocity[2]+.294)<1e-8);assert.equal(k.vf,0);assert.equal(m.grounded,false);
+ const k=new DrivingState();const m=k.step(.002,{forward:true,groundQuery:()=>null});assert.ok(Math.abs(k.linearVelocity[2]+.1176)<1e-8);assert.equal(k.vf,0);assert.equal(m.grounded,false);
 });
 test('landing compression and rebound follow the recovered one-sided suspension damping',()=>{
- const landing=onTrack();landing.reset({z:.2});landing.step(.005,{groundQuery:flatGround});
+ const landing=onTrack();landing.reset({z:.2});landing.step(.002,{groundQuery:flatGround});
  assert.ok(landing.linearVelocity[2]<0,'compression must not create an upward damping spike');
- const rebound=onTrack();rebound.wheelCompression.fill(.6);rebound.step(.005,{groundQuery:flatGround});
- assert.ok(Math.abs(rebound.linearVelocity[2]+.294)<1e-6,'negative rebound force must be discarded');
+ const rebound=onTrack();rebound.wheelCompression.fill(.6);rebound.step(.002,{groundQuery:flatGround});
+ assert.ok(Math.abs(rebound.linearVelocity[2]+.1176)<1e-6,'negative rebound force must be discarded');
 });
 test('reverse input stops a nearly stationary kart and engages immediately while moving backward',()=>{
  const stopped=onTrack();stopped.vf=.2;stopped.vs=.1;stopped.step(.005,{reverse:true,groundQuery:flatGround});
