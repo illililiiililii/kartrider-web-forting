@@ -11,6 +11,25 @@ body{background:#06182d}header{height:34px;background:#172f49eF;border-bottom:1p
 .race-card{align-self:center;width:auto;max-height:calc(100vh - 154px);padding:15px 13px;background:#1a2f47 url('assets/original-ui/img_mainSideBG.png') center/100% 100% no-repeat;border:0;border-radius:0;box-shadow:0 8px 18px #0008}.race-card .card-top{padding:0 5px;margin:0 0 8px;color:#bdd8ed}.race-card .live{color:#f4d34e}.race-card .track-thumb{height:126px;border:2px solid #c0d8e9;border-radius:0;box-shadow:none;filter:saturate(.9)}.track-title h2{font-size:18px;margin:10px 3px 3px}.track-title>span{color:#f1d356}.specs{border-color:#627f99;padding:10px 3px;margin:10px 0}.specs small{color:#9db9cc}.specs b{font-size:10px}#start,#again{border:1px solid #ffe483;border-radius:0;background:linear-gradient(#ffdb4e,#e19b1d);box-shadow:0 2px 0 #6d3d00;color:#412900;padding:11px;text-shadow:0 1px #fff6}.multi-open{border:1px solid #85b7d5;border-radius:0;background:#315c7c;box-shadow:none;padding:9px}#load-status{color:#aec8db}.lobby-bottom{left:0;right:0;bottom:0;height:92px;padding:7px 5%;display:flex;align-items:flex-end;gap:12px;background:#101f31eF url('assets/original-ui/bottom.png') repeat-x bottom;border-top:1px solid #49677f;color:#a8c0d2}.original-dock{position:absolute;left:50%;top:7px;transform:translateX(-50%);display:flex;align-items:flex-start;gap:23px}.original-dock span{display:grid;justify-items:center;gap:3px;color:#d8e9f7;font-size:10px;font-weight:800;text-shadow:0 1px #000}.original-dock img{width:31px;height:31px;object-fit:contain}.original-dock span:first-child img{object-position:top;object-fit:cover;object-position:top;width:31px}.original-dock i{width:31px;height:31px;display:grid;place-items:center;font-style:normal;font-size:9px;border:1px solid #7d9db5;background:#28445c;color:#f0da62}.lobby-bottom .small{margin-left:auto}.lobby-bottom kbd{background:#29445b;border-color:#627f97;color:#e4f1fa}
 @media(max-width:1000px){#lobby{grid-template-columns:190px minmax(370px,1fr) 280px;gap:12px;padding-left:2%;padding-right:2%}.original-rail{min-height:390px}.choice-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.original-dock{gap:11px}}@media(max-width:720px){header{height:32px}#lobby{display:block;overflow:auto;padding:45px 12px 106px}.original-rail{display:none}.garage-panel,.race-card{max-height:none;width:100%}.race-card{margin-top:12px}.choice-grid{height:280px}.original-dock{gap:8px}.lobby-bottom>span{display:none}.original-dock span{font-size:8px}}
 
+/* Keep the selected vehicle as the lobby's focal point.  The original panels
+   frame the 3D model instead of covering it, which also makes selection useful
+   on a wide web viewport. */
+@media(min-width:1001px){
+ #lobby{display:block;padding:0;background:linear-gradient(90deg,#07172bce 0 22%,#15395c24 50%,#061b32b3 100%)}
+ .original-rail{position:absolute;z-index:4;left:3%;top:12%;width:190px;min-height:390px}
+ .garage-panel{position:absolute;z-index:4;left:calc(3% + 205px);top:12%;width:310px;height:auto;max-height:calc(100vh - 168px);overflow:auto}
+ .garage-panel h1{font-size:19px}.garage-panel .choice-grid{grid-template-columns:repeat(2,minmax(0,1fr));grid-auto-rows:minmax(92px,1fr)}
+ .garage-panel .choice img{height:48px}.garage-panel .choice .avatar{width:50px;height:50px}.garage-panel .choice .avatar img{width:45px;height:45px}
+ .race-card{position:absolute;z-index:4;right:3%;top:16%;width:300px;max-height:calc(100vh - 205px);overflow:auto}
+}
+
+/* Original-style garage name plate: it deliberately stays low in the scene so
+   the real 3D kart and rider remain the visual focus. */
+#showcase{position:absolute;z-index:3;left:50%;bottom:104px;transform:translateX(-50%);width:min(390px,32vw);padding:10px 14px 9px;background:linear-gradient(90deg,#071a2de0,#23496edb 48%,#071a2de0);border-top:1px solid #7ca6c5;border-bottom:1px solid #07101c;box-shadow:0 5px 18px #0007;text-align:center;color:#e9f4ff;pointer-events:none}
+.showcase-title{display:grid;gap:1px}.showcase-title small{font-size:9px;font-weight:900;letter-spacing:1.8px;color:#8eb7d4}.showcase-title strong{font-size:21px;line-height:1.05;color:#fff;text-shadow:0 2px #071727}.showcase-title span{font-size:10px;color:#f3d45b;font-weight:800}
+.showcase-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin:8px 0 5px}.showcase-stats span{display:grid;gap:3px;font-size:8px;color:#9fc1d7;white-space:nowrap}.showcase-stats i{display:block;position:relative;height:5px;background:#09192a;border:1px solid #547996}.showcase-stats i::after{content:'';position:absolute;inset:1px auto 1px 1px;width:var(--value,35%);background:linear-gradient(90deg,#7dd5ff,#f3db52)}#showcase p{margin:0;font-size:8px;color:#a5c1d4}
+@media(max-width:1000px){#showcase{width:min(460px,58vw);bottom:98px}}@media(max-width:720px){#showcase{display:none}}
+
 .lobby-bottom{background:#101f31ef url('assets/original-ui/bottom.png') center bottom/56px 41px no-repeat}
 
 .lobby-bottom{background:#101f31ef}
