@@ -50,3 +50,13 @@ test('wheel contacts follow chassis orientation and collision response removes i
  const k=onTrack();k.reset({z:0,heading:Math.PI/2});k.step(.005,{groundQuery:flatGround});assert.equal(k.lastContacts,4);
  k.linearVelocity=[10,0,0];k.step(.005,{bodyContacts:[[-1,0,0]],groundQuery:flatGround});assert.ok(k.linearVelocity[0]<10);
 });
+test('a swept wall hit stops chassis penetration without losing ground or vertical motion',()=>{
+ const k=onTrack();k.linearVelocity=[8,0,0];
+ const wall=(from,to)=>to[0]>=.02?{normal:[-1,0,0],fraction:Math.max(0,(.02-from[0])/(to[0]-from[0]))}:null;
+ for(let i=0;i<50;i++)k.step(.005,{groundQuery:flatGround,bodySweep:wall});
+ assert.ok(k.position[0]<.035,`chassis passed through wall at ${k.position[0]}`);
+ assert.ok(Math.abs(k.position[2])<.06,'wall collision must preserve suspension ground contact');
+ assert.equal(k.lastContacts,4);
+ const falling=new DrivingState();falling.reset({z:2});falling.linearVelocity=[8,0,-3];falling.step(.005,{bodySweep:wall});
+ assert.ok(falling.linearVelocity[2]<-3,'horizontal wall impulse must not reverse gravity');
+});

@@ -104,7 +104,26 @@ let beforePause='race';function pause(){if(state==='race'||state==='countdown'){
 function finish(){state='finished';car.speed=0;keys.clear();if(room)send({type:'finish',time:elapsed});$('again').textContent=room?'방에서 나가기':'다시 달리기 ↗';$('finish-time').textContent=formatTime(elapsed);const record=!best||elapsed<best;if(record){best=elapsed;try{localStorage.setItem(bestKey(),String(best));}catch{}}
  updateBest();$('record-status').textContent=record?'새로운 개인 최고 기록입니다.':'완주 기록이 측정되었습니다.';$('results').showModal();}
 function groundQuery(origin,delta){const o=new THREE.Vector3(...origin),d=new THREE.Vector3(...delta),distance=d.length();if(distance<1e-6)return null;ray.set(o,d.normalize());ray.far=distance;const hit=ray.intersectObjects(colliders,false).find(h=>{const n=h.face.normal.clone().transformDirection(h.object.matrixWorld);return n.z>.65;});if(!hit)return null;const n=hit.face.normal.clone().transformDirection(hit.object.matrixWorld);return {point:[hit.point.x,hit.point.y,hit.point.z],normal:[n.x,n.y,n.z]};}
-function bodyContacts(){const velocity=driving.linearVelocity,speed=Math.hypot(...velocity);if(speed<.5)return [];const dir=new THREE.Vector3(...velocity).normalize(),axes=driving.axes(),contacts=[];for(const offset of [-.65,0,.65]){const side=new THREE.Vector3(...axes.right).multiplyScalar(offset),origin=new THREE.Vector3(car.x,car.y,car.z+.55).add(side);ray.set(origin,dir);ray.far=Math.max(.35,speed*.005+.35);for(const hit of ray.intersectObjects(colliders,false)){const n=hit.face.normal.clone().transformDirection(hit.object.matrixWorld);if(n.z<=.65&&n.dot(dir)<-.05){contacts.push([n.x,n.y,n.z]);break;}}}return contacts;}
+function bodySweep(from,to,axes){
+ const movement=new THREE.Vector3(to[0]-from[0],to[1]-from[1],0),distance=movement.length();if(distance<1e-6)return null;
+ const direction=movement.multiplyScalar(1/distance),right=new THREE.Vector3(...axes.right),forward=new THREE.Vector3(...axes.forward),width=driving.geometry.halfWidth*.8,length=driving.geometry.halfLength*.8;
+ const reach=width+length+.2,minX=Math.min(from[0],to[0])-reach,maxX=Math.max(from[0],to[0])+reach,minY=Math.min(from[1],to[1])-reach,maxY=Math.max(from[1],to[1])+reach;
+ const nearby=colliders.filter(mesh=>{const b=mesh.geometry.boundingBox;return b&&b.max.x>=minX&&b.min.x<=maxX&&b.max.y>=minY&&b.min.y<=maxY&&b.max.z>=from[2]+.2&&b.min.z<=from[2]+1;});
+ if(!nearby.length)return null;
+ const samples=[[0,0],[width,length],[-width,length],[width,-length],[-width,-length]];let nearest=null;
+ for(const [side,front] of samples)for(const height of [.28,.8]){
+  const origin=new THREE.Vector3(from[0],from[1],from[2]+height).addScaledVector(right,side).addScaledVector(forward,front);
+  ray.set(origin,direction);ray.far=distance+.035;
+  for(const hit of ray.intersectObjects(nearby,false)){
+   const n=hit.face.normal.clone().transformDirection(hit.object.matrixWorld);if(Math.abs(n.z)>.65)continue;
+   // Track collision meshes contain both triangle windings; oppose travel on
+   // either face so a reverse-side impact cannot slip through the barrier.
+   if(n.dot(direction)>0)n.negate();if(n.dot(direction)>-.05)continue;
+   if(!nearest||hit.distance<nearest.distance)nearest={distance:hit.distance,normal:[n.x,n.y,n.z]};break;
+  }
+ }
+ return nearest?{normal:nearest.normal,fraction:Math.max(0,(nearest.distance-.025)/distance)}:null;
+}
 function tick(dt){
  if(state==='countdown'){
   // A press in the final 0.1 seconds of the countdown arms the launch boost.
@@ -118,14 +137,14 @@ function tick(dt){
  if(state!=='race')return;
  elapsed+=dt;if(elapsed>1)$('message').textContent='';
  const old=[car.x,car.y,car.z+.8],throttle=keys.has('ArrowUp')||keys.has('KeyW'),brake=keys.has('ArrowDown')||keys.has('KeyS'),steer=(keys.has('ArrowLeft')||keys.has('KeyA')?1:0)-(keys.has('ArrowRight')||keys.has('KeyD')?1:0);
- const motion=driving.step(dt,{forward:throttle,reverse:brake,steer,drift:keys.has('ShiftLeft')||keys.has('ShiftRight'),boost:keys.has('ControlLeft')||keys.has('ControlRight')||keys.has('Space'),groundQuery,bodyContacts:bodyContacts()});car.x=driving.position[0];car.y=driving.position[1];car.z=driving.position[2];car.heading=driving.heading;car.speed=driving.speed;car.drift=motion.mode==='drift'||motion.mode==='trigger';
+ const motion=driving.step(dt,{forward:throttle,reverse:brake,steer,drift:keys.has('ShiftLeft')||keys.has('ShiftRight'),boost:keys.has('ControlLeft')||keys.has('ControlRight')||keys.has('Space'),groundQuery,bodySweep});car.x=driving.position[0];car.y=driving.position[1];car.z=driving.position[2];car.heading=driving.heading;car.speed=driving.speed;car.drift=motion.mode==='drift'||motion.mode==='trigger';
  car.vz=driving.linearVelocity[2];
  if(car.z<-40||!Number.isFinite(car.x)){resetCar();return;}
  if(progress.update(old,[car.x,car.y,car.z+.8])){if(progress.finished){finish();return;}Object.assign(safe,{x:car.x,y:car.y,z:car.z,heading:car.heading});}
  updateKart();
 }
 function updateKart(){if(!kart)return;kart.position.set(car.x,car.y,car.z);kart.quaternion.set(...driving.orientation);}
-function drawMap(){const c=$('map').getContext('2d'),b=track.userData.bounds;const sx=210/(b[3]-b[0]),sy=210/(b[4]-b[1]),scale=Math.min(sx,sy),cx=(b[0]+b[3])/2,cy=(b[1]+b[4])/2;
+function drawMap(){const c=$('map').getContext('2d'),xs=course.route.map(p=>p[0]),ys=course.route.map(p=>p[1]),b=[Math.min(...xs),Math.min(...ys),0,Math.max(...xs),Math.max(...ys)],sx=205/Math.max(1,b[3]-b[0]),sy=205/Math.max(1,b[4]-b[1]),scale=Math.min(sx,sy),cx=(b[0]+b[3])/2,cy=(b[1]+b[4])/2;
  const xy=p=>[120+(p[0]-cx)*scale,120-(p[1]-cy)*scale];c.clearRect(0,0,240,240);c.strokeStyle='#9bb7c6';c.lineWidth=4;c.lineJoin='round';c.beginPath();course.route.forEach((p,i)=>{const q=xy(p);i?c.lineTo(...q):c.moveTo(...q)});c.closePath();c.stroke();
  const next=progress?.gates[progress.next].records[0];if(next){const q=xy(next);c.fillStyle='#c7ff53';c.beginPath();c.arc(...q,4,0,Math.PI*2);c.fill();}
  for(const peer of remote.values()){if(peer.pose){const q=xy([peer.pose.x,peer.pose.y]);c.fillStyle='#ffad36';c.beginPath();c.arc(...q,4,0,Math.PI*2);c.fill();}}
@@ -157,10 +176,21 @@ async function updateRoom(data){room=data;multiplayer=true;$('room-details').hid
  if(data.stage==='countdown'&&state==='lobby')beginRace(clamp((data.startAt-Date.now())/1000,.1,3));
 }
 function connectRoom(action){if(ws)leaveRoom();const url=`${location.protocol==='https:'?'wss':'ws'}://${location.host}/multiplayer`;ws=new WebSocket(url);$('room-status').textContent='서버 연결 중…';ws.onopen=()=>send({type:action,name:$('rider-name').value||'Rider',code:$('room-code-input').value,track:selected.track,kart:selected.kart,character:selected.character});ws.onmessage=async e=>{let m;try{m=JSON.parse(e.data);}catch{return;}if(m.type==='hello')ownId=m.id;else if(m.type==='room')await updateRoom(m);else if(m.type==='pose'){const p=remote.get(m.id);if(p)p.pose=m;}else if(m.type==='leave'){const p=remote.get(m.id);if(p?.mesh)scene.remove(p.mesh);remote.delete(m.id);}else if(m.type==='error')$('room-status').textContent=m.message;};ws.onerror=()=>$('room-status').textContent='멀티플레이 서버에 연결할 수 없습니다.';ws.onclose=()=>{if(room)$('room-status').textContent='연결이 끊겼습니다.';};}
-function navigateHome(where){if(where==='garage'||where==='play'){ $('home-screen').hidden=true;$('garage-screen').hidden=false;return;} if(where==='lobby'){$('garage-screen').hidden=true;$('home-screen').hidden=false;return;} if(where==='multi'){$('multiplayer').showModal();return;} if(where==='play'){$('garage-screen').hidden=true;$('home-screen').hidden=false;return;} if(where==='profile'||where==='club'||where==='tune'||where==='exchange'||where==='shop'){ $('info').querySelector('h2').textContent=({profile:'내 정보',club:'클럽',tune:'튜닝',exchange:'교환',shop:'상점'})[where];$('info').querySelector('p').textContent='웹 포팅 로비에서 준비 중인 메뉴입니다.';$('info').showModal();} }
-addEventListener('resize',resize);addEventListener('keydown',e=>{if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space','ControlLeft','ControlRight'].includes(e.code))e.preventDefault();if(e.repeat)return;if(e.code==='Escape'){if(!$('info').open&&!$('results').open)pause();return;}if(e.code==='Enter'&&state==='lobby')startRace();if(e.code==='KeyR'&&state==='race')resetCar();keys.add(e.code);});addEventListener('keyup',e=>keys.delete(e.code));addEventListener('blur',()=>{keys.clear();if(state==='race'||state==='countdown')pause();});document.addEventListener('visibilitychange',()=>{if(document.hidden&&(state==='race'||state==='countdown'))pause();});
-$('start').onclick=startRace; document.querySelectorAll('[data-home]').forEach(b=>b.onclick=()=>navigateHome(b.dataset.home)); document.querySelectorAll('.mode-choice').forEach(b=>b.onclick=()=>{document.querySelectorAll('.mode-choice').forEach(x=>x.classList.toggle('selected',x===b));if(b.dataset.mode==='speed'||b.dataset.mode==='infinite'||b.dataset.mode==='time'||b.dataset.mode==='track')navigateHome('garage');}); $('garage-back').onclick=()=>navigateHome('lobby');$('again').onclick=()=>room?garage():startRace();$('garage').onclick=garage;$('exit').onclick=garage;$('pause').onclick=pause;$('reset').onclick=()=>{if(state==='race'||state==='paused')resetCar();};$('help').onclick=()=>$('info').showModal();$('close-info').onclick=()=>$('info').close();$('sound').onclick=()=>{soundOn=!soundOn;$('sound').textContent='사운드 '+(soundOn?'ON':'OFF');$('sound').setAttribute('aria-label','배경음악 '+(soundOn?'끄기':'켜기'));if(soundOn)music.play().catch(()=>{});else music.pause();};
-for(const tab of document.querySelectorAll('[data-tab]'))tab.onclick=()=>{for(const b of document.querySelectorAll('[data-tab]'))b.classList.toggle('active',b===tab);for(const name of ['kart','character','track'])$(name+'-grid').hidden=tab.dataset.tab!==name;};
+function selectGarageTab(name){for(const b of document.querySelectorAll('[data-tab]'))b.classList.toggle('active',b.dataset.tab===name);for(const kind of ['kart','character','track'])$(kind+'-grid').hidden=kind!==name;}
+function navigateHome(where){
+ if(where==='garage'||where==='play'){$('home-screen').hidden=true;$('garage-screen').hidden=false;selectGarageTab(where==='play'?'track':'kart');$('garage-heading-title').textContent=where==='play'?'트랙 선택 · 스피드전':'내 카트와 캐릭터';return;}
+ if(where==='lobby'){$('garage-screen').hidden=true;$('home-screen').hidden=false;return;}
+ if(where==='multi'){$('multiplayer').showModal();return;}
+ if(where==='profile'||where==='club'||where==='tune'||where==='exchange'||where==='shop'){$('info').querySelector('h2').textContent=({profile:'내 정보',club:'클럽',tune:'튜닝',exchange:'교환',shop:'상점'})[where];$('info').querySelector('p').textContent='웹 포팅 로비에서 준비 중인 메뉴입니다.';$('info').showModal();}
+}
+addEventListener('resize',resize);addEventListener('keydown',e=>{const onControl=e.target instanceof HTMLElement&&e.target.closest('button,a,input,dialog');if((state==='race'||state==='countdown')&&['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space','ControlLeft','ControlRight'].includes(e.code))e.preventDefault();if(e.repeat)return;if(e.code==='Escape'){if(!$('info').open&&!$('results').open)pause();return;}if(e.code==='Enter'&&state==='lobby'&&!onControl)startRace();if(e.code==='KeyR'&&state==='race')resetCar();if(!onControl)keys.add(e.code);});addEventListener('keyup',e=>keys.delete(e.code));addEventListener('blur',()=>{keys.clear();if(state==='race'||state==='countdown')pause();});document.addEventListener('visibilitychange',()=>{if(document.hidden&&(state==='race'||state==='countdown'))pause();});
+$('start').onclick=startRace;
+document.querySelectorAll('[data-home]').forEach(b=>b.onclick=()=>navigateHome(b.dataset.home));
+document.querySelectorAll('.mode-choice').forEach(b=>b.onclick=()=>{document.querySelectorAll('.mode-choice').forEach(x=>x.classList.toggle('selected',x===b));navigateHome('play');});
+$('garage-back').onclick=()=>navigateHome('lobby');$('again').onclick=()=>room?garage():startRace();$('garage').onclick=garage;$('exit').onclick=garage;$('pause').onclick=pause;
+$('reset').onclick=()=>{if(state==='race'||state==='paused')resetCar();};$('help').onclick=()=>$('info').showModal();$('close-info').onclick=()=>$('info').close();
+$('sound').onclick=()=>{soundOn=!soundOn;$('sound').textContent='사운드 '+(soundOn?'ON':'OFF');$('sound').setAttribute('aria-label','배경음악 '+(soundOn?'끄기':'켜기'));if(soundOn)music.play().catch(()=>{});else music.pause();};
+for(const tab of document.querySelectorAll('[data-tab]'))tab.onclick=()=>selectGarageTab(tab.dataset.tab);
 $('multi-open').onclick=()=>$('multiplayer').showModal();$('multi-close').onclick=()=>$('multiplayer').close();$('room-create').onclick=()=>connectRoom('create');$('room-join').onclick=()=>connectRoom('join');$('room-start').onclick=startRace;$('room-leave').onclick=leaveRoom;
 for(const b of document.querySelectorAll('[data-key]')){b.addEventListener('pointerdown',e=>{e.preventDefault();b.setPointerCapture(e.pointerId);keys.add(b.dataset.key);});for(const t of ['pointerup','pointercancel','lostpointercapture'])b.addEventListener(t,()=>keys.delete(b.dataset.key));}
 init();
