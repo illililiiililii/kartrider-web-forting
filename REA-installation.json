@@ -1,0 +1,12 @@
+{
+  "package": "rea-agents",
+  "version": "6.5.0",
+  "status": "ready",
+  "appliedActions": [
+    "configured_codex",
+    "installed_skill"
+  ],
+  "client": "codex",
+  "restartRequired": true,
+  "nativeAnalysisEngineInstalled": false
+}

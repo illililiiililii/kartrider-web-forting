@@ -1,0 +1,1127 @@
+[
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/track/village_R01/xt_trackThumb.png",
+    "sha256": "f7a2f8722e194f1fac4a4614cefa9b13530d70eba0d7946551c5b2048cadb00b",
+    "output": "tracks\\village_R01\\thumbnail.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/track/fairy_B01/ad_board_a.png",
+    "sha256": "a1d6cb9f5f0895a7b92460ec2eae586c611e2cd68ef2380302be6505b6f9218f",
+    "output": "textures\\8e630b8445d802.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/track/fairy_B01/ad_board_b.png",
+    "sha256": "5c9f582e34b93cdbe80a8b35c2219b4bda5b2d9b268407b1826ffd057098c165",
+    "output": "textures\\90fa80c8911983.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/track/fairy_B01/ad_board_c.png",
+    "sha256": "4f654129aeabd68fca9f8d0fbcf63c3403a9e8572278b46ca6378a2f9daab218",
+    "output": "textures\\70d87780f17f67.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/myRoom/ice_M04/ad_fence_a.png",
+    "sha256": "99506d075b16131c05fca5bfe2238897bf6497f1acd2653a44a202a5eb171960",
+    "output": "textures\\c3528ec9009a64.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/myRoom/ice_M04/ad_fence_b.png",
+    "sha256": "5735970792362e60b739dc6cef8490b3211a5439b217a6901f1ab42a06c580c3",
+    "output": "textures\\cb2bc573c86192.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/myRoom/ice_M04/ad_start.png",
+    "sha256": "df9b37e45b238d1fa66b5822875fc9dbb6f252349f6e207e7b175e20e128bb03",
+    "output": "textures\\0842ffbec1de70.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/village/texture/bighouse_set.dds",
+    "sha256": "1bfc8bb40b1501c86f01563dc6f1d4ddc3d3a377d2e392185130fce09e5abb5f",
+    "output": "textures\\74748c93be5e50.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/village/texture/cement_00.png",
+    "sha256": "346e468db76a4e1e0f3197ce9cf0108ceb6540649776b17426da0d83d4ecbe95",
+    "output": "textures\\e92ae8ede9ea44.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/village/texture/cement_start.png",
+    "sha256": "2e5db6d05bf0f450ee83f06cbfc04d843011cf4b0306f9cbb2de79653f5fffd3",
+    "output": "textures\\79aa0693cfca48.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/village/texture/cement01.dds",
+    "sha256": "8126e2d239e69826fc6c32d7ac164dfb58549b9d0dde6c7eb2570eaf7be064bb",
+    "output": "textures\\eeb7e9d578d598.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/village/texture/cement02_01.dds",
+    "sha256": "51658559613ea8f5cf76b6932290519b7a6aaf43ceaac6dbb78c02a2fb44dfd7",
+    "output": "textures\\403a97a7e5dec3.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/village/texture/cement03.dds",
+    "sha256": "6a6f3e8331f38d859f66e773b6501fe9f2b1309c9ef99f9de3bc06c93b71265d",
+    "output": "textures\\f683da5d72e760.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/village/texture/cement04.dds",
+    "sha256": "45d9ab2b6a9d8f8ff4c3eef3bf734f1365f261c6b614cd21667891e7a15c04ad",
+    "output": "textures\\c577442622fae4.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/village/texture/cement05.dds",
+    "sha256": "0daf7abb98b9c9187a00e4d3742b0bb77c8c5225f1eda8c505c18678830552de",
+    "output": "textures\\af1c2adacda744.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/village/texture/cliff_set.dds",
+    "sha256": "5c7aa93e3e5959105196208a53da19f96c9a381dc87bda6569996bdca8aba1f7",
+    "output": "textures\\1d3734b543aad8.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/village/texture/fence00_e.dds",
+    "sha256": "f51d8d3005bc99bc4f31bdfe4b13f09630037d18c0c2e58d4c11e4e0cdc18a91",
+    "output": "textures\\5c7833cbc94d9d.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/village/texture/fence01.dds",
+    "sha256": "7c2d626d995eecb06d742ec9c0a06f60bb03bb49f148800cbba3105300057a7f",
+    "output": "textures\\e95b63467157fd.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/village/texture/fence11.dds",
+    "sha256": "ad9327888fc4a0eb5c7c420a871b4ae0c84aa6d771ab3d7684f5dd4751893374",
+    "output": "textures\\7a72e0fee18cbc.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/village/texture/fence12.dds",
+    "sha256": "9dbed7012696df5b49e2ada65690caed4655e2cbb12c6f8f3337fc6ff808434b",
+    "output": "textures\\5d805b741b0005.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/village/texture/flag.dds",
+    "sha256": "8ba7aa22d7c845ca7489559b3e27451e3720cedae7bb726d5cd374f42f77fe66",
+    "output": "textures\\b095e9ff222500.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/village/texture/flag00.png",
+    "sha256": "ad03d801bfa3a077a27d552f2d48d927d1ad9a34e11655f6674fb797c45d4972",
+    "output": "textures\\97c1845bccc5ab.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/village/texture/flag01.png",
+    "sha256": "6d3bf94b9a6747da9b3be225c4771d57de7e2c860fd22d0c6058068489d76586",
+    "output": "textures\\3c24267831dd54.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/village/texture/fountion00_128.dds",
+    "sha256": "c7055cafe309893b4546cce92297ea7731ea164eb46b695cb9e9c5521efc7c33",
+    "output": "textures\\f54e1294c18ead.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/common/texture/fountionwater_128.dds",
+    "sha256": "86c746421658412fdd1c14da6f8244757b82ae41626cf516c895427f2a453b24",
+    "output": "textures\\e2fbf338172c9a.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/village/texture/front_128.dds",
+    "sha256": "7a36aa9df4fc504d1b3e69479f9cb881ef91d4b00249f441bd312d322a6cc221",
+    "output": "textures\\877f71c1fc91cc.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/village/texture/handrail.dds",
+    "sha256": "7db8c2ddd44809c1f4f214c088df9f5f7173d59e961d9ab71f856d25f93afa77",
+    "output": "textures\\b7188a0b2e4ba9.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/village/texture/lamp.dds",
+    "sha256": "f7f4d79c30e5752aa50ee78abd3c3679f7b652c4d02313ebeed91598e87e1852",
+    "output": "textures\\d45c6ae9e74d47.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/village/texture/lamp_red.dds",
+    "sha256": "df32c333b7036f980efc9664d7a39f6b61e2caa272fd13b7ed4f4d3915d83996",
+    "output": "textures\\9f132392947d59.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/village/texture/lamp00.dds",
+    "sha256": "62b4886dc0e015feb70ec701dfc90fa6e101ffa17770bda730bf37df205ab0ed",
+    "output": "textures\\1107aec2e4a321.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/village/texture/s_tree_set.dds",
+    "sha256": "ec88198400bd57d86cac970a368cf0199fb58d6d241fac67946be0c4f1b3581c",
+    "output": "textures\\508fca41f004a6.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/village/texture/sign_ani.dds",
+    "sha256": "4eab8fbde3d6abf6f15a1954a85fe1f50370e4085e1d1b01032230e6d1a9e70e",
+    "output": "textures\\70d42939699d2b.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/village/texture/sign_stick.dds",
+    "sha256": "12508f52c0e8cbbcf7012ca5b5f0cca781adebb8d735278ecda36de753430406",
+    "output": "textures\\66cc77ed86e61b.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/village/texture/sign03.dds",
+    "sha256": "e0b3056398e4da44d3806e4b49b10daa4cd13721264908fa7835c782d1d2e5e5",
+    "output": "textures\\7b0718fe9d7822.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/village/texture/sign07.dds",
+    "sha256": "59aea25405cf973d48bf7790f75cd3121f38990f9b97a2251f12c110d84a15ba",
+    "output": "textures\\97f16e57813a07.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/village/texture/sign08.dds",
+    "sha256": "565037615764458c1655c28bfd13359f635ab047fa9032644f52f11b1f82d92a",
+    "output": "textures\\708168d3f7a03e.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/village/texture/sign09.png",
+    "sha256": "c438effbbf925210236bd9d78e4cf516cf70634121c21c5889b44253e277a0ae",
+    "output": "textures\\d7c9d75270c4ff.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/village/texture/sign10.png",
+    "sha256": "645acc7de875026869971f70b861f3e51f8e9aad24bd6c41761aa22202a6a013",
+    "output": "textures\\21cf8de940ec09.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/village/texture/sign12.png",
+    "sha256": "0480c0767254a72d6fc8e5e71213acd70dc0cbfa356d0a27ba72dc6616500ac2",
+    "output": "textures\\8c17c0b78f5157.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/common/texture/sign14.dds",
+    "sha256": "d32c814eb69b355ae53aba304010f89bd74c9fd79f112ef66784c0d5ec82a43f",
+    "output": "textures\\70baa71fe129de.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/village/texture/sign15.dds",
+    "sha256": "711a9bc656e8de836489118f25e59a1394346b5976508492d9f534c7f3f7f648",
+    "output": "textures\\0cce1d2d5ce07e.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/village/texture/smallhouse_set.dds",
+    "sha256": "0c1d80d6b43f7b7a6f84f77a224a149d36fe4967cf36f2d6259a198939316161",
+    "output": "textures\\874e65a26fa92d.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/village/texture/stick.dds",
+    "sha256": "1f24febc6ab6bc57035d5260e8d1a9cc9f211041766374ab4a37f6d78502664d",
+    "output": "textures\\48974be7703877.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/village/texture/stop.dds",
+    "sha256": "b9d6a079b3a8c56610ccbd9086f45b18eb7025f4ef64d7534ecf76c6c83a2806",
+    "output": "textures\\b1b94fb273c069.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/village/texture/tent_set.dds",
+    "sha256": "3d115cf49db3ecbb9942762e56e40c829d4a7b36a042b40a3146ae2363782f11",
+    "output": "textures\\a4860446c15845.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/village/texture/tilegrass_128_03.dds",
+    "sha256": "28150b8cdbb329d5fa0cfd97ba7fd06ab10be0b1d656d98eeff39f3fdfedd8f1",
+    "output": "textures\\4d08e0b1726a3d.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/common/texture/transparency.dds",
+    "sha256": "1cc1a10f2bef0082b89e1bff7ab7daa55f9a09e3aa7cc4faa8ce1104d66e9698",
+    "output": "textures\\a1be10732db1c8.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/village/texture/tree_re09.dds",
+    "sha256": "fe8f1825bf8b65a7f132aa8542f0550fa8fd0a856943e5af717e1108d303bf31",
+    "output": "textures\\2aff7f74894073.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/village/texture/v_back.dds",
+    "sha256": "223ba62ac988cf1f6b1846839e9bc2930a329d34f33f13122d8924624e981007",
+    "output": "textures\\d5e5fb2ee02688.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/village/texture/v_back00.dds",
+    "sha256": "e34944a98eb7860c95abd7c8bd5c3ec348c1b547183378b9d18e84454b614176",
+    "output": "textures\\6b2aedf2eea519.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/village/texture/v_brick.dds",
+    "sha256": "8dcfd855a90a834bfb6572ff4351d7ea00cf5d5f3400986e64582298f0d1e1f8",
+    "output": "textures\\75adcdfc15e8ed.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/village/texture/v_stick.dds",
+    "sha256": "7002be26485be04716728c9e533642b8fb6693a3db994439129209cb01249870",
+    "output": "textures\\6e7e352aa034b4.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/village/texture/v_tree_set.dds",
+    "sha256": "e8c27c57688a8b27e59d4bb317d54d2656b848f0eea7998393dc7d7c106e9a38",
+    "output": "textures\\d7825ed861439b.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/village/texture/v_tree00_set.dds",
+    "sha256": "d305e3612fd592de402443afa328eac332cef39df18a2bc3bafc8936acd6a434",
+    "output": "textures\\f917a184d860d5.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/village/texture/v_tree01_set.dds",
+    "sha256": "9f269aa115ed5735ce80de3576e8c6540a2c2ed1219aa8682dc867ada92be0ff",
+    "output": "textures\\c26a3c4d32085f.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/village/texture/v_wall.dds",
+    "sha256": "681c834b7beb8c130245cd8a12c3b5aa40450e31dbf900597c57489ce92d2ef9",
+    "output": "textures\\3f39818ce54489.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/village/texture/village_skyline01.png",
+    "sha256": "5299c86200e71d17a75799b8a776eaa43b762c75fdbde5b1aa26e17ebe9aefcd",
+    "output": "textures\\9c6fc95eeaea11.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/common/texture/waterdrop.dds",
+    "sha256": "0ceabb562070b96242320ef2f6c662486ecb95880143bc35405ef28720fd32a9",
+    "output": "textures\\b35fbd1e79060e.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/sound/bgm/village/facelift_01.ogg",
+    "sha256": "bebdf4bdb9c12a4de8d21ac937fa4f2e27f151918d80459db6fe5d3890f6fd59",
+    "output": "tracks\\village_R01\\bgm.ogg"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/track/village_I01/xt_trackThumb.png",
+    "sha256": "41381fa60ae5473ec8ab05d4c9e4d35e88033f3afd2aacf2f1c8e446e4f2caa0",
+    "output": "tracks\\village_I01\\thumbnail.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/village/texture/busstop_set.dds",
+    "sha256": "99be2e77d91fabbcdd646539539e0220adddbb49de997d00012d1bd9b882cd4e",
+    "output": "textures\\211d67afe56cb6.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/village/texture/cement_08.png",
+    "sha256": "a85b1607c985f932ac4f09f528e42931a5a98f0a740c824d6e69a8ba5d20b63b",
+    "output": "textures\\ebf3da2347afb5.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/village/texture/cement_09.dds",
+    "sha256": "c4abe54b5da38d923f75af7f252e708fdaa6de8cad03291fbf7b79ac5f2d33c4",
+    "output": "textures\\aa43821c7c99f2.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/village/texture/cement_12.png",
+    "sha256": "451e59b8b9bcd916de1bac0d71d6a98eb9971bbe66b20de5b8c51a0dc284d4e7",
+    "output": "textures\\c4d788a952635c.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/village/texture/cement02_00.dds",
+    "sha256": "ea95f23ab2eedfb3ee1997259d41855384f5dcaa0f9982fa41ee4f291f65a1b7",
+    "output": "textures\\20b962fc48f24e.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/village/texture/cement06_start.png",
+    "sha256": "8a8601c6ce6901f4e24cca7a64d14938c882a4ae6c752c8cfa791d01581a94ec",
+    "output": "textures\\57bc9822eb0ca6.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/village/texture/clocktop.dds",
+    "sha256": "80c03951c105397b4e61a4d9f41ec02ecde8e45cc919bbb55d5633c099ae50a7",
+    "output": "textures\\0e4c9d8c5374e1.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/village/texture/F_flower_set.dds",
+    "sha256": "5fd75b26952a2d0318012accb083294618a960f52cffb019ba61def9cea0adf1",
+    "output": "textures\\19305ebf369ab6.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/village/texture/F_road00.png",
+    "sha256": "cfe9d169de6ff0ad858a7cae2cd8b3526c537248008d15d5575b831b23bd68d6",
+    "output": "textures\\ca3a53fb092fb3.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/village/texture/F_road02.dds",
+    "sha256": "eb6d8d961c673daadd7d0d6d1eed0fa5eada565f957989e7f0bac10e32872dbd",
+    "output": "textures\\d9b9fe408fd709.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/village/texture/F_water01.dds",
+    "sha256": "5d06de7c80213a29356e820e3e4f754d7ea6753bf7219a7b62ff217141b61d43",
+    "output": "textures\\9f13ab9276381b.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/village/texture/fence00.dds",
+    "sha256": "0acd71f45ec5c26f7ed710da694ac1bebf81665a20fee3f1af59c70473c7ca08",
+    "output": "textures\\63eb78308e6cc4.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/village/texture/fence00_b.dds",
+    "sha256": "6bd9bc8d26a05ed281a87cc986eed57cbfea09174694c740f176361ae60ab6e1",
+    "output": "textures\\81934ba8466412.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/village/texture/fence01_a.dds",
+    "sha256": "9e8d888544fd7e468871a1ae3aea7ef0134c12af7cef871e56536f93dfe3aebd",
+    "output": "textures\\b37727d615fa90.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/village/texture/fence04.dds",
+    "sha256": "641aa141cb916d4fc9443eb2ca46d7c04bbbcc6f0aa45477435e895b5c76bb8a",
+    "output": "textures\\d12b3f04b3a4da.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/common/texture/fountionwater02.dds",
+    "sha256": "201b001f419acbd5bec1e1cfdd3abe1dbb1a25f0cc007a5eebbe8f9ca240995c",
+    "output": "textures\\65b00306f5d9ec.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/village/texture/garbage&fireplug.dds",
+    "sha256": "e26f75279250d8b95d4bad6bbedf2053d7f7fa61c62c0a36ac98e00add796518",
+    "output": "textures\\3c143a0a3928c3.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/village/texture/gate_set.dds",
+    "sha256": "efb021f808d8febbd56f20ffcdf09fff1e8377f695ee490f278da8693a4bf2d6",
+    "output": "textures\\0ab7862d55f25b.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/village/texture/house_inner.dds",
+    "sha256": "8ca1172f39ab9748a83543a1ed7236b6b3c417652f1472360f82f1b710da1a6b",
+    "output": "textures\\6a2222237e0659.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/village/texture/orangehouse_256.dds",
+    "sha256": "774a1eeda554767728252027235ed638e0598f8f0a8b1d6d9e410fadbd06c890",
+    "output": "textures\\b69d5345e87c83.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/village/texture/s_tree00_set.dds",
+    "sha256": "c174b3fe3124a459529d42b2e32a143dbcfabb3ea94058456f7d8aae1f9b6483",
+    "output": "textures\\3c2871aeb294aa.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/village/texture/sign_ad08.dds",
+    "sha256": "2739a9936f4e3c7b910881e575cedec3478eef50174438c73bb49fd411b45dc2",
+    "output": "textures\\176686adc38f9a.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/village/texture/sign_ad09.dds",
+    "sha256": "c54d5bde7ce574e23ed6c7ed19b45b3890af8241648547349ad75547862d55f3",
+    "output": "textures\\a5f3480378ce6d.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/village/texture/sign_y.dds",
+    "sha256": "ec55f9685787124259da2885e3fe1efe417ee83df7b7f153a31358ee568888ab",
+    "output": "textures\\a7512318a819a8.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/village/texture/sign00.dds",
+    "sha256": "c7c24cfc075bbed0888d1c080f68e799bbc925429bdddf67a73861f0a4e33de1",
+    "output": "textures\\133819ff6986d1.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/village/texture/signalflag.dds",
+    "sha256": "b9f02be8de8abf3871cbf4d83b9a668452ea67cec2866f32363fd2a2fb392324",
+    "output": "textures\\7679ce0ed0a30c.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/village/texture/stick00.dds",
+    "sha256": "d262398da6e9214a6327adfcb2bfd6e52af1d279558690194864dea6bd01e2f0",
+    "output": "textures\\df48d4be3267a7.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/village/texture/tilegrass_128_02.dds",
+    "sha256": "20fcbe77e52b2843894456ccc77c13bb1d38969ea225b1bd65fd1cae9f79ae6f",
+    "output": "textures\\7ec2351daa4afb.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/village/texture/V_bridge_road.dds",
+    "sha256": "db9a06d9ffc758dbe6e603779951ac8ef6723f5461c444b24062dd835a6305dc",
+    "output": "textures\\42cd7c3079ded2.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/village/texture/V_bridge_road01.png",
+    "sha256": "d8fc0997d1fcf0667372b94c11fe3bc0a5bb7832a9b2df7bc6e51242515e0c65",
+    "output": "textures\\ef51b5d8ace058.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/village/texture/violethouse_256.dds",
+    "sha256": "499179ed2ad4ffca57f0e3c1e25cb4c5bd9fe21d84ec9506953514a39a9689a1",
+    "output": "textures\\fc914572aba8fb.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/village/texture/windmill_inner.dds",
+    "sha256": "4624661ea46651d31632c87c2c540be8a6e8be873fe169f6891170cb2110ec43",
+    "output": "textures\\4aef6ae3981300.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/village/texture/windmill_inner_set.dds",
+    "sha256": "73533bc7970bccfb4ec7107284545db0df43ee43f28399a1885b563a7a0bdd4f",
+    "output": "textures\\7aed50b94d5f1e.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/village/texture/windmill_re256.dds",
+    "sha256": "42715e672d20c8213b47303da27efe82ef3c09eaf716b91cdde636ebb0174e81",
+    "output": "textures\\cd464b4d2ea152.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/village/texture/window.dds",
+    "sha256": "17a00f51840727c8ae2f7cd7090986d0dd777a265973b11c6bf3c0f7bcbc4198",
+    "output": "textures\\f7b93e463a82c7.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/village/texture/wood00.dds",
+    "sha256": "229405c751cffab1a832175ab2475f25298b38adb88d727fa8af79d39fd40317",
+    "output": "textures\\fb3025f73507e3.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/village/texture/woodbox.dds",
+    "sha256": "650d1a3a33dc6c8f06086d4d21a25e92be9be57aa01b5596e68a68295c88d6ff",
+    "output": "textures\\51199fb5359c20.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/sound/bgm/village/facelift_01.ogg",
+    "sha256": "bebdf4bdb9c12a4de8d21ac937fa4f2e27f151918d80459db6fe5d3890f6fd59",
+    "output": "tracks\\village_I01\\bgm.ogg"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/track/forest_I01/xt_trackThumb.png",
+    "sha256": "fc99ca6fd1fafea823e3e42236e1594867557ba60c57cb9ca2da1010949cb9d2",
+    "output": "tracks\\forest_I01\\thumbnail.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/forest/texture/ca_racing_fence.dds",
+    "sha256": "ef4a2f4de5c9fc65dec48ccdf57e497ed16e7863a9de19dec90b87bf4b3c4546",
+    "output": "textures\\e5c30292950266.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/forest/texture/F_ back01.dds",
+    "sha256": "f78e437b31f6fbb6c62c98ab2d8e897abd00dd58b439009cabd939808af7a6c6",
+    "output": "textures\\0fa493489d6cc2.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/forest/texture/F_ cliff04.dds",
+    "sha256": "dce5df6ef5f80447432e19b9b17a08d8b2e4b8d627ac9ef0aa4667a7737cb664",
+    "output": "textures\\5538b4329439f1.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/forest/texture/F_ ston00.dds",
+    "sha256": "6cd410afedb28188dfe45847a3687b60a7996cb8dde66f3fd4cbc44e73f81bd3",
+    "output": "textures\\ce1c3769621129.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/forest/texture/F_ ston01.dds",
+    "sha256": "1dfbdf342bf425bba27f4e726263e87ddd1d2a58a647a5cbeff6af25e979d50f",
+    "output": "textures\\ff1d7649bfb6f3.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/forest/texture/F_cabin00.dds",
+    "sha256": "fe25cc5140d1ae171d955aab199ddaa898e508bcea4998e1ded628a120b07c45",
+    "output": "textures\\5d7857cc38debc.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/forest/texture/F_fence00.dds",
+    "sha256": "9c1cdf3adca19a33aa26953cc5f653862bd7c1a2c56de520013e120b41b6ad6f",
+    "output": "textures\\41b2c039c0cded.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/forest/texture/F_fence02.dds",
+    "sha256": "8a7cf3b0968046526d86d515e9acb1bbcf334f008c7c71f772977ef5fc2dfb5a",
+    "output": "textures\\79d65ee22aaa6c.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/forest/texture/F_fence03.dds",
+    "sha256": "772441d51d679a6a03e4b2cedaf6861b806261f4d8e041588379b6405b053209",
+    "output": "textures\\e00d6eff0e0b66.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/forest/texture/F_fence04.dds",
+    "sha256": "8c0cd4f437494f5a7726dfe5f54d7ba3082e231d9602e85cb694dc8b8874d1ec",
+    "output": "textures\\e98b78b4f38bdd.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/forest/texture/F_fence06.dds",
+    "sha256": "8d66196e5f38a7fd22b5b2b238c0aa8f9ec9654808cb0452e6a069392d38e709",
+    "output": "textures\\5eee0fbcf83f70.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/forest/texture/F_fence08.dds",
+    "sha256": "787d8ccd5a07302fc5f107de9642eaa2b1dfcbc051140fadde4a7d0eb5f32f34",
+    "output": "textures\\b1c2ec245d8537.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/forest/texture/F_flower_set.dds",
+    "sha256": "e67edda446ba670ea58c89a86d31f79876c6673b219d4807d6a6826555b9e603",
+    "output": "textures\\3c8f0bf49386d2.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/forest/texture/F_grass_set.dds",
+    "sha256": "03cf360c8c287e9fb096020f1c9a2737765df83b93b84816bf01da6db5af0e20",
+    "output": "textures\\a8a59a4c7bdb6e.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/forest/texture/F_grass_set00.dds",
+    "sha256": "29f50918f3d9f2f4f724fb60d4727a45bc38d969b3947fed2be9c8ffd0a1ce74",
+    "output": "textures\\45fca8c2407ebd.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/forest/texture/F_grass09.dds",
+    "sha256": "8e75273bde34256ddfed092a2c3dbe79803574e4fc72f91c80084a8b8bcc2791",
+    "output": "textures\\490f3f5f58d7f4.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/forest/texture/F_grass10.dds",
+    "sha256": "961f327dc18b1d5c3f202a5128bcb206cfe710ad873bbb25f38a10e01fbd6bf8",
+    "output": "textures\\c5ab2da66ef1e2.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/forest/texture/F_handrail.dds",
+    "sha256": "a50b33af8f63c16cebacbab81eca0cb33bc43701dbd176e94b9ea3080c6bc6e1",
+    "output": "textures\\8535432c2792a3.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/forest/texture/F_mtree00.dds",
+    "sha256": "1ade1b5ef6e89152b7fd52e8caf65e7504b0b253a295c46b86f5c662aff07783",
+    "output": "textures\\57dac09e05ff2a.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/forest/texture/F_mtree02.dds",
+    "sha256": "0b7928b898a45cc700c60da37c3eb93d03353768b4e6c316bb460c974ee81033",
+    "output": "textures\\b017bd278d41a5.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/forest/texture/F_mtree03.dds",
+    "sha256": "5eed76b0dcdf868ec701de67c3bf89079ae272a19b906026c2de1551b02a6577",
+    "output": "textures\\2e08ac45fad94b.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/forest/texture/F_mushroom_set.png",
+    "sha256": "c17cb2967f1fa341330d3a28491a71e815715a64e8345d6cacedf170c2906654",
+    "output": "textures\\008138a4bb7cbf.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/forest/texture/F_netbridge.dds",
+    "sha256": "a2de049a334b84239ea7a05ce370bdcf3f55c48b5762fdc16b75d7e60a09424d",
+    "output": "textures\\d744fc815ae4e3.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/forest/texture/F_overpass.dds",
+    "sha256": "d8a0a470e02098d68cf206a58f524cf683b8f172478a6a9fc45d10bbc286a8c8",
+    "output": "textures\\053d276e60c893.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/forest/texture/F_overpass00.dds",
+    "sha256": "ecf93727bf5e0fcfc36f26f642dbb2969e2bca3038f5bf6386502f3b07447c37",
+    "output": "textures\\a4fbcce2ef3eee.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/forest/texture/F_overpass02.dds",
+    "sha256": "48150b3c13207c64f7c4e0f5ead802cf4cf93c18c53db4badb0718cd9c9ee04f",
+    "output": "textures\\c8210562a6f971.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/forest/texture/F_pinegrass_set.dds",
+    "sha256": "fefc62ce99b47b966ce83f404e2e8e6bcb0c31ec5fe0ef517da5ca532959f58e",
+    "output": "textures\\17d74a482c8696.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/forest/texture/F_pinetree_set.dds",
+    "sha256": "97a07f76b97f4b8335d569ad3b97a25abe5a067f0ae04833ae7209fc5919fc59",
+    "output": "textures\\6b347e158ffd76.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/forest/texture/F_pinetree00_set.dds",
+    "sha256": "67d10b2189c0d68c9a630ede2a979087316e12d294a15b8fc7d4d848f5fb919c",
+    "output": "textures\\8ad830580a2f99.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/forest/texture/F_pinetreebranch_set.dds",
+    "sha256": "60fc1c16e088f65e86c6274ceaacbef311167e7131c009fe3330a4120f04be10",
+    "output": "textures\\ad0f3e2ac9e1a3.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/forest/texture/F_pinetreeleaf_set.dds",
+    "sha256": "e572dc6faaa4e134ea19e06530a4f6542f7d200861905fe4ed470ff191c6ebac",
+    "output": "textures\\740cd34737bad8.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/forest/texture/F_road00.png",
+    "sha256": "cfe9d169de6ff0ad858a7cae2cd8b3526c537248008d15d5575b831b23bd68d6",
+    "output": "textures\\de622fed85f88a.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/forest/texture/F_road02.dds",
+    "sha256": "eb6d8d961c673daadd7d0d6d1eed0fa5eada565f957989e7f0bac10e32872dbd",
+    "output": "textures\\6d15b2811e5b7f.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/forest/texture/F_roadstart01.png",
+    "sha256": "fb13ff8af45d0e373bd974e6c99d5e77979c817e971f82a041ede24a0345b52a",
+    "output": "textures\\79de2ff43bf6ba.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/forest/texture/F_sign.dds",
+    "sha256": "41cc20c61e20e7e4cd8e4bc447d339995be18681284ae6caf4b4e0bd817109ed",
+    "output": "textures\\06d27184005b28.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/forest/texture/F_sign00.dds",
+    "sha256": "809dc328af5403666a7922e67a1d2efd8a5b79f0e2ae5b37e62ca552eae00479",
+    "output": "textures\\6b493dd95eb5ba.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/forest/texture/F_sign03.dds",
+    "sha256": "32199419371f4addd632da87cde800975bc65bba9f8646e3a7605b2be37a409e",
+    "output": "textures\\e7fc79676e29f9.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/forest/texture/F_tilegrass00.dds",
+    "sha256": "6b2b9001b110353dd000805eb9a461d1c18c7a20222b2cad02ce59f6d77350cb",
+    "output": "textures\\49a6d66c20aa51.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/forest/texture/F_tree00_set.dds",
+    "sha256": "5c2f9031f0c628b506843efc447793a4a5c510e150c4ee99e55ba37d7efaddd8",
+    "output": "textures\\cc83c8cac5322f.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/forest/texture/F_treeleaf_set.dds",
+    "sha256": "1c001955b009d967702118a093b3203ace325b4c0b6d4ff0786ebbae330001cc",
+    "output": "textures\\967d697cfaf983.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/forest/texture/F_treeleaf00_set.dds",
+    "sha256": "280b70fc445cdafb98438771e1e90525476d3b70c49d8d0824ed643676fff684",
+    "output": "textures\\5bf02bffbcbe2e.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/forest/texture/F_treewood00.dds",
+    "sha256": "0ac11e61f346e8377a4268d483593a28a1fe23a5eb2b67511b55e8f983bffc77",
+    "output": "textures\\248fc4d971df6c.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/forest/texture/F_treewood01.dds",
+    "sha256": "93cace6794ddc4fb74c96b09760a71a7c60ba6475b6face0e86966180d05bc6e",
+    "output": "textures\\53f2f66ac241a2.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/forest/texture/F_water01.dds",
+    "sha256": "5d06de7c80213a29356e820e3e4f754d7ea6753bf7219a7b62ff217141b61d43",
+    "output": "textures\\d59050ac43cd6a.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/forest/texture/F_wood.dds",
+    "sha256": "d70b583fedf1b861a91527fb4810944ddfb93aca3dc200298cc01a0492b0ca66",
+    "output": "textures\\32d117b23f8973.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/forest/texture/F_woodtunnel.dds",
+    "sha256": "b8c919ba1053573d9e1a0cbb059d5e2a39cddaae7618402430e2ffce16dad9b7",
+    "output": "textures\\3c59f8714b98ec.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/common/texture/shadow00.dds",
+    "sha256": "5282a2377177c154512e267bda144d09d24bf18bfe89293daab2b9388b52c88d",
+    "output": "textures\\06e81a3922d9a5.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/common/texture/shadow01.dds",
+    "sha256": "753f22a6348d1029d0d4686e8c2ab238dfb2d6a027dce03344128dbdaf2121de",
+    "output": "textures\\0e8abdda82af2c.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/forest/texture/tunnel00.dds",
+    "sha256": "c64b21ee8231616f389fbb686bab3d01043b991aee334fffc30b3eb9adb6ae17",
+    "output": "textures\\f628a919671cc1.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/forest/texture/wood00.dds",
+    "sha256": "f6001b39bae10de0f310f3fb9c3168a942663b820d5a890e1b1eb60e23845520",
+    "output": "textures\\6734c5d46a510d.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/sound/bgm/forest/facelift_02.ogg",
+    "sha256": "66aa50a7d51274887eeee4e3fec52bf4f3e7a321fab2d0ce0bacbdf12c311fd1",
+    "output": "tracks\\forest_I01\\bgm.ogg"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/track/desert_I02/xt_trackThumb.png",
+    "sha256": "15822e2086563c9fc8da31163dd829e4a3175ab1b9fb2ea82c9a8ccdcbac1e83",
+    "output": "tracks\\desert_I02\\thumbnail.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/desert/texture/005_item_object_01.dds",
+    "sha256": "c36ec113a67b4032d42a6e7ca324cb21f936caac3f6c682b2036754525de81e8",
+    "output": "textures\\72bdac4a2184db.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/desert/texture/005_item_object_02.dds",
+    "sha256": "4a00e23c4d2696eb3807125bbae3af58882fefbe572c6a231f51e5b62d21e7d1",
+    "output": "textures\\5381ba6093c18e.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/desert/texture/005_item_object_03.png",
+    "sha256": "75b5b15853a526aabb3b5afcb677cec2dbc7c20ff5c0dd119950951e3c0df207",
+    "output": "textures\\9292009e7e4081.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/track/fairy_I06/ad_fence_c.png",
+    "sha256": "a0de905a52b19772b5574d091aca793eaedcdcf34d3733eaa6cf09a2956b7b71",
+    "output": "textures\\0b9c3bfc58ef44.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/desert/texture/ad_start_de.dds",
+    "sha256": "bdb41ab80c5c2abe2b92c40d3d927bbfbf9c9212b88e496f9df3c7a0ee7fcacb",
+    "output": "textures\\2552f667453aa5.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/desert/texture/background_sand.dds",
+    "sha256": "3dcc23de64d287015da522b7ec5b19a496d035e5d982a949318d78b6943d32fd",
+    "output": "textures\\46b880e3de3829.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/desert/texture/de_fence_wood01.png",
+    "sha256": "4da347c31d97e0d7313d067a63bd5b91ab2fcdb1747eb7bc3e3725fd7bcdb8da",
+    "output": "textures\\53c1e3de2d0f93.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/desert/texture/de_road_wood.dds",
+    "sha256": "64fc9fb7f3aff8b88b29efb1eed521f6ad4f3d7b759a4e7d1565887a30630c39",
+    "output": "textures\\b92a2a6cea90b4.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/desert/texture/de_road_wood_점프01.dds",
+    "sha256": "6dc76df07ad2c134fd33ffd0a00a404a8179e00c4d4d246d754e02e0935117f0",
+    "output": "textures\\6a59b2e6306e6a.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/desert/texture/fence_red_A.dds",
+    "sha256": "8d1e271dfd3603bf818e0171b9697f0cf01afaebec0f0e7c82e4fcb9c77ddfe1",
+    "output": "textures\\75042c2e2662d6.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/desert/texture/fence_woodB.dds",
+    "sha256": "f7b0fde042fbac7fd8bf0ca15fb174fb94f5f60cba1c574bff84509ee4f4a09b",
+    "output": "textures\\a8f3aa98c4c273.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/desert/texture/fence_woodB_arrow .dds",
+    "sha256": "a8575d6dcff0fe7ed3b5b6f73c62c89077f994c43a4277d4b0d6ecee175ff3fb",
+    "output": "textures\\7490e0d740cbd0.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/desert/texture/item_object_01.png",
+    "sha256": "fdf94cce2ac876888d6166608d57fe343c46e9b01ed97e99048330c99bca3186",
+    "output": "textures\\a32c990b056a3b.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/desert/texture/pyramid_01.dds",
+    "sha256": "b5d39b025d4420ec328ab87fe620e7aaeadcfc866b7c32ae2146c381e0872732",
+    "output": "textures\\54ed73a73709b3.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/desert/texture/pyramid_02.dds",
+    "sha256": "f15a7e908e2077845cb7f41577a06637fd7abe67893d2d7481db3eb9fe4f64d3",
+    "output": "textures\\a3929fb71c7542.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/desert/texture/pyramid_inside_ceilling.dds",
+    "sha256": "5f558e04669963dafbbf0cc0d7e57394470b270193d23da9aa06f2ffa5cee5f9",
+    "output": "textures\\22fe9bd9109326.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/desert/texture/pyramid_inside_gate.dds",
+    "sha256": "9a8ed2a4dfc78cd2cf3c87805a37edbdf80cd6af0c60ace6646124d2fc5578c1",
+    "output": "textures\\0a6a7d1893a04e.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/desert/texture/pyramid_inside_wall01.dds",
+    "sha256": "6bbe96436ba03348df9a58464c4e0b0297cd546fff9830ae42234844b71191e9",
+    "output": "textures\\6fb81de799226d.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/desert/texture/pyramid_inside_wall02.dds",
+    "sha256": "36dc1681559f33b473cd8906ac622d77e7fca2dfc3b24cc93f119493625ce0c9",
+    "output": "textures\\fefe5533feeb91.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/desert/texture/road_pyramid.dds",
+    "sha256": "9729ac77a536011ba86e974bc201145165891dfa7b90a36c3263bca6e543b7fe",
+    "output": "textures\\747932d309b97f.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/desert/texture/road_sand.dds",
+    "sha256": "bf1b3bff4f3524bf59abdaf152af4a74497d6a24c49bcc6af5ca18bf1eddc273",
+    "output": "textures\\b2f30f52e37a04.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/desert/texture/road_ston.dds",
+    "sha256": "50feb37cf8ef5e83a24d0f081a5a93517be6827f426f6806cb34d8bc64507467",
+    "output": "textures\\90df3867681d78.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/desert/texture/road_ston_start.dds",
+    "sha256": "ea629a164e53ad2831d9833115e50c68afcaad23f230e935e2a489b77dc6ffce",
+    "output": "textures\\c64e91ac5e7914.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/desert/texture/road_ston_uphill.dds",
+    "sha256": "052600aaa9a445a6f3f49834d85f0693ed66284f91d7ed223713f7feb435d693",
+    "output": "textures\\c4187f739b790b.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/desert/texture/sand.dds",
+    "sha256": "322397f8fecef9c1e7a391142d08d8b2246fb1cd371fbaaf5d32e2886b59cafd",
+    "output": "textures\\a11191c9438f5b.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/desert/texture/sign_ani_A.dds",
+    "sha256": "56796fc39b5ffd5ad7324867d299acd0fe19d4b012321f142c7357133e45885c",
+    "output": "textures\\ffafdec901e904.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/desert/texture/sign_ani_B.dds",
+    "sha256": "03ab9632aab8ea460204cf805b62b36ab40054b672a23e6fcca0232d7879674c",
+    "output": "textures\\03034e53a2d2da.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/common/texture/sign_stick.dds",
+    "sha256": "fa47fda38223246a39d1515074b067a9a621fccc786cb979d4b205d2ab37d1ba",
+    "output": "textures\\d60d6ae02b87ca.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/desert/texture/sign_y.dds",
+    "sha256": "ff3de75ee1bc276620897d0876cb05deac81dc09eab6ea879c4962cea8440a49",
+    "output": "textures\\2e4e52479e398f.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/desert/texture/ston_C.dds",
+    "sha256": "2a1fe5c05d126a5107a1cbabbcc935e8bcfe040477c368ccd95415a920cd6da2",
+    "output": "textures\\7de769afc32e60.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/desert/texture/wood_pillar.dds",
+    "sha256": "c7f1a8652bae1f2585c57f672b2e46bb95a62a9866e6a7fa63b916651a03726c",
+    "output": "textures\\2634ed5fef1cac.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/sound/bgm/desert/desert_01.ogg",
+    "sha256": "28232ebd9510e867adff03bfa99c67d1e0bfe92618078b72ca18d8cd23da16e5",
+    "output": "tracks\\desert_I02\\bgm.ogg"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/track/ice_I01/xt_trackThumb.png",
+    "sha256": "e287aef74a3b83e4fd627c0ecc63ca5677f4c3767f5b3fa7cea2836b5b56c983",
+    "output": "tracks\\ice_I01\\thumbnail.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/track/ice_I01/개발자-s.dds",
+    "sha256": "7f800ba553bdd207b96fa4d5cb8c58d12cc9263ba4db104bba711599a4151e89",
+    "output": "textures\\e74e7d68928691.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/ice/texture/ice_arrow.dds",
+    "sha256": "79df31afab1b237065c988d18f225468dd8128e280f5bd1fd203b1809e802d3e",
+    "output": "textures\\cf1c9e90f45c87.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/ice/texture/ice_arrow_a.dds",
+    "sha256": "49c4a225c189f38d85df59ac32e7e32965500068b4131fa216d6d37f724463f3",
+    "output": "textures\\346c1d245e7c14.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/ice/texture/ice_aurora .png",
+    "sha256": "a9763f16209eedf98f354e543fe8eef343c593bd2684ec0dd316857669fae11e",
+    "output": "textures\\9ec62d705f0cb0.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/ice/texture/ice_aurora_a.png",
+    "sha256": "d883ea47d89f3f47f97d63c60c24da16ef61eafece41703bc82cd1c29eae0314",
+    "output": "textures\\768418170e065e.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/ice/texture/ice_aurora_b.png",
+    "sha256": "f730efef9afb83aeddaafef721081944d123c674a61fef485f65f69cb2dad8e9",
+    "output": "textures\\01c764044b019d.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/ice/texture/ice_fish.dds",
+    "sha256": "41a4082a55ed7b1de933c5fae40f3d06e4adb28fe0fba2eaec672057de929d85",
+    "output": "textures\\c8f37046937f39.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/common/texture/ice_glacial terrain_A.png",
+    "sha256": "ea3d84af35243cedbaef416c502c8971f7ff4f71d129db34c12ff1a04cabe452",
+    "output": "textures\\fac6279c347082.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/ice/texture/ice_glacial terrain_B.png",
+    "sha256": "29b563105c0efda548d40f00f4fbe42b8b2f81e35cdcc0f5eeec9451692f82ef",
+    "output": "textures\\7b42a3c2fd3f70.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/ice/texture/ice_icicle_A.png",
+    "sha256": "7653975f7aab0fd586250fbe2d4d21581155dfb7a678cbf252cd07ada534be3b",
+    "output": "textures\\3baf69ea2b7bb9.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/ice/texture/ice_icicle_B.png",
+    "sha256": "55e4bc89fdd90ab72dbb630a05fd7b64c52287ecc03d38cb3e1ede304a0164b9",
+    "output": "textures\\09773aa4879352.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/ice/texture/ice_p_A.png",
+    "sha256": "adfbc8bea58df14127f34e8e6ea78f8987562c4cfc9701c0683961f373d9fb65",
+    "output": "textures\\7c29d710260453.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/ice/texture/ice_p_A_a.png",
+    "sha256": "df3a642308f9d94a39861b6d79c4fc68b50331993a0325ceaf86449abe8e6767",
+    "output": "textures\\0877475ed39fa2.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/ice/texture/ice_p_A-B.png",
+    "sha256": "3287f7a5ab09fd490db153a06020e70751b0966b3cae777a25355d37552b3572",
+    "output": "textures\\b1a96f7ba30813.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/ice/texture/ice_p_B.png",
+    "sha256": "2e09de9ca74edcb4f58d4f65ee162ec394c9166e9c0a567255431e885d1a5df6",
+    "output": "textures\\05b2cb971e05c1.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/ice/texture/ice_p_B_B.png",
+    "sha256": "7085e4e18734b438dc527bfd392a549cecd897bf81f43d2e779843829019b17d",
+    "output": "textures\\2bd4e040fa0a6b.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/ice/texture/ice_p_B_C.png",
+    "sha256": "a095c4c393ea56eaff965c2f59f57c7f374d4789bf52810e567dc0f80e100769",
+    "output": "textures\\570ee8e7a8046a.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/ice/texture/ice_p_B-1.png",
+    "sha256": "222dd9c816c24e060d84eb702a38433f2befd2ca6e326d6af0cdbdf0eb44a0df",
+    "output": "textures\\cbf18d47048c11.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/ice/texture/ice_p_B-2.png",
+    "sha256": "318b79b7a7c2c55799ed1b547391fe3f7de27e4bb6e69a5bcd29570fc70a4ccf",
+    "output": "textures\\8a6a77ab8ea88d.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/common/texture/ice_p_c.png",
+    "sha256": "bb8eb9db03928c5be75bace4ad3d44ad829ca38372fe54b26ac2dae85a9e7ada",
+    "output": "textures\\8bd0580f43013a.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/ice/texture/ice_penguin.dds",
+    "sha256": "67336488668469af57bf95c6ae80dff86810195a925804efc845d4d43e260e7c",
+    "output": "textures\\cf27b649e9026b.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/ice/texture/ice_penguin-1.dds",
+    "sha256": "4e3e0f0fadc509eb3492e08e2e13844c4100ce6769c9bfd36258312729327073",
+    "output": "textures\\2aec5ecc09f378.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/ice/texture/ice_road_A.png",
+    "sha256": "228d2c89297824c2addf793eae195da7fc5ed0da9dce4d717b9588912155411d",
+    "output": "textures\\aabcd103eca6ef.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/ice/texture/ice_road_A_B.png",
+    "sha256": "71956910dabeb5155acf955df6bad09c8c39c6b8a9c91781b7bc5b93928dff74",
+    "output": "textures\\1ce06618784ddf.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/ice/texture/ice_road_A_C.png",
+    "sha256": "dd6087395540845c2fede61592b94c2ba0310a06e6f5698b8f6a7c4ce95fb2fe",
+    "output": "textures\\5709003fbdd922.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/common/texture/ice_road_B.png",
+    "sha256": "86dc7d589fbdb7c84fdad3ff351901f082525b9e188afcec6450a736d4c22687",
+    "output": "textures\\7f39cde8dd0c8a.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/ice/texture/ice_road_B_B.png",
+    "sha256": "83cd0ea4eb9258bf6c34fdd7b21799e8589e4a900b04f05cd46a4db4822c08af",
+    "output": "textures\\0f409a0860f166.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/ice/texture/ice_road_start.png",
+    "sha256": "6e8c03c9d332e108157c9f9a00e0f5b9e2effb43e5e0135dc51b290fcbe1f3c8",
+    "output": "textures\\5fecdbdc984332.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/ice/texture/ice_see.dds",
+    "sha256": "e7c03d401d60196d9141a1da2eaa23b1806817a74a69129ccc526b5e050723a6",
+    "output": "textures\\80dd278a8defd4.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/ice/texture/ice_see-ani.dds",
+    "sha256": "aed72b52c23a94dc94671afab20af24142c95ce737f1c0aff4161132c6203403",
+    "output": "textures\\0bea6bb9b6baeb.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/ice/texture/ice_see-bottom.dds",
+    "sha256": "2366fd0055a9399c0970fd91a2cc3b744d5a373e6ec77867c560392c0d035154",
+    "output": "textures\\d0b88d41154356.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/ice/texture/ice_sign_i04.png",
+    "sha256": "eb9c42bf20c75d2b8bee8374b06175eee089ca1b696be42651aae939f19e7380",
+    "output": "textures\\d2379307950184.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/ice/texture/ice_sign_jump01.png",
+    "sha256": "3120a06e6b9a381eeb494776dd47a13e1070f6bf9243eb67718311a6a2036828",
+    "output": "textures\\3d1b5c18749ad4.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/ice/texture/ice_sign_jump02.png",
+    "sha256": "04e0709364dd953452a0435b1fbf40f6530c852ce0a96a3b235b1263fa9f2d77",
+    "output": "textures\\7a1ac7254a6912.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/ice/texture/ice_sign_p.dds",
+    "sha256": "dfba9d71f52b7a03344ed72abdcec30e3222f8b5809c1672748724e2daac435b",
+    "output": "textures\\5775f360a5af2f.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/ice/texture/object_03.png",
+    "sha256": "31d998626a171116f4a1c506db0e39c8c18e47e38202d4506391ac8b7958b36f",
+    "output": "textures\\3b1588593bfd74.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/ice/texture/start.png",
+    "sha256": "069af7b7c6e246019b2cd719bdf45f3cb3b9efeb763b4b18839976723c524d2c",
+    "output": "textures\\29dc8e80cf5fb9.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/theme/common/texture/twinkle.png",
+    "sha256": "196e9e78df6820d1c899e7676d6dd447ea8a45546b3055e5df372358f800579f",
+    "output": "textures\\3a51b9275a3062.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/sound/bgm/ice/ice_01.ogg",
+    "sha256": "83a2e8fe5a0eb2be7f149a33f464359cb4633c48ec9d45179108995421168afe",
+    "output": "tracks\\ice_I01\\bgm.ogg"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/character/dao/costume/face/dao_org/f00.png",
+    "sha256": "216182db1a98ded4ba002825116c9aac4100b7a80f459b39ac733ec77f17b53e",
+    "output": "characters\\dao\\face.png"
+  },
+  {
+    "source": "KartRider_5136_01_UNPACK/_rhoOut/character/dizni/costume/face/dizni_org/f00.png",
+    "sha256": "078d623eb93fea55619d4551f9ad3883d2c8d1c28ca02daf6ee0e7ca1480e916",
+    "output": "characters\\dizni\\face.png"
+  }
+]

@@ -1,0 +1,158 @@
+{
+  "tracks": [
+    {
+      "id": "village_R01",
+      "name": "빌리지 고가의 질주",
+      "theme": "village",
+      "laps": 2,
+      "meshCount": 375,
+      "gates": 61,
+      "textures": 57,
+      "missingTextures": []
+    },
+    {
+      "id": "village_I01",
+      "name": "빌리지 시계탑",
+      "theme": "village",
+      "laps": 3,
+      "meshCount": 348,
+      "gates": 39,
+      "textures": 74,
+      "missingTextures": []
+    },
+    {
+      "id": "forest_I01",
+      "name": "포레스트 통나무",
+      "theme": "forest",
+      "laps": 3,
+      "meshCount": 518,
+      "gates": 49,
+      "textures": 57,
+      "missingTextures": []
+    },
+    {
+      "id": "desert_I02",
+      "name": "사막 피라미드 탐험",
+      "theme": "desert",
+      "laps": 3,
+      "meshCount": 176,
+      "gates": 48,
+      "textures": 38,
+      "missingTextures": []
+    },
+    {
+      "id": "ice_I01",
+      "name": "아이스 상어의 무덤",
+      "theme": "ice",
+      "laps": 3,
+      "meshCount": 506,
+      "gates": 32,
+      "textures": 44,
+      "missingTextures": []
+    }
+  ],
+  "karts": [
+    {
+      "id": "spectorV1",
+      "name": "스펙터 V1",
+      "stats": {
+        "ForwardAccelForce": 154.0,
+        "DragFactor": -0.084,
+        "SteerConstraint": 3.06,
+        "DriftEscapeForce": 2210.0
+      }
+    },
+    {
+      "id": "whiteKnightV1",
+      "name": "백기사 V1",
+      "stats": {
+        "ForwardAccelForce": 154.0,
+        "DragFactor": -0.084,
+        "SteerConstraint": 3.09,
+        "DriftEscapeForce": 2220.0
+      }
+    },
+    {
+      "id": "stormV1",
+      "name": "스톰 V1",
+      "stats": {
+        "ForwardAccelForce": 154.0,
+        "DragFactor": -0.083,
+        "SteerConstraint": 2.44,
+        "DriftEscapeForce": 1960.0
+      }
+    },
+    {
+      "id": "cottonV1",
+      "name": "코튼 V1",
+      "stats": {
+        "ForwardAccelForce": 154.0,
+        "DragFactor": -0.083,
+        "SteerConstraint": 2.36,
+        "DriftEscapeForce": 1900.0
+      }
+    },
+    {
+      "id": "saberV1",
+      "name": "세이버 V1",
+      "stats": {
+        "ForwardAccelForce": 154.0,
+        "DragFactor": -0.083,
+        "SteerConstraint": 2.43,
+        "DriftEscapeForce": 2040.0
+      }
+    },
+    {
+      "id": "sangunV1",
+      "name": "산군 V1",
+      "stats": {
+        "ForwardAccelForce": 154.0,
+        "DragFactor": -0.083,
+        "SteerConstraint": 2.33,
+        "DriftEscapeForce": 1850.0
+      }
+    },
+    {
+      "id": "titanV1",
+      "name": "타이탄 V1",
+      "stats": {
+        "ForwardAccelForce": 154.0,
+        "DragFactor": -0.083,
+        "SteerConstraint": 2.7,
+        "DriftEscapeForce": 1820.0
+      }
+    },
+    {
+      "id": "practiceV1",
+      "name": "연습카트 V1",
+      "stats": {
+        "ForwardAccelForce": 154.0,
+        "DragFactor": -0.083,
+        "SteerConstraint": 2.36,
+        "DriftEscapeForce": 1600.0
+      }
+    }
+  ],
+  "characters": [
+    {
+      "id": "dao",
+      "name": "다오",
+      "color": "#4ba8e4"
+    },
+    {
+      "id": "bazzi",
+      "name": "배찌",
+      "color": "#efaa32"
+    },
+    {
+      "id": "dizni",
+      "name": "디지니",
+      "color": "#f496bf"
+    },
+    {
+      "id": "marid",
+      "name": "마리드",
+      "color": "#b893e7"
+    }
+  ]
+}

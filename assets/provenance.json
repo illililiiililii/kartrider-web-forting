@@ -1,0 +1,4050 @@
+{
+  "track": {
+    "Source": "C:\\Users\\user\\Documents\\Codex\\2026-10-16\\https-github-com-morluto-rea-https\\work\\track.1s",
+    "Output": "C:\\Users\\user\\Documents\\Codex\\2026-10-16\\https-github-com-morluto-rea-https\\work\\village_R01.ktrk",
+    "MeshCount": 375,
+    "VertexCount": 34030,
+    "TriangleCount": 17697,
+    "Bounds": {
+      "Min": [
+        -36.534996,
+        -111.33331,
+        2.8498707
+      ],
+      "Max": [
+        1239.2922,
+        1600.7839,
+        106.82852
+      ]
+    },
+    "Textures": [
+      "ad_board_a",
+      "ad_board_b",
+      "ad_board_c",
+      "ad_fence_a",
+      "ad_fence_b",
+      "ad_start",
+      "bighouse_set",
+      "cement_00",
+      "cement_start",
+      "cement01",
+      "cement02_01",
+      "cement03",
+      "cement04",
+      "cement05",
+      "cliff_set",
+      "fence00_e",
+      "fence01",
+      "fence11",
+      "fence12",
+      "flag",
+      "flag00",
+      "flag01",
+      "fountion00_128",
+      "fountionwater_128",
+      "front_128",
+      "handrail",
+      "lamp",
+      "lamp_red",
+      "lamp00",
+      "s_tree_set",
+      "sign_ani",
+      "sign_stick",
+      "sign03",
+      "sign07",
+      "sign08",
+      "sign09",
+      "sign10",
+      "sign12",
+      "sign14",
+      "sign15",
+      "smallhouse_set",
+      "stick",
+      "stop",
+      "tent_set",
+      "tilegrass_128_03",
+      "transparency",
+      "tree_re09",
+      "v_back",
+      "v_back00",
+      "v_brick",
+      "v_stick",
+      "v_tree_set",
+      "v_tree00_set",
+      "v_tree01_set",
+      "v_wall",
+      "village_skyline01",
+      "waterdrop"
+    ],
+    "CollidableMeshCount": 55,
+    "CollidableTriangleCount": 2997,
+    "Collidable": [
+      {
+        "Name": "road_Geom",
+        "Triangles": 62
+      },
+      {
+        "Name": "O_001_Geom",
+        "Triangles": 40
+      },
+      {
+        "Name": "O_002_Geom",
+        "Triangles": 15
+      },
+      {
+        "Name": "Object02_Geom",
+        "Triangles": 100
+      },
+      {
+        "Name": "Object45_Geom",
+        "Triangles": 100
+      },
+      {
+        "Name": "Object47_Geom",
+        "Triangles": 100
+      },
+      {
+        "Name": "Object50_Geom",
+        "Triangles": 50
+      },
+      {
+        "Name": "RoadObj08@s0",
+        "Triangles": 16
+      },
+      {
+        "Name": "RoadObj08@s1",
+        "Triangles": 28
+      },
+      {
+        "Name": "RoadObj08@s2",
+        "Triangles": 84
+      },
+      {
+        "Name": "RoadObj09@s0",
+        "Triangles": 20
+      },
+      {
+        "Name": "RoadObj09@s1",
+        "Triangles": 21
+      },
+      {
+        "Name": "RoadObj09@s2",
+        "Triangles": 108
+      },
+      {
+        "Name": "RoadObj04@s0",
+        "Triangles": 22
+      },
+      {
+        "Name": "RoadObj04@s1",
+        "Triangles": 108
+      },
+      {
+        "Name": "RoadObj04@s2",
+        "Triangles": 126
+      },
+      {
+        "Name": "RoadObj04@s3",
+        "Triangles": 44
+      },
+      {
+        "Name": "Object56@s1",
+        "Triangles": 24
+      },
+      {
+        "Name": "Object56@s2",
+        "Triangles": 16
+      },
+      {
+        "Name": "road@s0",
+        "Triangles": 8
+      },
+      {
+        "Name": "Box195@s0",
+        "Triangles": 2
+      },
+      {
+        "Name": "RoadObj01@s1",
+        "Triangles": 74
+      },
+      {
+        "Name": "RoadObj01@s2",
+        "Triangles": 94
+      },
+      {
+        "Name": "RoadObj01@s3",
+        "Triangles": 78
+      },
+      {
+        "Name": "RoadObj01@s4",
+        "Triangles": 34
+      },
+      {
+        "Name": "RoadObj01@s5",
+        "Triangles": 2
+      },
+      {
+        "Name": "RoadObj01@s6",
+        "Triangles": 56
+      },
+      {
+        "Name": "RoadObj01@s8",
+        "Triangles": 30
+      },
+      {
+        "Name": "RoadObj01@s9",
+        "Triangles": 76
+      },
+      {
+        "Name": "RoadObj01@s10",
+        "Triangles": 53
+      },
+      {
+        "Name": "RoadObj01@s11",
+        "Triangles": 7
+      },
+      {
+        "Name": "RoadObj01@s12",
+        "Triangles": 48
+      },
+      {
+        "Name": "RoadObj01@s13",
+        "Triangles": 89
+      },
+      {
+        "Name": "RoadObj01@s14",
+        "Triangles": 26
+      },
+      {
+        "Name": "RoadObj01@s15",
+        "Triangles": 140
+      },
+      {
+        "Name": "RoadObj01@s16",
+        "Triangles": 24
+      },
+      {
+        "Name": "RoadObj01@s17",
+        "Triangles": 42
+      },
+      {
+        "Name": "RoadObj01@s18",
+        "Triangles": 44
+      },
+      {
+        "Name": "RoadObj01@s19",
+        "Triangles": 158
+      },
+      {
+        "Name": "RoadObj01@s31",
+        "Triangles": 59
+      },
+      {
+        "Name": "RoadObj01@s32",
+        "Triangles": 350
+      },
+      {
+        "Name": "RoadObj01@s33",
+        "Triangles": 11
+      },
+      {
+        "Name": "RoadObj01@s34",
+        "Triangles": 6
+      },
+      {
+        "Name": "RoadObj01@s35",
+        "Triangles": 180
+      },
+      {
+        "Name": "RoadObj01@s36",
+        "Triangles": 134
+      },
+      {
+        "Name": "Box319@s0",
+        "Triangles": 8
+      },
+      {
+        "Name": "road45@s0",
+        "Triangles": 8
+      },
+      {
+        "Name": "Plane03@s0",
+        "Triangles": 4
+      },
+      {
+        "Name": "Object174@s0",
+        "Triangles": 18
+      },
+      {
+        "Name": "Object175@s0",
+        "Triangles": 2
+      },
+      {
+        "Name": "Object175@s1",
+        "Triangles": 2
+      },
+      {
+        "Name": "Object176@s0",
+        "Triangles": 2
+      },
+      {
+        "Name": "Object176@s1",
+        "Triangles": 2
+      },
+      {
+        "Name": "Object177@s0",
+        "Triangles": 10
+      },
+      {
+        "Name": "Object177@s1",
+        "Triangles": 32
+      }
+    ],
+    "Meshes": [
+      {
+        "Name": "가로등_Geom",
+        "Texture": "lamp_red",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 2.689171e-05,
+        "Vertices": 114,
+        "Triangles": 70
+      },
+      {
+        "Name": "Object03_Geom",
+        "Texture": "lamp",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": -2.689174e-05,
+        "Vertices": 500,
+        "Triangles": 300
+      },
+      {
+        "Name": "Object03_Geom",
+        "Texture": "lamp",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": -2.689174e-05,
+        "Vertices": 500,
+        "Triangles": 300
+      },
+      {
+        "Name": "yb01_Geom",
+        "Texture": "sign03",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 0.42803478,
+        "Vertices": 76,
+        "Triangles": 52
+      },
+      {
+        "Name": "Object03_Geom",
+        "Texture": "lamp",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": -2.6891743e-05,
+        "Vertices": 375,
+        "Triangles": 225
+      },
+      {
+        "Name": "Object03_Geom",
+        "Texture": "lamp",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": -2.6891745e-05,
+        "Vertices": 375,
+        "Triangles": 225
+      },
+      {
+        "Name": "Object03_Geom",
+        "Texture": "lamp",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": -2.6891743e-05,
+        "Vertices": 500,
+        "Triangles": 300
+      },
+      {
+        "Name": "Object03_Geom",
+        "Texture": "lamp",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": -2.6891747e-05,
+        "Vertices": 375,
+        "Triangles": 225
+      },
+      {
+        "Name": "Object03_Geom",
+        "Texture": "lamp",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": -2.6891747e-05,
+        "Vertices": 375,
+        "Triangles": 225
+      },
+      {
+        "Name": "Object03_Geom",
+        "Texture": "lamp",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": -2.689175e-05,
+        "Vertices": 250,
+        "Triangles": 150
+      },
+      {
+        "Name": "road_Geom",
+        "Texture": "front_128",
+        "Flags": 1,
+        "Kind": "ReTriStrip",
+        "Determinant": 1.262374,
+        "Vertices": 101,
+        "Triangles": 62
+      },
+      {
+        "Name": "Object43_Geom",
+        "Texture": "lamp00",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": -2.6891736e-05,
+        "Vertices": 216,
+        "Triangles": 136
+      },
+      {
+        "Name": "yb04_Geom",
+        "Texture": "sign03",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 0.42803478,
+        "Vertices": 136,
+        "Triangles": 92
+      },
+      {
+        "Name": "Object01_Geom",
+        "Texture": "sign03",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": -0.42803472,
+        "Vertices": 154,
+        "Triangles": 104
+      },
+      {
+        "Name": "가로등_Geom",
+        "Texture": "lamp_red",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 2.6891714e-05,
+        "Vertices": 114,
+        "Triangles": 70
+      },
+      {
+        "Name": "가로등_Geom",
+        "Texture": "lamp_red",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 2.6891717e-05,
+        "Vertices": 114,
+        "Triangles": 70
+      },
+      {
+        "Name": "가로등_Geom",
+        "Texture": "lamp_red",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 2.689171e-05,
+        "Vertices": 114,
+        "Triangles": 70
+      },
+      {
+        "Name": "가로등_Geom",
+        "Texture": "lamp_red",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 2.689171e-05,
+        "Vertices": 57,
+        "Triangles": 35
+      },
+      {
+        "Name": "yb05_Geom",
+        "Texture": "sign03",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 0.4280348,
+        "Vertices": 76,
+        "Triangles": 52
+      },
+      {
+        "Name": "Object43_Geom",
+        "Texture": "lamp00",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 2.6891736e-05,
+        "Vertices": 270,
+        "Triangles": 170
+      },
+      {
+        "Name": "Object43_Geom",
+        "Texture": "lamp00",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 2.6891736e-05,
+        "Vertices": 216,
+        "Triangles": 136
+      },
+      {
+        "Name": "Object43_Geom",
+        "Texture": "lamp00",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 2.6891736e-05,
+        "Vertices": 216,
+        "Triangles": 136
+      },
+      {
+        "Name": "Object43_Geom",
+        "Texture": "lamp00",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 2.6891736e-05,
+        "Vertices": 108,
+        "Triangles": 68
+      },
+      {
+        "Name": "Object43_Geom",
+        "Texture": "lamp00",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": -2.6891736e-05,
+        "Vertices": 162,
+        "Triangles": 102
+      },
+      {
+        "Name": "Object43_Geom",
+        "Texture": "lamp00",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 2.6891736e-05,
+        "Vertices": 216,
+        "Triangles": 136
+      },
+      {
+        "Name": "Object43_Geom",
+        "Texture": "lamp00",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 2.6891736e-05,
+        "Vertices": 216,
+        "Triangles": 136
+      },
+      {
+        "Name": "Object43_Geom",
+        "Texture": "lamp00",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 2.6891736e-05,
+        "Vertices": 216,
+        "Triangles": 136
+      },
+      {
+        "Name": "Object43_Geom",
+        "Texture": "lamp00",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": -2.6891736e-05,
+        "Vertices": 216,
+        "Triangles": 136
+      },
+      {
+        "Name": "Object43_Geom",
+        "Texture": "lamp00",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": -2.6891736e-05,
+        "Vertices": 216,
+        "Triangles": 136
+      },
+      {
+        "Name": "Object43_Geom",
+        "Texture": "lamp00",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": -2.6891737e-05,
+        "Vertices": 216,
+        "Triangles": 136
+      },
+      {
+        "Name": "Object43_Geom",
+        "Texture": "lamp00",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": -2.6891732e-05,
+        "Vertices": 270,
+        "Triangles": 170
+      },
+      {
+        "Name": "Object43_Geom",
+        "Texture": "lamp00",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 2.6891754e-05,
+        "Vertices": 54,
+        "Triangles": 34
+      },
+      {
+        "Name": "Object43_Geom",
+        "Texture": "lamp00",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 2.6891728e-05,
+        "Vertices": 108,
+        "Triangles": 68
+      },
+      {
+        "Name": "Object43_Geom",
+        "Texture": "lamp00",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 2.6891736e-05,
+        "Vertices": 162,
+        "Triangles": 102
+      },
+      {
+        "Name": "Object43_Geom",
+        "Texture": "lamp00",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 2.689174e-05,
+        "Vertices": 54,
+        "Triangles": 34
+      },
+      {
+        "Name": "Object43_Geom",
+        "Texture": "lamp00",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 2.689174e-05,
+        "Vertices": 216,
+        "Triangles": 136
+      },
+      {
+        "Name": "Object43_Geom",
+        "Texture": "lamp00",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 2.6891743e-05,
+        "Vertices": 216,
+        "Triangles": 136
+      },
+      {
+        "Name": "Object43_Geom",
+        "Texture": "lamp00",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 2.6891737e-05,
+        "Vertices": 216,
+        "Triangles": 136
+      },
+      {
+        "Name": "Object43_Geom",
+        "Texture": "lamp00",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 2.689173e-05,
+        "Vertices": 162,
+        "Triangles": 102
+      },
+      {
+        "Name": "f_000_Geom",
+        "Texture": "flag01",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 4.7924936e-05,
+        "Vertices": 20,
+        "Triangles": 10
+      },
+      {
+        "Name": "f_001_Geom",
+        "Texture": "flag00",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 4.7924936e-05,
+        "Vertices": 20,
+        "Triangles": 10
+      },
+      {
+        "Name": "s_000_Geom",
+        "Texture": "sign_stick",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 1.0000002,
+        "Vertices": 180,
+        "Triangles": 90
+      },
+      {
+        "Name": "s_001_Geom",
+        "Texture": "sign_ani",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 1.0000002,
+        "Vertices": 4,
+        "Triangles": 2
+      },
+      {
+        "Name": "s_001_Geom",
+        "Texture": "sign_ani",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 1.0000002,
+        "Vertices": 4,
+        "Triangles": 2
+      },
+      {
+        "Name": "s_001_Geom",
+        "Texture": "sign_ani",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 1,
+        "Vertices": 4,
+        "Triangles": 2
+      },
+      {
+        "Name": "Box223_Geom",
+        "Texture": "stick",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 0.8502286,
+        "Vertices": 88,
+        "Triangles": 44
+      },
+      {
+        "Name": "Plane1802_Geom",
+        "Texture": "ad_board_a",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": -0.0024941377,
+        "Vertices": 16,
+        "Triangles": 8
+      },
+      {
+        "Name": "Box223_Geom",
+        "Texture": "stick",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 0.85022837,
+        "Vertices": 24,
+        "Triangles": 12
+      },
+      {
+        "Name": "O_000_Geom",
+        "Texture": "fence00_e",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": -0.00018265829,
+        "Vertices": 44,
+        "Triangles": 28
+      },
+      {
+        "Name": "O_001_Geom",
+        "Texture": "cliff_set",
+        "Flags": 1,
+        "Kind": "ReTriStrip",
+        "Determinant": -0.00018265829,
+        "Vertices": 42,
+        "Triangles": 40
+      },
+      {
+        "Name": "O_002_Geom",
+        "Texture": "cliff_set",
+        "Flags": 1,
+        "Kind": "ReTriStrip",
+        "Determinant": -0.00018265829,
+        "Vertices": 25,
+        "Triangles": 15
+      },
+      {
+        "Name": "s_000_Geom",
+        "Texture": "sign_stick",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 1.0000002,
+        "Vertices": 240,
+        "Triangles": 120
+      },
+      {
+        "Name": "s_001_Geom",
+        "Texture": "sign_ani",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 1.0000002,
+        "Vertices": 4,
+        "Triangles": 2
+      },
+      {
+        "Name": "s_001_Geom",
+        "Texture": "sign_ani",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 1.0000002,
+        "Vertices": 4,
+        "Triangles": 2
+      },
+      {
+        "Name": "Object03_Geom",
+        "Texture": "lamp",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": -2.6891747e-05,
+        "Vertices": 500,
+        "Triangles": 300
+      },
+      {
+        "Name": "Object03_Geom",
+        "Texture": "lamp",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": -2.6891747e-05,
+        "Vertices": 500,
+        "Triangles": 300
+      },
+      {
+        "Name": "Object03_Geom",
+        "Texture": "lamp",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": -2.6891747e-05,
+        "Vertices": 500,
+        "Triangles": 300
+      },
+      {
+        "Name": "Object03_Geom",
+        "Texture": "lamp",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": -2.6891747e-05,
+        "Vertices": 375,
+        "Triangles": 225
+      },
+      {
+        "Name": "Object03_Geom",
+        "Texture": "lamp",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 2.6891747e-05,
+        "Vertices": 375,
+        "Triangles": 225
+      },
+      {
+        "Name": "Object03_Geom",
+        "Texture": "lamp",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 2.6891741e-05,
+        "Vertices": 250,
+        "Triangles": 150
+      },
+      {
+        "Name": "Object03_Geom",
+        "Texture": "lamp",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 2.689174e-05,
+        "Vertices": 375,
+        "Triangles": 225
+      },
+      {
+        "Name": "Object03_Geom",
+        "Texture": "lamp",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 2.6891747e-05,
+        "Vertices": 500,
+        "Triangles": 300
+      },
+      {
+        "Name": "Object03_Geom",
+        "Texture": "lamp",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 2.6891737e-05,
+        "Vertices": 500,
+        "Triangles": 300
+      },
+      {
+        "Name": "Object03_Geom",
+        "Texture": "lamp",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 2.6891737e-05,
+        "Vertices": 375,
+        "Triangles": 225
+      },
+      {
+        "Name": "Object03_Geom",
+        "Texture": "lamp",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 2.689174e-05,
+        "Vertices": 250,
+        "Triangles": 150
+      },
+      {
+        "Name": "s_001_Geom",
+        "Texture": "sign_ani",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 1.0000002,
+        "Vertices": 4,
+        "Triangles": 2
+      },
+      {
+        "Name": "s_001_Geom",
+        "Texture": "sign_ani",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 1.0000002,
+        "Vertices": 4,
+        "Triangles": 2
+      },
+      {
+        "Name": "yb06_Geom",
+        "Texture": "sign03",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 0.4280347,
+        "Vertices": 76,
+        "Triangles": 52
+      },
+      {
+        "Name": "yb07_Geom",
+        "Texture": "sign03",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 0.42803478,
+        "Vertices": 70,
+        "Triangles": 48
+      },
+      {
+        "Name": "Object03_Geom",
+        "Texture": "lamp",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": -2.6891747e-05,
+        "Vertices": 125,
+        "Triangles": 75
+      },
+      {
+        "Name": "Object14_Geom",
+        "Texture": "waterdrop",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 0.00044779587,
+        "Vertices": 4,
+        "Triangles": 2
+      },
+      {
+        "Name": "물03@s0",
+        "Texture": "fountionwater_128",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 1.3847567e-05,
+        "Vertices": 36,
+        "Triangles": 24
+      },
+      {
+        "Name": "Object27_Geom",
+        "Texture": "waterdrop",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 0.0004477962,
+        "Vertices": 4,
+        "Triangles": 2
+      },
+      {
+        "Name": "Object21_Geom",
+        "Texture": "waterdrop",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 0.0004477943,
+        "Vertices": 4,
+        "Triangles": 2
+      },
+      {
+        "Name": "Object18_Geom",
+        "Texture": "waterdrop",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 0.00044779538,
+        "Vertices": 4,
+        "Triangles": 2
+      },
+      {
+        "Name": "Object26_Geom",
+        "Texture": "waterdrop",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 0.00044779544,
+        "Vertices": 4,
+        "Triangles": 2
+      },
+      {
+        "Name": "Object17_Geom",
+        "Texture": "waterdrop",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 0.00044779584,
+        "Vertices": 4,
+        "Triangles": 2
+      },
+      {
+        "Name": "Object25_Geom",
+        "Texture": "waterdrop",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 0.00044779564,
+        "Vertices": 4,
+        "Triangles": 2
+      },
+      {
+        "Name": "Object19_Geom",
+        "Texture": "waterdrop",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 0.0004477958,
+        "Vertices": 4,
+        "Triangles": 2
+      },
+      {
+        "Name": "Object23_Geom",
+        "Texture": "waterdrop",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 0.00044779573,
+        "Vertices": 4,
+        "Triangles": 2
+      },
+      {
+        "Name": "Object24_Geom",
+        "Texture": "waterdrop",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 0.00044779564,
+        "Vertices": 4,
+        "Triangles": 2
+      },
+      {
+        "Name": "Object20_Geom",
+        "Texture": "waterdrop",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 0.00044779555,
+        "Vertices": 4,
+        "Triangles": 2
+      },
+      {
+        "Name": "Object22_Geom",
+        "Texture": "waterdrop",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 0.00044779555,
+        "Vertices": 4,
+        "Triangles": 2
+      },
+      {
+        "Name": "Plane1799_Geom",
+        "Texture": "ad_start",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": -1.2300411,
+        "Vertices": 8,
+        "Triangles": 4
+      },
+      {
+        "Name": "s_000_Geom",
+        "Texture": "sign15",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": -0.29143977,
+        "Vertices": 4,
+        "Triangles": 2
+      },
+      {
+        "Name": "s_002_Geom",
+        "Texture": "sign08",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": -0.29143977,
+        "Vertices": 4,
+        "Triangles": 2
+      },
+      {
+        "Name": "f_000_Geom",
+        "Texture": "flag01",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 4.792494e-05,
+        "Vertices": 16,
+        "Triangles": 8
+      },
+      {
+        "Name": "f_001_Geom",
+        "Texture": "flag00",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 4.792494e-05,
+        "Vertices": 16,
+        "Triangles": 8
+      },
+      {
+        "Name": "f_000_Geom",
+        "Texture": "flag01",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 4.7924936e-05,
+        "Vertices": 12,
+        "Triangles": 6
+      },
+      {
+        "Name": "f_001_Geom",
+        "Texture": "flag00",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 4.7924936e-05,
+        "Vertices": 12,
+        "Triangles": 6
+      },
+      {
+        "Name": "f_000_Geom",
+        "Texture": "flag01",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 4.7924936e-05,
+        "Vertices": 24,
+        "Triangles": 12
+      },
+      {
+        "Name": "f_001_Geom",
+        "Texture": "flag00",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 4.7924936e-05,
+        "Vertices": 24,
+        "Triangles": 12
+      },
+      {
+        "Name": "f_000_Geom",
+        "Texture": "flag01",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 4.7924936e-05,
+        "Vertices": 24,
+        "Triangles": 12
+      },
+      {
+        "Name": "f_001_Geom",
+        "Texture": "flag00",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 4.7924936e-05,
+        "Vertices": 24,
+        "Triangles": 12
+      },
+      {
+        "Name": "f_000_Geom",
+        "Texture": "flag01",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 4.7924936e-05,
+        "Vertices": 24,
+        "Triangles": 12
+      },
+      {
+        "Name": "f_001_Geom",
+        "Texture": "flag00",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 4.7924936e-05,
+        "Vertices": 24,
+        "Triangles": 12
+      },
+      {
+        "Name": "f_000_Geom",
+        "Texture": "flag01",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 4.7924936e-05,
+        "Vertices": 24,
+        "Triangles": 12
+      },
+      {
+        "Name": "f_001_Geom",
+        "Texture": "flag00",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 4.7924936e-05,
+        "Vertices": 24,
+        "Triangles": 12
+      },
+      {
+        "Name": "f_000_Geom",
+        "Texture": "flag01",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 4.7924936e-05,
+        "Vertices": 20,
+        "Triangles": 10
+      },
+      {
+        "Name": "f_001_Geom",
+        "Texture": "flag00",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 4.7924936e-05,
+        "Vertices": 20,
+        "Triangles": 10
+      },
+      {
+        "Name": "f_000_Geom",
+        "Texture": "flag01",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 4.7924936e-05,
+        "Vertices": 28,
+        "Triangles": 14
+      },
+      {
+        "Name": "f_001_Geom",
+        "Texture": "flag00",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 4.7924936e-05,
+        "Vertices": 24,
+        "Triangles": 12
+      },
+      {
+        "Name": "f_001_Geom",
+        "Texture": "flag00",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 4.792494e-05,
+        "Vertices": 16,
+        "Triangles": 8
+      },
+      {
+        "Name": "f_000_Geom",
+        "Texture": "flag01",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 4.7924936e-05,
+        "Vertices": 16,
+        "Triangles": 8
+      },
+      {
+        "Name": "f_001_Geom",
+        "Texture": "flag00",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 4.792494e-05,
+        "Vertices": 4,
+        "Triangles": 2
+      },
+      {
+        "Name": "f_000_Geom",
+        "Texture": "flag01",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 4.792494e-05,
+        "Vertices": 8,
+        "Triangles": 4
+      },
+      {
+        "Name": "f_001_Geom",
+        "Texture": "flag00",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 4.792494e-05,
+        "Vertices": 8,
+        "Triangles": 4
+      },
+      {
+        "Name": "f_000_Geom",
+        "Texture": "flag01",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 4.792494e-05,
+        "Vertices": 12,
+        "Triangles": 6
+      },
+      {
+        "Name": "f_001_Geom",
+        "Texture": "flag00",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 4.792494e-05,
+        "Vertices": 12,
+        "Triangles": 6
+      },
+      {
+        "Name": "f_000_Geom",
+        "Texture": "flag01",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 4.7924936e-05,
+        "Vertices": 4,
+        "Triangles": 2
+      },
+      {
+        "Name": "f_001_Geom",
+        "Texture": "flag00",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 4.792494e-05,
+        "Vertices": 4,
+        "Triangles": 2
+      },
+      {
+        "Name": "Object02_Geom",
+        "Texture": "stop",
+        "Flags": 1,
+        "Kind": "ReTriList",
+        "Determinant": 6.0152295e-05,
+        "Vertices": 200,
+        "Triangles": 100
+      },
+      {
+        "Name": "Object45_Geom",
+        "Texture": "stop",
+        "Flags": 1,
+        "Kind": "ReTriStrip",
+        "Determinant": -5.1057734e-05,
+        "Vertices": 200,
+        "Triangles": 100
+      },
+      {
+        "Name": "Object47_Geom",
+        "Texture": "stop",
+        "Flags": 1,
+        "Kind": "ReTriStrip",
+        "Determinant": -5.105774e-05,
+        "Vertices": 200,
+        "Triangles": 100
+      },
+      {
+        "Name": "Object50_Geom",
+        "Texture": "stop",
+        "Flags": 1,
+        "Kind": "ReTriStrip",
+        "Determinant": -5.105774e-05,
+        "Vertices": 100,
+        "Triangles": 50
+      },
+      {
+        "Name": "RoadObj08@s0",
+        "Texture": "cement_00",
+        "Flags": 1,
+        "Kind": "ReTriList",
+        "Determinant": 8,
+        "Vertices": 38,
+        "Triangles": 16
+      },
+      {
+        "Name": "RoadObj08@s1",
+        "Texture": "handrail",
+        "Flags": 1,
+        "Kind": "ReTriList",
+        "Determinant": 8,
+        "Vertices": 82,
+        "Triangles": 28
+      },
+      {
+        "Name": "RoadObj08@s2",
+        "Texture": "cement04",
+        "Flags": 1,
+        "Kind": "ReTriList",
+        "Determinant": 8,
+        "Vertices": 240,
+        "Triangles": 84
+      },
+      {
+        "Name": "RoadObj08@s3",
+        "Texture": "cement_00",
+        "Flags": 0,
+        "Kind": "ReTriList",
+        "Determinant": 8,
+        "Vertices": 16,
+        "Triangles": 6
+      },
+      {
+        "Name": "RoadObj08@s4",
+        "Texture": "cement04",
+        "Flags": 0,
+        "Kind": "ReTriList",
+        "Determinant": 8,
+        "Vertices": 84,
+        "Triangles": 32
+      },
+      {
+        "Name": "RoadObj08@s5",
+        "Texture": "handrail",
+        "Flags": 0,
+        "Kind": "ReTriList",
+        "Determinant": 8,
+        "Vertices": 32,
+        "Triangles": 12
+      },
+      {
+        "Name": "RoadObj09@s0",
+        "Texture": "handrail",
+        "Flags": 1,
+        "Kind": "ReTriList",
+        "Determinant": -8,
+        "Vertices": 58,
+        "Triangles": 20
+      },
+      {
+        "Name": "RoadObj09@s1",
+        "Texture": "cement05",
+        "Flags": 1,
+        "Kind": "ReTriList",
+        "Determinant": -8,
+        "Vertices": 61,
+        "Triangles": 21
+      },
+      {
+        "Name": "RoadObj09@s2",
+        "Texture": "cement04",
+        "Flags": 1,
+        "Kind": "ReTriList",
+        "Determinant": -8,
+        "Vertices": 322,
+        "Triangles": 108
+      },
+      {
+        "Name": "Blue house15@s0",
+        "Texture": "smallhouse_set",
+        "Flags": 0,
+        "Kind": "ReTriList",
+        "Determinant": -0.04278216,
+        "Vertices": 536,
+        "Triangles": 226
+      },
+      {
+        "Name": "나무32@s0",
+        "Texture": "v_tree_set",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": -0.00017464849,
+        "Vertices": 48,
+        "Triangles": 24
+      },
+      {
+        "Name": "Plane684@s0",
+        "Texture": "v_tree_set",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 0.0017001827,
+        "Vertices": 12,
+        "Triangles": 6
+      },
+      {
+        "Name": "Box08@s0",
+        "Texture": "tent_set",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 1.001563,
+        "Vertices": 96,
+        "Triangles": 48
+      },
+      {
+        "Name": "Box28@s0",
+        "Texture": "bighouse_set",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 0.55018747,
+        "Vertices": 170,
+        "Triangles": 106
+      },
+      {
+        "Name": "Plane1572@s0",
+        "Texture": "sign10",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 2.2282474,
+        "Vertices": 12,
+        "Triangles": 6
+      },
+      {
+        "Name": "Box111@s0",
+        "Texture": "bighouse_set",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 0.5315062,
+        "Vertices": 88,
+        "Triangles": 56
+      },
+      {
+        "Name": "green bh@s0",
+        "Texture": "bighouse_set",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 0.2559348,
+        "Vertices": 180,
+        "Triangles": 108
+      },
+      {
+        "Name": "Box123@s0",
+        "Texture": "bighouse_set",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 0.5315062,
+        "Vertices": 66,
+        "Triangles": 42
+      },
+      {
+        "Name": "Box128@s0",
+        "Texture": "tent_set",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": -1.001563,
+        "Vertices": 80,
+        "Triangles": 40
+      },
+      {
+        "Name": "small tree18@s0",
+        "Texture": "v_tree00_set",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 0.000115255185,
+        "Vertices": 48,
+        "Triangles": 24
+      },
+      {
+        "Name": "Box130@s0",
+        "Texture": "s_tree_set",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": -0.39932343,
+        "Vertices": 48,
+        "Triangles": 24
+      },
+      {
+        "Name": "small tree22@s0",
+        "Texture": "v_tree00_set",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 0.000115255185,
+        "Vertices": 48,
+        "Triangles": 24
+      },
+      {
+        "Name": "Box134@s0",
+        "Texture": "s_tree_set",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": -0.39932343,
+        "Vertices": 48,
+        "Triangles": 24
+      },
+      {
+        "Name": "Plane1581@s0",
+        "Texture": "flag",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 0.9999999,
+        "Vertices": 24,
+        "Triangles": 12
+      },
+      {
+        "Name": "Plane1583@s0",
+        "Texture": "flag",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 0.9999999,
+        "Vertices": 36,
+        "Triangles": 18
+      },
+      {
+        "Name": "Plane1588@s0",
+        "Texture": "sign12",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": -3.11549,
+        "Vertices": 12,
+        "Triangles": 6
+      },
+      {
+        "Name": "green bh01@s0",
+        "Texture": "bighouse_set",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 0.25593475,
+        "Vertices": 158,
+        "Triangles": 94
+      },
+      {
+        "Name": "Box142@s0",
+        "Texture": "bighouse_set",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": -0.5315062,
+        "Vertices": 66,
+        "Triangles": 42
+      },
+      {
+        "Name": "Object11@s0",
+        "Texture": "tent_set",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": -1.001563,
+        "Vertices": 96,
+        "Triangles": 48
+      },
+      {
+        "Name": "Object16@s0",
+        "Texture": "tent_set",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 1.001563,
+        "Vertices": 32,
+        "Triangles": 16
+      },
+      {
+        "Name": "Object18@s0",
+        "Texture": "tent_set",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": -1.0015632,
+        "Vertices": 32,
+        "Triangles": 16
+      },
+      {
+        "Name": "Plane1588+@s0",
+        "Texture": "ad_board_a",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": -0.21080977,
+        "Vertices": 16,
+        "Triangles": 10
+      },
+      {
+        "Name": "sign90+@s0",
+        "Texture": "sign07",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 0.29143977,
+        "Vertices": 8,
+        "Triangles": 4
+      },
+      {
+        "Name": "Box147@s0",
+        "Texture": "bighouse_set",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": -0.2559348,
+        "Vertices": 148,
+        "Triangles": 92
+      },
+      {
+        "Name": "Box149@s0",
+        "Texture": "tent_set",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": -1.0015632,
+        "Vertices": 80,
+        "Triangles": 40
+      },
+      {
+        "Name": "Box154@s0",
+        "Texture": "bighouse_set",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 0.5501875,
+        "Vertices": 22,
+        "Triangles": 14
+      },
+      {
+        "Name": "나무34@s0",
+        "Texture": "v_tree_set",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": -0.00017464849,
+        "Vertices": 24,
+        "Triangles": 12
+      },
+      {
+        "Name": "green bh02@s0",
+        "Texture": "bighouse_set",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 0.2559348,
+        "Vertices": 136,
+        "Triangles": 80
+      },
+      {
+        "Name": "Blue house18@s0",
+        "Texture": "smallhouse_set",
+        "Flags": 0,
+        "Kind": "ReTriList",
+        "Determinant": 0.04278216,
+        "Vertices": 444,
+        "Triangles": 180
+      },
+      {
+        "Name": "나무35@s0",
+        "Texture": "v_tree_set",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": -0.00017464848,
+        "Vertices": 24,
+        "Triangles": 12
+      },
+      {
+        "Name": "나무36@s0",
+        "Texture": "v_tree_set",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": -0.00026292485,
+        "Vertices": 36,
+        "Triangles": 18
+      },
+      {
+        "Name": "sign91+@s0",
+        "Texture": "sign08",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": -0.29143983,
+        "Vertices": 24,
+        "Triangles": 12
+      },
+      {
+        "Name": "나무37@s0",
+        "Texture": "v_tree_set",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 0.00017464846,
+        "Vertices": 48,
+        "Triangles": 24
+      },
+      {
+        "Name": "나무39@s0",
+        "Texture": "v_tree_set",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": -0.00017464842,
+        "Vertices": 48,
+        "Triangles": 24
+      },
+      {
+        "Name": "Object41@s0",
+        "Texture": "tent_set",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 1.001563,
+        "Vertices": 48,
+        "Triangles": 24
+      },
+      {
+        "Name": "Blue house21@s0",
+        "Texture": "smallhouse_set",
+        "Flags": 0,
+        "Kind": "ReTriList",
+        "Determinant": 0.042782165,
+        "Vertices": 592,
+        "Triangles": 240
+      },
+      {
+        "Name": "Box159@s0",
+        "Texture": "bighouse_set",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 0.5315062,
+        "Vertices": 22,
+        "Triangles": 14
+      },
+      {
+        "Name": "Plane1606@s0",
+        "Texture": "v_tree_set",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 0.0036518837,
+        "Vertices": 24,
+        "Triangles": 12
+      },
+      {
+        "Name": "나무43@s0",
+        "Texture": "v_tree_set",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": -0.00026292485,
+        "Vertices": 12,
+        "Triangles": 6
+      },
+      {
+        "Name": "Plane1607@s0",
+        "Texture": "ad_board_a",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": -0.12499765,
+        "Vertices": 24,
+        "Triangles": 18
+      },
+      {
+        "Name": "Plane1609+@s0",
+        "Texture": "ad_board_c",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": -0.1249976,
+        "Vertices": 32,
+        "Triangles": 20
+      },
+      {
+        "Name": "Plane1610+@s0",
+        "Texture": "ad_board_b",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": -0.124997646,
+        "Vertices": 48,
+        "Triangles": 30
+      },
+      {
+        "Name": "Trees00 06@s0",
+        "Texture": "v_tree01_set",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 0.00025449516,
+        "Vertices": 8,
+        "Triangles": 4
+      },
+      {
+        "Name": "far tree15@s0",
+        "Texture": "v_tree00_set",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 4.1627005e-05,
+        "Vertices": 20,
+        "Triangles": 10
+      },
+      {
+        "Name": "나무01@s0",
+        "Texture": "v_tree_set",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 0.0021187852,
+        "Vertices": 24,
+        "Triangles": 12
+      },
+      {
+        "Name": "Plane630@s0",
+        "Texture": "tree_re09",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 0.0051193335,
+        "Vertices": 12,
+        "Triangles": 6
+      },
+      {
+        "Name": "나무44@s0",
+        "Texture": "v_tree_set",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 0.0022086827,
+        "Vertices": 12,
+        "Triangles": 6
+      },
+      {
+        "Name": "나무45@s0",
+        "Texture": "v_tree_set",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 0.0048651136,
+        "Vertices": 36,
+        "Triangles": 18
+      },
+      {
+        "Name": "나무46@s0",
+        "Texture": "v_tree_set",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 0.0022086839,
+        "Vertices": 12,
+        "Triangles": 6
+      },
+      {
+        "Name": "small tree28@s0",
+        "Texture": "v_tree00_set",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 0.00064921286,
+        "Vertices": 12,
+        "Triangles": 6
+      },
+      {
+        "Name": "Box160@s0",
+        "Texture": "bighouse_set",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 0.55018765,
+        "Vertices": 66,
+        "Triangles": 42
+      },
+      {
+        "Name": "small tree29@s0",
+        "Texture": "v_tree00_set",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 0.00064921286,
+        "Vertices": 36,
+        "Triangles": 18
+      },
+      {
+        "Name": "Trees00 07@s0",
+        "Texture": "v_tree01_set",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 0.00025449516,
+        "Vertices": 4,
+        "Triangles": 2
+      },
+      {
+        "Name": "Trees00 08@s0",
+        "Texture": "v_back",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 8.269622e-05,
+        "Vertices": 4,
+        "Triangles": 2
+      },
+      {
+        "Name": "RoadObj04@s0",
+        "Texture": "cement05",
+        "Flags": 1,
+        "Kind": "ReTriList",
+        "Determinant": 8,
+        "Vertices": 66,
+        "Triangles": 22
+      },
+      {
+        "Name": "RoadObj04@s1",
+        "Texture": "cement04",
+        "Flags": 1,
+        "Kind": "ReTriList",
+        "Determinant": 8,
+        "Vertices": 320,
+        "Triangles": 108
+      },
+      {
+        "Name": "RoadObj04@s2",
+        "Texture": "handrail",
+        "Flags": 1,
+        "Kind": "ReTriList",
+        "Determinant": 8,
+        "Vertices": 286,
+        "Triangles": 126
+      },
+      {
+        "Name": "RoadObj04@s3",
+        "Texture": "handrail",
+        "Flags": 1,
+        "Kind": "ReTriList",
+        "Determinant": 8,
+        "Vertices": 120,
+        "Triangles": 44
+      },
+      {
+        "Name": "Green house01@s0",
+        "Texture": "smallhouse_set",
+        "Flags": 0,
+        "Kind": "ReTriList",
+        "Determinant": 0.0005529179,
+        "Vertices": 184,
+        "Triangles": 92
+      },
+      {
+        "Name": "나무47@s0",
+        "Texture": "v_tree_set",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": -0.0022086818,
+        "Vertices": 36,
+        "Triangles": 18
+      },
+      {
+        "Name": "나무51@s0",
+        "Texture": "v_tree_set",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": -0.0022086825,
+        "Vertices": 36,
+        "Triangles": 18
+      },
+      {
+        "Name": "road16@s0",
+        "Texture": "v_stick",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 16.942152,
+        "Vertices": 22,
+        "Triangles": 12
+      },
+      {
+        "Name": "road17@s0",
+        "Texture": "v_stick",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 16.942152,
+        "Vertices": 22,
+        "Triangles": 12
+      },
+      {
+        "Name": "Box163@s0",
+        "Texture": "bighouse_set",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 0.55018765,
+        "Vertices": 22,
+        "Triangles": 14
+      },
+      {
+        "Name": "나무54@s0",
+        "Texture": "v_tree_set",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 0.004865114,
+        "Vertices": 36,
+        "Triangles": 18
+      },
+      {
+        "Name": "Box164@s0",
+        "Texture": "bighouse_set",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 0.531506,
+        "Vertices": 88,
+        "Triangles": 56
+      },
+      {
+        "Name": "green bh03@s0",
+        "Texture": "bighouse_set",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 0.25593477,
+        "Vertices": 92,
+        "Triangles": 52
+      },
+      {
+        "Name": "Blue house25@s0",
+        "Texture": "smallhouse_set",
+        "Flags": 0,
+        "Kind": "ReTriList",
+        "Determinant": -0.042782158,
+        "Vertices": 148,
+        "Triangles": 60
+      },
+      {
+        "Name": "Box168@s0",
+        "Texture": "bighouse_set",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 0.5315062,
+        "Vertices": 44,
+        "Triangles": 28
+      },
+      {
+        "Name": "Object42@s0",
+        "Texture": "tent_set",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 1.001563,
+        "Vertices": 48,
+        "Triangles": 24
+      },
+      {
+        "Name": "Blue house26@s0",
+        "Texture": "smallhouse_set",
+        "Flags": 0,
+        "Kind": "ReTriList",
+        "Determinant": 0.042782158,
+        "Vertices": 444,
+        "Triangles": 180
+      },
+      {
+        "Name": "나무56@s0",
+        "Texture": "v_tree_set",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 0.0048651136,
+        "Vertices": 24,
+        "Triangles": 12
+      },
+      {
+        "Name": "나무58@s0",
+        "Texture": "v_tree_set",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 0.005071537,
+        "Vertices": 24,
+        "Triangles": 12
+      },
+      {
+        "Name": "나무60@s0",
+        "Texture": "v_tree_set",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 0.0048651136,
+        "Vertices": 24,
+        "Triangles": 12
+      },
+      {
+        "Name": "나무62@s0",
+        "Texture": "v_tree_set",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 0.0050715352,
+        "Vertices": 24,
+        "Triangles": 12
+      },
+      {
+        "Name": "나무64@s0",
+        "Texture": "v_tree_set",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 0.004865112,
+        "Vertices": 12,
+        "Triangles": 6
+      },
+      {
+        "Name": "Plane04@s0",
+        "Texture": "tilegrass_128_03",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 1,
+        "Vertices": 4,
+        "Triangles": 2
+      },
+      {
+        "Name": "Plane1614@s0",
+        "Texture": "tilegrass_128_03",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 1,
+        "Vertices": 4,
+        "Triangles": 2
+      },
+      {
+        "Name": "나무66@s0",
+        "Texture": "v_tree_set",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": -0.0048651136,
+        "Vertices": 24,
+        "Triangles": 12
+      },
+      {
+        "Name": "나무70@s0",
+        "Texture": "v_tree_set",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": -0.0048651104,
+        "Vertices": 24,
+        "Triangles": 12
+      },
+      {
+        "Name": "Green house03@s0",
+        "Texture": "smallhouse_set",
+        "Flags": 0,
+        "Kind": "ReTriList",
+        "Determinant": 0.0005529177,
+        "Vertices": 388,
+        "Triangles": 166
+      },
+      {
+        "Name": "Box171@s0",
+        "Texture": "bighouse_set",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 0.55018765,
+        "Vertices": 44,
+        "Triangles": 28
+      },
+      {
+        "Name": "Box172@s0",
+        "Texture": "bighouse_set",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": -0.2559348,
+        "Vertices": 60,
+        "Triangles": 36
+      },
+      {
+        "Name": "나무74@s0",
+        "Texture": "v_tree_set",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 0.0048651127,
+        "Vertices": 24,
+        "Triangles": 12
+      },
+      {
+        "Name": "나무76@s0",
+        "Texture": "v_tree_set",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 0.0048651127,
+        "Vertices": 12,
+        "Triangles": 6
+      },
+      {
+        "Name": "Box176@s0",
+        "Texture": "bighouse_set",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": -0.5315062,
+        "Vertices": 66,
+        "Triangles": 42
+      },
+      {
+        "Name": "Plane1644@s0",
+        "Texture": "ad_board_a",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 1,
+        "Vertices": 4,
+        "Triangles": 2
+      },
+      {
+        "Name": "sign92+@s0",
+        "Texture": "sign08",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 0.2914399,
+        "Vertices": 24,
+        "Triangles": 12
+      },
+      {
+        "Name": "sign97+@s0",
+        "Texture": "sign07",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": -0.2914397,
+        "Vertices": 8,
+        "Triangles": 4
+      },
+      {
+        "Name": "small tree34@s0",
+        "Texture": "v_tree00_set",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": -0.0006492128,
+        "Vertices": 36,
+        "Triangles": 18
+      },
+      {
+        "Name": "나무77@s0",
+        "Texture": "v_tree_set",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 0.0022086827,
+        "Vertices": 24,
+        "Triangles": 12
+      },
+      {
+        "Name": "나무78@s0",
+        "Texture": "v_tree_set",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 0.0022086834,
+        "Vertices": 24,
+        "Triangles": 12
+      },
+      {
+        "Name": "나무80@s0",
+        "Texture": "v_tree_set",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 0.001612294,
+        "Vertices": 12,
+        "Triangles": 6
+      },
+      {
+        "Name": "small tree37@s0",
+        "Texture": "v_tree00_set",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 0.0006329892,
+        "Vertices": 36,
+        "Triangles": 18
+      },
+      {
+        "Name": "Green house04@s0",
+        "Texture": "smallhouse_set",
+        "Flags": 0,
+        "Kind": "ReTriList",
+        "Determinant": 0.00055291795,
+        "Vertices": 92,
+        "Triangles": 46
+      },
+      {
+        "Name": "나무81@s0",
+        "Texture": "v_tree_set",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": -0.0025869908,
+        "Vertices": 12,
+        "Triangles": 6
+      },
+      {
+        "Name": "Object56@s0",
+        "Texture": "fence00_e",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 1,
+        "Vertices": 32,
+        "Triangles": 20
+      },
+      {
+        "Name": "Object56@s1",
+        "Texture": "cliff_set",
+        "Flags": 1,
+        "Kind": "ReTriStrip",
+        "Determinant": 1,
+        "Vertices": 24,
+        "Triangles": 24
+      },
+      {
+        "Name": "Object56@s2",
+        "Texture": "cliff_set",
+        "Flags": 1,
+        "Kind": "ReTriStrip",
+        "Determinant": 1,
+        "Vertices": 21,
+        "Triangles": 16
+      },
+      {
+        "Name": "Trees00 09@s0",
+        "Texture": "v_tree01_set",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 0.0004989122,
+        "Vertices": 4,
+        "Triangles": 2
+      },
+      {
+        "Name": "road@s0",
+        "Texture": "v_brick",
+        "Flags": 1,
+        "Kind": "ReTriStrip",
+        "Determinant": 1,
+        "Vertices": 16,
+        "Triangles": 8
+      },
+      {
+        "Name": "Box195@s0",
+        "Texture": "handrail",
+        "Flags": 1,
+        "Kind": "ReTriStrip",
+        "Determinant": 1,
+        "Vertices": 4,
+        "Triangles": 2
+      },
+      {
+        "Name": "Trees00 10@s0",
+        "Texture": "v_tree01_set",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 0.0004989122,
+        "Vertices": 4,
+        "Triangles": 2
+      },
+      {
+        "Name": "Box196@s0",
+        "Texture": "bighouse_set",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 0.55018747,
+        "Vertices": 110,
+        "Triangles": 70
+      },
+      {
+        "Name": "Object57@s0",
+        "Texture": "tent_set",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 1.001563,
+        "Vertices": 96,
+        "Triangles": 48
+      },
+      {
+        "Name": "Box203@s0",
+        "Texture": "bighouse_set",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": -0.2559348,
+        "Vertices": 186,
+        "Triangles": 114
+      },
+      {
+        "Name": "Object58@s0",
+        "Texture": "tent_set",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 1.0015631,
+        "Vertices": 48,
+        "Triangles": 24
+      },
+      {
+        "Name": "나무83@s0",
+        "Texture": "v_tree_set",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 7.950784e-05,
+        "Vertices": 96,
+        "Triangles": 48
+      },
+      {
+        "Name": "RoadObj01@s0",
+        "Texture": "v_back",
+        "Flags": 0,
+        "Kind": "ReTriList",
+        "Determinant": 8,
+        "Vertices": 92,
+        "Triangles": 42
+      },
+      {
+        "Name": "RoadObj01@s1",
+        "Texture": "fence11",
+        "Flags": 1,
+        "Kind": "ReTriList",
+        "Determinant": 8,
+        "Vertices": 152,
+        "Triangles": 74
+      },
+      {
+        "Name": "RoadObj01@s2",
+        "Texture": "v_wall",
+        "Flags": 1,
+        "Kind": "ReTriList",
+        "Determinant": 8,
+        "Vertices": 198,
+        "Triangles": 94
+      },
+      {
+        "Name": "RoadObj01@s3",
+        "Texture": "fence01",
+        "Flags": 1,
+        "Kind": "ReTriList",
+        "Determinant": 8,
+        "Vertices": 164,
+        "Triangles": 78
+      },
+      {
+        "Name": "RoadObj01@s4",
+        "Texture": "v_brick",
+        "Flags": 1,
+        "Kind": "ReTriList",
+        "Determinant": 8,
+        "Vertices": 74,
+        "Triangles": 34
+      },
+      {
+        "Name": "RoadObj01@s5",
+        "Texture": "cement_start",
+        "Flags": 1,
+        "Kind": "ReTriStrip",
+        "Determinant": 8,
+        "Vertices": 4,
+        "Triangles": 2
+      },
+      {
+        "Name": "RoadObj01@s6",
+        "Texture": "fence12",
+        "Flags": 1,
+        "Kind": "ReTriList",
+        "Determinant": 8,
+        "Vertices": 116,
+        "Triangles": 56
+      },
+      {
+        "Name": "RoadObj01@s7",
+        "Texture": "cement04",
+        "Flags": 0,
+        "Kind": "ReTriList",
+        "Determinant": 8,
+        "Vertices": 78,
+        "Triangles": 26
+      },
+      {
+        "Name": "RoadObj01@s8",
+        "Texture": "cement_00",
+        "Flags": 1,
+        "Kind": "ReTriList",
+        "Determinant": 8,
+        "Vertices": 91,
+        "Triangles": 30
+      },
+      {
+        "Name": "RoadObj01@s9",
+        "Texture": "cement_00",
+        "Flags": 1,
+        "Kind": "ReTriList",
+        "Determinant": 8,
+        "Vertices": 173,
+        "Triangles": 76
+      },
+      {
+        "Name": "RoadObj01@s10",
+        "Texture": "cement_00",
+        "Flags": 1,
+        "Kind": "ReTriList",
+        "Determinant": 8,
+        "Vertices": 154,
+        "Triangles": 53
+      },
+      {
+        "Name": "RoadObj01@s11",
+        "Texture": "cement_00",
+        "Flags": 1,
+        "Kind": "ReTriList",
+        "Determinant": 8,
+        "Vertices": 17,
+        "Triangles": 7
+      },
+      {
+        "Name": "RoadObj01@s12",
+        "Texture": "cement_00",
+        "Flags": 1,
+        "Kind": "ReTriStrip",
+        "Determinant": 8,
+        "Vertices": 77,
+        "Triangles": 48
+      },
+      {
+        "Name": "RoadObj01@s13",
+        "Texture": "cement_00",
+        "Flags": 1,
+        "Kind": "ReTriList",
+        "Determinant": 8,
+        "Vertices": 196,
+        "Triangles": 89
+      },
+      {
+        "Name": "RoadObj01@s14",
+        "Texture": "cement02_01",
+        "Flags": 1,
+        "Kind": "ReTriList",
+        "Determinant": 8,
+        "Vertices": 78,
+        "Triangles": 26
+      },
+      {
+        "Name": "RoadObj01@s15",
+        "Texture": "cement02_01",
+        "Flags": 1,
+        "Kind": "ReTriList",
+        "Determinant": 8,
+        "Vertices": 338,
+        "Triangles": 140
+      },
+      {
+        "Name": "RoadObj01@s16",
+        "Texture": "cement02_01",
+        "Flags": 1,
+        "Kind": "ReTriList",
+        "Determinant": 8,
+        "Vertices": 57,
+        "Triangles": 24
+      },
+      {
+        "Name": "RoadObj01@s17",
+        "Texture": "cement02_01",
+        "Flags": 1,
+        "Kind": "ReTriList",
+        "Determinant": 8,
+        "Vertices": 96,
+        "Triangles": 42
+      },
+      {
+        "Name": "RoadObj01@s18",
+        "Texture": "cement02_01",
+        "Flags": 1,
+        "Kind": "ReTriList",
+        "Determinant": 8,
+        "Vertices": 94,
+        "Triangles": 44
+      },
+      {
+        "Name": "RoadObj01@s19",
+        "Texture": "cement02_01",
+        "Flags": 1,
+        "Kind": "ReTriList",
+        "Determinant": 8,
+        "Vertices": 341,
+        "Triangles": 158
+      },
+      {
+        "Name": "RoadObj01@s20",
+        "Texture": "cement01",
+        "Flags": 0,
+        "Kind": "ReTriList",
+        "Determinant": 8,
+        "Vertices": 134,
+        "Triangles": 51
+      },
+      {
+        "Name": "RoadObj01@s21",
+        "Texture": "cement01",
+        "Flags": 0,
+        "Kind": "ReTriList",
+        "Determinant": 8,
+        "Vertices": 279,
+        "Triangles": 117
+      },
+      {
+        "Name": "RoadObj01@s22",
+        "Texture": "v_tree01_set",
+        "Flags": 0,
+        "Kind": "ReTriList",
+        "Determinant": 8,
+        "Vertices": 203,
+        "Triangles": 81
+      },
+      {
+        "Name": "RoadObj01@s23",
+        "Texture": "v_tree01_set",
+        "Flags": 0,
+        "Kind": "ReTriList",
+        "Determinant": 8,
+        "Vertices": 166,
+        "Triangles": 55
+      },
+      {
+        "Name": "RoadObj01@s24",
+        "Texture": "v_tree01_set",
+        "Flags": 0,
+        "Kind": "ReTriList",
+        "Determinant": 8,
+        "Vertices": 242,
+        "Triangles": 108
+      },
+      {
+        "Name": "RoadObj01@s25",
+        "Texture": "v_tree01_set",
+        "Flags": 0,
+        "Kind": "ReTriList",
+        "Determinant": 8,
+        "Vertices": 127,
+        "Triangles": 42
+      },
+      {
+        "Name": "RoadObj01@s26",
+        "Texture": "tilegrass_128_03",
+        "Flags": 0,
+        "Kind": "ReTriList",
+        "Determinant": 8,
+        "Vertices": 323,
+        "Triangles": 118
+      },
+      {
+        "Name": "RoadObj01@s27",
+        "Texture": "tilegrass_128_03",
+        "Flags": 0,
+        "Kind": "ReTriList",
+        "Determinant": 8,
+        "Vertices": 231,
+        "Triangles": 76
+      },
+      {
+        "Name": "RoadObj01@s28",
+        "Texture": "tilegrass_128_03",
+        "Flags": 0,
+        "Kind": "ReTriList",
+        "Determinant": 8,
+        "Vertices": 64,
+        "Triangles": 23
+      },
+      {
+        "Name": "RoadObj01@s29",
+        "Texture": "tilegrass_128_03",
+        "Flags": 0,
+        "Kind": "ReTriList",
+        "Determinant": 8,
+        "Vertices": 223,
+        "Triangles": 81
+      },
+      {
+        "Name": "RoadObj01@s30",
+        "Texture": "tilegrass_128_03",
+        "Flags": 0,
+        "Kind": "ReTriList",
+        "Determinant": 8,
+        "Vertices": 152,
+        "Triangles": 48
+      },
+      {
+        "Name": "RoadObj01@s31",
+        "Texture": "cement03",
+        "Flags": 1,
+        "Kind": "ReTriList",
+        "Determinant": 8,
+        "Vertices": 176,
+        "Triangles": 59
+      },
+      {
+        "Name": "RoadObj01@s32",
+        "Texture": "cement03",
+        "Flags": 1,
+        "Kind": "ReTriList",
+        "Determinant": 8,
+        "Vertices": 828,
+        "Triangles": 350
+      },
+      {
+        "Name": "RoadObj01@s33",
+        "Texture": "cement03",
+        "Flags": 1,
+        "Kind": "ReTriList",
+        "Determinant": 8,
+        "Vertices": 32,
+        "Triangles": 11
+      },
+      {
+        "Name": "RoadObj01@s34",
+        "Texture": "cement03",
+        "Flags": 1,
+        "Kind": "ReTriList",
+        "Determinant": 8,
+        "Vertices": 19,
+        "Triangles": 6
+      },
+      {
+        "Name": "RoadObj01@s35",
+        "Texture": "cement03",
+        "Flags": 1,
+        "Kind": "ReTriList",
+        "Determinant": 8,
+        "Vertices": 426,
+        "Triangles": 180
+      },
+      {
+        "Name": "RoadObj01@s36",
+        "Texture": "cement03",
+        "Flags": 1,
+        "Kind": "ReTriList",
+        "Determinant": 8,
+        "Vertices": 307,
+        "Triangles": 134
+      },
+      {
+        "Name": "sign100+@s0",
+        "Texture": "sign14",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 0.2914396,
+        "Vertices": 8,
+        "Triangles": 4
+      },
+      {
+        "Name": "sign101+@s0",
+        "Texture": "sign07",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 0.29143983,
+        "Vertices": 8,
+        "Triangles": 4
+      },
+      {
+        "Name": "sign102+@s0",
+        "Texture": "sign14",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 0.29143977,
+        "Vertices": 8,
+        "Triangles": 4
+      },
+      {
+        "Name": "Box234@s0",
+        "Texture": "bighouse_set",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 0.55018747,
+        "Vertices": 66,
+        "Triangles": 42
+      },
+      {
+        "Name": "나무87@s0",
+        "Texture": "v_tree_set",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": -0.00017464848,
+        "Vertices": 36,
+        "Triangles": 18
+      },
+      {
+        "Name": "Box237@s0",
+        "Texture": "bighouse_set",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": -0.25593483,
+        "Vertices": 82,
+        "Triangles": 50
+      },
+      {
+        "Name": "Plane1804@s0",
+        "Texture": "v_tree_set",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 0.0017001817,
+        "Vertices": 24,
+        "Triangles": 12
+      },
+      {
+        "Name": "Box239@s0",
+        "Texture": "bighouse_set",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": -0.5315062,
+        "Vertices": 88,
+        "Triangles": 56
+      },
+      {
+        "Name": "Plane1805@s0",
+        "Texture": "v_tree_set",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": -0.0017001821,
+        "Vertices": 36,
+        "Triangles": 18
+      },
+      {
+        "Name": "나무89@s0",
+        "Texture": "v_tree_set",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 0.00017464846,
+        "Vertices": 12,
+        "Triangles": 6
+      },
+      {
+        "Name": "Box245@s0",
+        "Texture": "bighouse_set",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": -0.5315062,
+        "Vertices": 22,
+        "Triangles": 14
+      },
+      {
+        "Name": "Box246@s0",
+        "Texture": "bighouse_set",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": -0.5315062,
+        "Vertices": 66,
+        "Triangles": 42
+      },
+      {
+        "Name": "나무90@s0",
+        "Texture": "v_tree_set",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": -0.00017464848,
+        "Vertices": 24,
+        "Triangles": 12
+      },
+      {
+        "Name": "나무93@s0",
+        "Texture": "v_tree_set",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 0.00017464846,
+        "Vertices": 24,
+        "Triangles": 12
+      },
+      {
+        "Name": "Box250@s0",
+        "Texture": "bighouse_set",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": -0.25593483,
+        "Vertices": 60,
+        "Triangles": 36
+      },
+      {
+        "Name": "Plane1808@s0",
+        "Texture": "v_tree_set",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": -0.00054701034,
+        "Vertices": 48,
+        "Triangles": 24
+      },
+      {
+        "Name": "Green house05@s0",
+        "Texture": "smallhouse_set",
+        "Flags": 0,
+        "Kind": "ReTriList",
+        "Determinant": 0.0005529177,
+        "Vertices": 92,
+        "Triangles": 46
+      },
+      {
+        "Name": "나무97@s0",
+        "Texture": "v_tree_set",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 0.0023167436,
+        "Vertices": 36,
+        "Triangles": 18
+      },
+      {
+        "Name": "나무100@s0",
+        "Texture": "v_tree_set",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 7.950784e-05,
+        "Vertices": 72,
+        "Triangles": 36
+      },
+      {
+        "Name": "Blue house32@s0",
+        "Texture": "smallhouse_set",
+        "Flags": 0,
+        "Kind": "ReTriList",
+        "Determinant": 0.04278216,
+        "Vertices": 536,
+        "Triangles": 226
+      },
+      {
+        "Name": "Plane1812@s0",
+        "Texture": "v_tree_set",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 0.0005470102,
+        "Vertices": 48,
+        "Triangles": 24
+      },
+      {
+        "Name": "Box252@s0",
+        "Texture": "bighouse_set",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 0.531506,
+        "Vertices": 22,
+        "Triangles": 14
+      },
+      {
+        "Name": "Plane1814@s0",
+        "Texture": "v_tree_set",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 0.0005470102,
+        "Vertices": 24,
+        "Triangles": 12
+      },
+      {
+        "Name": "나무106@s0",
+        "Texture": "v_tree_set",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 0.0038901127,
+        "Vertices": 24,
+        "Triangles": 12
+      },
+      {
+        "Name": "나무108@s0",
+        "Texture": "v_tree_set",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 0.0038901127,
+        "Vertices": 24,
+        "Triangles": 12
+      },
+      {
+        "Name": "나무110@s0",
+        "Texture": "v_tree_set",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 0.004055166,
+        "Vertices": 24,
+        "Triangles": 12
+      },
+      {
+        "Name": "small tree40@s0",
+        "Texture": "v_tree00_set",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": -0.0006329891,
+        "Vertices": 84,
+        "Triangles": 42
+      },
+      {
+        "Name": "나무112@s0",
+        "Texture": "v_tree_set",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 0.0038901123,
+        "Vertices": 24,
+        "Triangles": 12
+      },
+      {
+        "Name": "Plane1816@s0",
+        "Texture": "ad_board_a",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": -0.01197314,
+        "Vertices": 8,
+        "Triangles": 4
+      },
+      {
+        "Name": "Plane1816@s1",
+        "Texture": "stick",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": -0.01197314,
+        "Vertices": 48,
+        "Triangles": 24
+      },
+      {
+        "Name": "small tree47@s0",
+        "Texture": "v_tree00_set",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 0.0006492126,
+        "Vertices": 36,
+        "Triangles": 18
+      },
+      {
+        "Name": "나무114@s0",
+        "Texture": "v_tree_set",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 0.004055166,
+        "Vertices": 24,
+        "Triangles": 12
+      },
+      {
+        "Name": "나무116@s0",
+        "Texture": "v_tree_set",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 0.003890111,
+        "Vertices": 24,
+        "Triangles": 12
+      },
+      {
+        "Name": "나무118@s0",
+        "Texture": "v_tree_set",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 0.0038901116,
+        "Vertices": 24,
+        "Triangles": 12
+      },
+      {
+        "Name": "나무120@s0",
+        "Texture": "v_tree_set",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 0.0038901116,
+        "Vertices": 24,
+        "Triangles": 12
+      },
+      {
+        "Name": "나무122@s0",
+        "Texture": "v_tree_set",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 0.0038901127,
+        "Vertices": 12,
+        "Triangles": 6
+      },
+      {
+        "Name": "나무124@s0",
+        "Texture": "v_tree_set",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 0.0038901123,
+        "Vertices": 24,
+        "Triangles": 12
+      },
+      {
+        "Name": "나무128@s0",
+        "Texture": "v_tree_set",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 0.0040551666,
+        "Vertices": 24,
+        "Triangles": 12
+      },
+      {
+        "Name": "far tree20@s0",
+        "Texture": "v_tree00_set",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 0.0005034886,
+        "Vertices": 20,
+        "Triangles": 10
+      },
+      {
+        "Name": "나무130@s0",
+        "Texture": "v_tree_set",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 0.0040551666,
+        "Vertices": 12,
+        "Triangles": 6
+      },
+      {
+        "Name": "나무131@s0",
+        "Texture": "v_tree_set",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 0.0040551657,
+        "Vertices": 24,
+        "Triangles": 12
+      },
+      {
+        "Name": "Blue house35@s0",
+        "Texture": "smallhouse_set",
+        "Flags": 0,
+        "Kind": "ReTriList",
+        "Determinant": 0.04278217,
+        "Vertices": 444,
+        "Triangles": 180
+      },
+      {
+        "Name": "Box259@s0",
+        "Texture": "bighouse_set",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 0.55018747,
+        "Vertices": 44,
+        "Triangles": 28
+      },
+      {
+        "Name": "나무132@s0",
+        "Texture": "v_tree_set",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": -7.950786e-05,
+        "Vertices": 48,
+        "Triangles": 24
+      },
+      {
+        "Name": "나무134@s0",
+        "Texture": "v_tree_set",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": -7.950786e-05,
+        "Vertices": 36,
+        "Triangles": 18
+      },
+      {
+        "Name": "Plane1820@s0",
+        "Texture": "v_tree_set",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": -0.00054701034,
+        "Vertices": 36,
+        "Triangles": 18
+      },
+      {
+        "Name": "나무137@s0",
+        "Texture": "v_tree_set",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 0.0038901116,
+        "Vertices": 24,
+        "Triangles": 12
+      },
+      {
+        "Name": "나무139@s0",
+        "Texture": "v_tree_set",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 0.0040551657,
+        "Vertices": 24,
+        "Triangles": 12
+      },
+      {
+        "Name": "나무141@s0",
+        "Texture": "v_tree_set",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 0.0038901123,
+        "Vertices": 24,
+        "Triangles": 12
+      },
+      {
+        "Name": "나무143@s0",
+        "Texture": "v_tree_set",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 0.0040551657,
+        "Vertices": 24,
+        "Triangles": 12
+      },
+      {
+        "Name": "road43@s0",
+        "Texture": "v_stick",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 16.942152,
+        "Vertices": 22,
+        "Triangles": 12
+      },
+      {
+        "Name": "road44@s0",
+        "Texture": "v_stick",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 16.942152,
+        "Vertices": 22,
+        "Triangles": 12
+      },
+      {
+        "Name": "sign108+@s0",
+        "Texture": "sign08",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": -0.29143983,
+        "Vertices": 8,
+        "Triangles": 4
+      },
+      {
+        "Name": "sign109+@s0",
+        "Texture": "sign08",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 0.29143974,
+        "Vertices": 24,
+        "Triangles": 12
+      },
+      {
+        "Name": "far tree25@s0",
+        "Texture": "v_tree00_set",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": -4.1627027e-05,
+        "Vertices": 12,
+        "Triangles": 6
+      },
+      {
+        "Name": "far tree27@s0",
+        "Texture": "v_tree00_set",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": -4.1626998e-05,
+        "Vertices": 8,
+        "Triangles": 4
+      },
+      {
+        "Name": "far tree31@s0",
+        "Texture": "v_tree00_set",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 0.000188695,
+        "Vertices": 16,
+        "Triangles": 8
+      },
+      {
+        "Name": "나무145@s0",
+        "Texture": "v_tree_set",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 0.0038901127,
+        "Vertices": 24,
+        "Triangles": 12
+      },
+      {
+        "Name": "far tree35@s0",
+        "Texture": "v_tree00_set",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": -2.333211e-05,
+        "Vertices": 4,
+        "Triangles": 2
+      },
+      {
+        "Name": "나무147@s0",
+        "Texture": "v_tree_set",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 0.0038901123,
+        "Vertices": 24,
+        "Triangles": 12
+      },
+      {
+        "Name": "sign112+@s0",
+        "Texture": "sign08",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": -0.29143977,
+        "Vertices": 8,
+        "Triangles": 4
+      },
+      {
+        "Name": "Plane1823+@s0",
+        "Texture": "ad_board_c",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": -0.21080977,
+        "Vertices": 16,
+        "Triangles": 10
+      },
+      {
+        "Name": "나무149@s0",
+        "Texture": "v_tree_set",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 0.0024150407,
+        "Vertices": 60,
+        "Triangles": 30
+      },
+      {
+        "Name": "나무153@s0",
+        "Texture": "v_tree_set",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 0.0024150407,
+        "Vertices": 60,
+        "Triangles": 30
+      },
+      {
+        "Name": "Plane1824@s0",
+        "Texture": "v_tree_set",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": -0.00054701034,
+        "Vertices": 36,
+        "Triangles": 18
+      },
+      {
+        "Name": "Trees00 13@s0",
+        "Texture": "v_tree01_set",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 0.00025449516,
+        "Vertices": 8,
+        "Triangles": 4
+      },
+      {
+        "Name": "Box229@s0",
+        "Texture": "stick",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 0.85022837,
+        "Vertices": 114,
+        "Triangles": 60
+      },
+      {
+        "Name": "Plane1801@s0",
+        "Texture": "ad_board_a",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": -0.0024941382,
+        "Vertices": 16,
+        "Triangles": 8
+      },
+      {
+        "Name": "Plane1579@s0",
+        "Texture": "flag",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 0.99999976,
+        "Vertices": 12,
+        "Triangles": 6
+      },
+      {
+        "Name": "Trees00 15@s0",
+        "Texture": "v_tree01_set",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 0.00025449516,
+        "Vertices": 4,
+        "Triangles": 2
+      },
+      {
+        "Name": "Box319@s0",
+        "Texture": "v_wall",
+        "Flags": 1,
+        "Kind": "ReTriStrip",
+        "Determinant": 0.00011836131,
+        "Vertices": 16,
+        "Triangles": 8
+      },
+      {
+        "Name": "road45@s0",
+        "Texture": "v_brick",
+        "Flags": 1,
+        "Kind": "ReTriStrip",
+        "Determinant": 1,
+        "Vertices": 16,
+        "Triangles": 8
+      },
+      {
+        "Name": "start_obj+@s0",
+        "Texture": "ad_start",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": -0.937954,
+        "Vertices": 12,
+        "Triangles": 12
+      },
+      {
+        "Name": "start_obj+@s1",
+        "Texture": "stick",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": -0.937954,
+        "Vertices": 64,
+        "Triangles": 32
+      },
+      {
+        "Name": "물02@s0",
+        "Texture": "fountionwater_128",
+        "Flags": 0,
+        "Kind": "ReTriList",
+        "Determinant": 0.00012552614,
+        "Vertices": 42,
+        "Triangles": 18
+      },
+      {
+        "Name": "분수대@s0",
+        "Texture": "fountion00_128",
+        "Flags": 0,
+        "Kind": "ReTriList",
+        "Determinant": 0.0018319973,
+        "Vertices": 78,
+        "Triangles": 40
+      },
+      {
+        "Name": "물00@s0",
+        "Texture": "fountionwater_128",
+        "Flags": 0,
+        "Kind": "ReTriList",
+        "Determinant": 0.0005948911,
+        "Vertices": 78,
+        "Triangles": 30
+      },
+      {
+        "Name": "Plane02@s0",
+        "Texture": "sign09",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 3.1154912,
+        "Vertices": 4,
+        "Triangles": 2
+      },
+      {
+        "Name": "sign1112@s0",
+        "Texture": "sign14",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": -0.29143974,
+        "Vertices": 8,
+        "Triangles": 4
+      },
+      {
+        "Name": "나무162@s0",
+        "Texture": "v_tree_set",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 0.0024150407,
+        "Vertices": 12,
+        "Triangles": 6
+      },
+      {
+        "Name": "Trees00 17@s0",
+        "Texture": "v_tree01_set",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 0.00045970752,
+        "Vertices": 8,
+        "Triangles": 4
+      },
+      {
+        "Name": "Trees00 19@s0",
+        "Texture": "v_tree01_set",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 0.00025449513,
+        "Vertices": 8,
+        "Triangles": 4
+      },
+      {
+        "Name": "Box320@s0",
+        "Texture": "bighouse_set",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 0.55018765,
+        "Vertices": 44,
+        "Triangles": 28
+      },
+      {
+        "Name": "나무163@s0",
+        "Texture": "v_tree_set",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 0.0048651136,
+        "Vertices": 12,
+        "Triangles": 6
+      },
+      {
+        "Name": "start_obj+@s0",
+        "Texture": "ad_start",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": -0.937954,
+        "Vertices": 12,
+        "Triangles": 12
+      },
+      {
+        "Name": "start_obj+@s1",
+        "Texture": "stick",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": -0.937954,
+        "Vertices": 64,
+        "Triangles": 32
+      },
+      {
+        "Name": "Plane03@s0",
+        "Texture": "transparency",
+        "Flags": 1,
+        "Kind": "ReTriList",
+        "Determinant": 1,
+        "Vertices": 10,
+        "Triangles": 4
+      },
+      {
+        "Name": "Object174@s0",
+        "Texture": "ad_fence_a",
+        "Flags": 1,
+        "Kind": "ReTriList",
+        "Determinant": 8,
+        "Vertices": 50,
+        "Triangles": 18
+      },
+      {
+        "Name": "Object175@s0",
+        "Texture": "ad_fence_b",
+        "Flags": 1,
+        "Kind": "ReTriStrip",
+        "Determinant": 8,
+        "Vertices": 4,
+        "Triangles": 2
+      },
+      {
+        "Name": "Object175@s1",
+        "Texture": "ad_fence_a",
+        "Flags": 1,
+        "Kind": "ReTriStrip",
+        "Determinant": 8,
+        "Vertices": 4,
+        "Triangles": 2
+      },
+      {
+        "Name": "Object176@s0",
+        "Texture": "ad_fence_b",
+        "Flags": 1,
+        "Kind": "ReTriStrip",
+        "Determinant": 8,
+        "Vertices": 4,
+        "Triangles": 2
+      },
+      {
+        "Name": "Object176@s1",
+        "Texture": "ad_fence_a",
+        "Flags": 1,
+        "Kind": "ReTriStrip",
+        "Determinant": 8,
+        "Vertices": 4,
+        "Triangles": 2
+      },
+      {
+        "Name": "Object177@s0",
+        "Texture": "ad_fence_b",
+        "Flags": 1,
+        "Kind": "ReTriList",
+        "Determinant": 8,
+        "Vertices": 30,
+        "Triangles": 10
+      },
+      {
+        "Name": "Object177@s1",
+        "Texture": "ad_fence_a",
+        "Flags": 1,
+        "Kind": "ReTriList",
+        "Determinant": 8,
+        "Vertices": 96,
+        "Triangles": 32
+      },
+      {
+        "Name": "Tree014@s0",
+        "Texture": "v_tree01_set",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 0.00027316582,
+        "Vertices": 6,
+        "Triangles": 4
+      },
+      {
+        "Name": "Trees00 024@s0",
+        "Texture": "v_tree01_set",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 0.00025449513,
+        "Vertices": 6,
+        "Triangles": 4
+      },
+      {
+        "Name": "Trees00 025@s0",
+        "Texture": "v_back",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 0.0001305798,
+        "Vertices": 4,
+        "Triangles": 2
+      },
+      {
+        "Name": "Trees00 026@s0",
+        "Texture": "v_tree01_set",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 0.00025449513,
+        "Vertices": 6,
+        "Triangles": 4
+      },
+      {
+        "Name": "Tree015@s0",
+        "Texture": "v_tree01_set",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 0.00027316582,
+        "Vertices": 4,
+        "Triangles": 2
+      },
+      {
+        "Name": "Tree071@s0",
+        "Texture": "v_back00",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 0.00188613,
+        "Vertices": 4,
+        "Triangles": 2
+      },
+      {
+        "Name": "Plane439817607@s0",
+        "Texture": "village_skyline01",
+        "Flags": 0,
+        "Kind": "ReTriList",
+        "Determinant": 1.6837715,
+        "Vertices": 24,
+        "Triangles": 8
+      },
+      {
+        "Name": "Tree072@s0",
+        "Texture": "v_back00",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 0.00188613,
+        "Vertices": 4,
+        "Triangles": 2
+      },
+      {
+        "Name": "Tree073@s0",
+        "Texture": "v_back00",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 0.00188613,
+        "Vertices": 4,
+        "Triangles": 2
+      },
+      {
+        "Name": "Tree074@s0",
+        "Texture": "v_back00",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 0.0018861301,
+        "Vertices": 4,
+        "Triangles": 2
+      },
+      {
+        "Name": "Object178@s0",
+        "Texture": "v_back",
+        "Flags": 0,
+        "Kind": "ReTriStrip",
+        "Determinant": 0.00013057979,
+        "Vertices": 4,
+        "Triangles": 2
+      }
+    ]
+  },
+  "sources": [
+    {
+      "sourceArchive": "KartRider_5136_01_UNPACK.zip",
+      "sourceMember": "KartRider_5136_01_UNPACK/_rhoOut/track/fairy_B01/ad_board_a.png",
+      "output": "assets\\textures\\12852c05f4ca.png",
+      "sha256": "a1d6cb9f5f0895a7b92460ec2eae586c611e2cd68ef2380302be6505b6f9218f"
+    },
+    {
+      "sourceArchive": "KartRider_5136_01_UNPACK.zip",
+      "sourceMember": "KartRider_5136_01_UNPACK/_rhoOut/track/fairy_B01/ad_board_b.png",
+      "output": "assets\\textures\\0738010673c1.png",
+      "sha256": "5c9f582e34b93cdbe80a8b35c2219b4bda5b2d9b268407b1826ffd057098c165"
+    },
+    {
+      "sourceArchive": "KartRider_5136_01_UNPACK.zip",
+      "sourceMember": "KartRider_5136_01_UNPACK/_rhoOut/track/fairy_B01/ad_board_c.png",
+      "output": "assets\\textures\\4ae048611df5.png",
+      "sha256": "4f654129aeabd68fca9f8d0fbcf63c3403a9e8572278b46ca6378a2f9daab218"
+    },
+    {
+      "sourceArchive": "KartRider_5136_01_UNPACK.zip",
+      "sourceMember": "KartRider_5136_01_UNPACK/_rhoOut/myRoom/ice_M04/ad_fence_a.png",
+      "output": "assets\\textures\\d5275858aa93.png",
+      "sha256": "99506d075b16131c05fca5bfe2238897bf6497f1acd2653a44a202a5eb171960"
+    },
+    {
+      "sourceArchive": "KartRider_5136_01_UNPACK.zip",
+      "sourceMember": "KartRider_5136_01_UNPACK/_rhoOut/myRoom/ice_M04/ad_fence_b.png",
+      "output": "assets\\textures\\4c37419125d8.png",
+      "sha256": "5735970792362e60b739dc6cef8490b3211a5439b217a6901f1ab42a06c580c3"
+    },
+    {
+      "sourceArchive": "KartRider_5136_01_UNPACK.zip",
+      "sourceMember": "KartRider_5136_01_UNPACK/_rhoOut/myRoom/ice_M04/ad_start.png",
+      "output": "assets\\textures\\473355cc5496.png",
+      "sha256": "df9b37e45b238d1fa66b5822875fc9dbb6f252349f6e207e7b175e20e128bb03"
+    },
+    {
+      "sourceArchive": "KartRider_5136_01_UNPACK.zip",
+      "sourceMember": "KartRider_5136_01_UNPACK/_rhoOut/theme/village/texture/bighouse_set.dds",
+      "output": "assets\\textures\\ccd727633d29.png",
+      "sha256": "1bfc8bb40b1501c86f01563dc6f1d4ddc3d3a377d2e392185130fce09e5abb5f"
+    },
+    {
+      "sourceArchive": "KartRider_5136_01_UNPACK.zip",
+      "sourceMember": "KartRider_5136_01_UNPACK/_rhoOut/theme/village/texture/cement_00.png",
+      "output": "assets\\textures\\0d19162a05da.png",
+      "sha256": "346e468db76a4e1e0f3197ce9cf0108ceb6540649776b17426da0d83d4ecbe95"
+    },
+    {
+      "sourceArchive": "KartRider_5136_01_UNPACK.zip",
+      "sourceMember": "KartRider_5136_01_UNPACK/_rhoOut/theme/village/texture/cement_start.png",
+      "output": "assets\\textures\\950e7f2bef10.png",
+      "sha256": "2e5db6d05bf0f450ee83f06cbfc04d843011cf4b0306f9cbb2de79653f5fffd3"
+    },
+    {
+      "sourceArchive": "KartRider_5136_01_UNPACK.zip",
+      "sourceMember": "KartRider_5136_01_UNPACK/_rhoOut/theme/village/texture/cement01.dds",
+      "output": "assets\\textures\\1a5cccc4928b.png",
+      "sha256": "8126e2d239e69826fc6c32d7ac164dfb58549b9d0dde6c7eb2570eaf7be064bb"
+    },
+    {
+      "sourceArchive": "KartRider_5136_01_UNPACK.zip",
+      "sourceMember": "KartRider_5136_01_UNPACK/_rhoOut/theme/village/texture/cement02_01.dds",
+      "output": "assets\\textures\\32db628b4e38.png",
+      "sha256": "51658559613ea8f5cf76b6932290519b7a6aaf43ceaac6dbb78c02a2fb44dfd7"
+    },
+    {
+      "sourceArchive": "KartRider_5136_01_UNPACK.zip",
+      "sourceMember": "KartRider_5136_01_UNPACK/_rhoOut/theme/village/texture/cement03.dds",
+      "output": "assets\\textures\\d464bbf38b8b.png",
+      "sha256": "6a6f3e8331f38d859f66e773b6501fe9f2b1309c9ef99f9de3bc06c93b71265d"
+    },
+    {
+      "sourceArchive": "KartRider_5136_01_UNPACK.zip",
+      "sourceMember": "KartRider_5136_01_UNPACK/_rhoOut/theme/village/texture/cement04.dds",
+      "output": "assets\\textures\\6521f4e448c9.png",
+      "sha256": "45d9ab2b6a9d8f8ff4c3eef3bf734f1365f261c6b614cd21667891e7a15c04ad"
+    },
+    {
+      "sourceArchive": "KartRider_5136_01_UNPACK.zip",
+      "sourceMember": "KartRider_5136_01_UNPACK/_rhoOut/theme/village/texture/cement05.dds",
+      "output": "assets\\textures\\df58c3ff0499.png",
+      "sha256": "0daf7abb98b9c9187a00e4d3742b0bb77c8c5225f1eda8c505c18678830552de"
+    },
+    {
+      "sourceArchive": "KartRider_5136_01_UNPACK.zip",
+      "sourceMember": "KartRider_5136_01_UNPACK/_rhoOut/theme/village/texture/cliff_set.dds",
+      "output": "assets\\textures\\8b87d4762eec.png",
+      "sha256": "5c7aa93e3e5959105196208a53da19f96c9a381dc87bda6569996bdca8aba1f7"
+    },
+    {
+      "sourceArchive": "KartRider_5136_01_UNPACK.zip",
+      "sourceMember": "KartRider_5136_01_UNPACK/_rhoOut/theme/village/texture/fence00_e.dds",
+      "output": "assets\\textures\\fb989989173b.png",
+      "sha256": "f51d8d3005bc99bc4f31bdfe4b13f09630037d18c0c2e58d4c11e4e0cdc18a91"
+    },
+    {
+      "sourceArchive": "KartRider_5136_01_UNPACK.zip",
+      "sourceMember": "KartRider_5136_01_UNPACK/_rhoOut/theme/village/texture/fence01.dds",
+      "output": "assets\\textures\\571d5156f7bd.png",
+      "sha256": "7c2d626d995eecb06d742ec9c0a06f60bb03bb49f148800cbba3105300057a7f"
+    },
+    {
+      "sourceArchive": "KartRider_5136_01_UNPACK.zip",
+      "sourceMember": "KartRider_5136_01_UNPACK/_rhoOut/theme/village/texture/fence11.dds",
+      "output": "assets\\textures\\4d5f55f65ad2.png",
+      "sha256": "ad9327888fc4a0eb5c7c420a871b4ae0c84aa6d771ab3d7684f5dd4751893374"
+    },
+    {
+      "sourceArchive": "KartRider_5136_01_UNPACK.zip",
+      "sourceMember": "KartRider_5136_01_UNPACK/_rhoOut/theme/village/texture/fence12.dds",
+      "output": "assets\\textures\\bf2420fe7cec.png",
+      "sha256": "9dbed7012696df5b49e2ada65690caed4655e2cbb12c6f8f3337fc6ff808434b"
+    },
+    {
+      "sourceArchive": "KartRider_5136_01_UNPACK.zip",
+      "sourceMember": "KartRider_5136_01_UNPACK/_rhoOut/theme/village/texture/flag.dds",
+      "output": "assets\\textures\\112f3a99b283.png",
+      "sha256": "8ba7aa22d7c845ca7489559b3e27451e3720cedae7bb726d5cd374f42f77fe66"
+    },
+    {
+      "sourceArchive": "KartRider_5136_01_UNPACK.zip",
+      "sourceMember": "KartRider_5136_01_UNPACK/_rhoOut/theme/village/texture/flag00.png",
+      "output": "assets\\textures\\7119fb55d6ed.png",
+      "sha256": "ad03d801bfa3a077a27d552f2d48d927d1ad9a34e11655f6674fb797c45d4972"
+    },
+    {
+      "sourceArchive": "KartRider_5136_01_UNPACK.zip",
+      "sourceMember": "KartRider_5136_01_UNPACK/_rhoOut/theme/village/texture/flag01.png",
+      "output": "assets\\textures\\aa7eb40ab78c.png",
+      "sha256": "6d3bf94b9a6747da9b3be225c4771d57de7e2c860fd22d0c6058068489d76586"
+    },
+    {
+      "sourceArchive": "KartRider_5136_01_UNPACK.zip",
+      "sourceMember": "KartRider_5136_01_UNPACK/_rhoOut/theme/village/texture/fountion00_128.dds",
+      "output": "assets\\textures\\7faa69a0776a.png",
+      "sha256": "c7055cafe309893b4546cce92297ea7731ea164eb46b695cb9e9c5521efc7c33"
+    },
+    {
+      "sourceArchive": "KartRider_5136_01_UNPACK.zip",
+      "sourceMember": "KartRider_5136_01_UNPACK/_rhoOut/theme/common/texture/fountionwater_128.dds",
+      "output": "assets\\textures\\3d9be6043a24.png",
+      "sha256": "86c746421658412fdd1c14da6f8244757b82ae41626cf516c895427f2a453b24"
+    },
+    {
+      "sourceArchive": "KartRider_5136_01_UNPACK.zip",
+      "sourceMember": "KartRider_5136_01_UNPACK/_rhoOut/theme/village/texture/front_128.dds",
+      "output": "assets\\textures\\4919c6641873.png",
+      "sha256": "7a36aa9df4fc504d1b3e69479f9cb881ef91d4b00249f441bd312d322a6cc221"
+    },
+    {
+      "sourceArchive": "KartRider_5136_01_UNPACK.zip",
+      "sourceMember": "KartRider_5136_01_UNPACK/_rhoOut/theme/village/texture/handrail.dds",
+      "output": "assets\\textures\\d2a0366fa557.png",
+      "sha256": "7db8c2ddd44809c1f4f214c088df9f5f7173d59e961d9ab71f856d25f93afa77"
+    },
+    {
+      "sourceArchive": "KartRider_5136_01_UNPACK.zip",
+      "sourceMember": "KartRider_5136_01_UNPACK/_rhoOut/theme/village/texture/lamp.dds",
+      "output": "assets\\textures\\bc4edcce8a85.png",
+      "sha256": "f7f4d79c30e5752aa50ee78abd3c3679f7b652c4d02313ebeed91598e87e1852"
+    },
+    {
+      "sourceArchive": "KartRider_5136_01_UNPACK.zip",
+      "sourceMember": "KartRider_5136_01_UNPACK/_rhoOut/theme/village/texture/lamp_red.dds",
+      "output": "assets\\textures\\abe390f9e7fe.png",
+      "sha256": "df32c333b7036f980efc9664d7a39f6b61e2caa272fd13b7ed4f4d3915d83996"
+    },
+    {
+      "sourceArchive": "KartRider_5136_01_UNPACK.zip",
+      "sourceMember": "KartRider_5136_01_UNPACK/_rhoOut/theme/village/texture/lamp00.dds",
+      "output": "assets\\textures\\7922b351b5af.png",
+      "sha256": "62b4886dc0e015feb70ec701dfc90fa6e101ffa17770bda730bf37df205ab0ed"
+    },
+    {
+      "sourceArchive": "KartRider_5136_01_UNPACK.zip",
+      "sourceMember": "KartRider_5136_01_UNPACK/_rhoOut/theme/village/texture/s_tree_set.dds",
+      "output": "assets\\textures\\394d3ecefa1d.png",
+      "sha256": "ec88198400bd57d86cac970a368cf0199fb58d6d241fac67946be0c4f1b3581c"
+    },
+    {
+      "sourceArchive": "KartRider_5136_01_UNPACK.zip",
+      "sourceMember": "KartRider_5136_01_UNPACK/_rhoOut/theme/village/texture/sign_ani.dds",
+      "output": "assets\\textures\\bd793f6e08fc.png",
+      "sha256": "4eab8fbde3d6abf6f15a1954a85fe1f50370e4085e1d1b01032230e6d1a9e70e"
+    },
+    {
+      "sourceArchive": "KartRider_5136_01_UNPACK.zip",
+      "sourceMember": "KartRider_5136_01_UNPACK/_rhoOut/theme/village/texture/sign_stick.dds",
+      "output": "assets\\textures\\28ce25122c7d.png",
+      "sha256": "12508f52c0e8cbbcf7012ca5b5f0cca781adebb8d735278ecda36de753430406"
+    },
+    {
+      "sourceArchive": "KartRider_5136_01_UNPACK.zip",
+      "sourceMember": "KartRider_5136_01_UNPACK/_rhoOut/theme/village/texture/sign03.dds",
+      "output": "assets\\textures\\1b45ea6fb325.png",
+      "sha256": "e0b3056398e4da44d3806e4b49b10daa4cd13721264908fa7835c782d1d2e5e5"
+    },
+    {
+      "sourceArchive": "KartRider_5136_01_UNPACK.zip",
+      "sourceMember": "KartRider_5136_01_UNPACK/_rhoOut/theme/village/texture/sign07.dds",
+      "output": "assets\\textures\\7482c505384d.png",
+      "sha256": "59aea25405cf973d48bf7790f75cd3121f38990f9b97a2251f12c110d84a15ba"
+    },
+    {
+      "sourceArchive": "KartRider_5136_01_UNPACK.zip",
+      "sourceMember": "KartRider_5136_01_UNPACK/_rhoOut/theme/village/texture/sign08.dds",
+      "output": "assets\\textures\\ede35dea632b.png",
+      "sha256": "565037615764458c1655c28bfd13359f635ab047fa9032644f52f11b1f82d92a"
+    },
+    {
+      "sourceArchive": "KartRider_5136_01_UNPACK.zip",
+      "sourceMember": "KartRider_5136_01_UNPACK/_rhoOut/theme/village/texture/sign09.png",
+      "output": "assets\\textures\\e74c6502a9ee.png",
+      "sha256": "c438effbbf925210236bd9d78e4cf516cf70634121c21c5889b44253e277a0ae"
+    },
+    {
+      "sourceArchive": "KartRider_5136_01_UNPACK.zip",
+      "sourceMember": "KartRider_5136_01_UNPACK/_rhoOut/theme/village/texture/sign10.png",
+      "output": "assets\\textures\\667a3ca78c8e.png",
+      "sha256": "645acc7de875026869971f70b861f3e51f8e9aad24bd6c41761aa22202a6a013"
+    },
+    {
+      "sourceArchive": "KartRider_5136_01_UNPACK.zip",
+      "sourceMember": "KartRider_5136_01_UNPACK/_rhoOut/theme/village/texture/sign12.png",
+      "output": "assets\\textures\\ffe5ebdefde0.png",
+      "sha256": "0480c0767254a72d6fc8e5e71213acd70dc0cbfa356d0a27ba72dc6616500ac2"
+    },
+    {
+      "sourceArchive": "KartRider_5136_01_UNPACK.zip",
+      "sourceMember": "KartRider_5136_01_UNPACK/_rhoOut/theme/common/texture/sign14.dds",
+      "output": "assets\\textures\\a7b5f36e680c.png",
+      "sha256": "d32c814eb69b355ae53aba304010f89bd74c9fd79f112ef66784c0d5ec82a43f"
+    },
+    {
+      "sourceArchive": "KartRider_5136_01_UNPACK.zip",
+      "sourceMember": "KartRider_5136_01_UNPACK/_rhoOut/theme/village/texture/sign15.dds",
+      "output": "assets\\textures\\0273d7ef60ef.png",
+      "sha256": "711a9bc656e8de836489118f25e59a1394346b5976508492d9f534c7f3f7f648"
+    },
+    {
+      "sourceArchive": "KartRider_5136_01_UNPACK.zip",
+      "sourceMember": "KartRider_5136_01_UNPACK/_rhoOut/theme/village/texture/smallhouse_set.dds",
+      "output": "assets\\textures\\bc9d9bb4ce00.png",
+      "sha256": "0c1d80d6b43f7b7a6f84f77a224a149d36fe4967cf36f2d6259a198939316161"
+    },
+    {
+      "sourceArchive": "KartRider_5136_01_UNPACK.zip",
+      "sourceMember": "KartRider_5136_01_UNPACK/_rhoOut/theme/village/texture/stick.dds",
+      "output": "assets\\textures\\946466f6c963.png",
+      "sha256": "1f24febc6ab6bc57035d5260e8d1a9cc9f211041766374ab4a37f6d78502664d"
+    },
+    {
+      "sourceArchive": "KartRider_5136_01_UNPACK.zip",
+      "sourceMember": "KartRider_5136_01_UNPACK/_rhoOut/theme/village/texture/stop.dds",
+      "output": "assets\\textures\\1b480158e1f3.png",
+      "sha256": "b9d6a079b3a8c56610ccbd9086f45b18eb7025f4ef64d7534ecf76c6c83a2806"
+    },
+    {
+      "sourceArchive": "KartRider_5136_01_UNPACK.zip",
+      "sourceMember": "KartRider_5136_01_UNPACK/_rhoOut/theme/village/texture/tent_set.dds",
+      "output": "assets\\textures\\7bbcdb546d27.png",
+      "sha256": "3d115cf49db3ecbb9942762e56e40c829d4a7b36a042b40a3146ae2363782f11"
+    },
+    {
+      "sourceArchive": "KartRider_5136_01_UNPACK.zip",
+      "sourceMember": "KartRider_5136_01_UNPACK/_rhoOut/theme/village/texture/tilegrass_128_03.dds",
+      "output": "assets\\textures\\f29c50fa84b9.png",
+      "sha256": "28150b8cdbb329d5fa0cfd97ba7fd06ab10be0b1d656d98eeff39f3fdfedd8f1"
+    },
+    {
+      "sourceArchive": "KartRider_5136_01_UNPACK.zip",
+      "sourceMember": "KartRider_5136_01_UNPACK/_rhoOut/theme/common/texture/transparency.dds",
+      "output": "assets\\textures\\ce03e308a595.png",
+      "sha256": "1cc1a10f2bef0082b89e1bff7ab7daa55f9a09e3aa7cc4faa8ce1104d66e9698"
+    },
+    {
+      "sourceArchive": "KartRider_5136_01_UNPACK.zip",
+      "sourceMember": "KartRider_5136_01_UNPACK/_rhoOut/theme/village/texture/tree_re09.dds",
+      "output": "assets\\textures\\891306af6500.png",
+      "sha256": "fe8f1825bf8b65a7f132aa8542f0550fa8fd0a856943e5af717e1108d303bf31"
+    },
+    {
+      "sourceArchive": "KartRider_5136_01_UNPACK.zip",
+      "sourceMember": "KartRider_5136_01_UNPACK/_rhoOut/theme/village/texture/v_back.dds",
+      "output": "assets\\textures\\f9bdc3dbabff.png",
+      "sha256": "223ba62ac988cf1f6b1846839e9bc2930a329d34f33f13122d8924624e981007"
+    },
+    {
+      "sourceArchive": "KartRider_5136_01_UNPACK.zip",
+      "sourceMember": "KartRider_5136_01_UNPACK/_rhoOut/theme/village/texture/v_back00.dds",
+      "output": "assets\\textures\\2038ef64fbd1.png",
+      "sha256": "e34944a98eb7860c95abd7c8bd5c3ec348c1b547183378b9d18e84454b614176"
+    },
+    {
+      "sourceArchive": "KartRider_5136_01_UNPACK.zip",
+      "sourceMember": "KartRider_5136_01_UNPACK/_rhoOut/theme/village/texture/v_brick.dds",
+      "output": "assets\\textures\\efa6856b8811.png",
+      "sha256": "8dcfd855a90a834bfb6572ff4351d7ea00cf5d5f3400986e64582298f0d1e1f8"
+    },
+    {
+      "sourceArchive": "KartRider_5136_01_UNPACK.zip",
+      "sourceMember": "KartRider_5136_01_UNPACK/_rhoOut/theme/village/texture/v_stick.dds",
+      "output": "assets\\textures\\c59e92d51683.png",
+      "sha256": "7002be26485be04716728c9e533642b8fb6693a3db994439129209cb01249870"
+    },
+    {
+      "sourceArchive": "KartRider_5136_01_UNPACK.zip",
+      "sourceMember": "KartRider_5136_01_UNPACK/_rhoOut/theme/village/texture/v_tree_set.dds",
+      "output": "assets\\textures\\ab199f4ef8cd.png",
+      "sha256": "e8c27c57688a8b27e59d4bb317d54d2656b848f0eea7998393dc7d7c106e9a38"
+    },
+    {
+      "sourceArchive": "KartRider_5136_01_UNPACK.zip",
+      "sourceMember": "KartRider_5136_01_UNPACK/_rhoOut/theme/village/texture/v_tree00_set.dds",
+      "output": "assets\\textures\\2fc573b821a4.png",
+      "sha256": "d305e3612fd592de402443afa328eac332cef39df18a2bc3bafc8936acd6a434"
+    },
+    {
+      "sourceArchive": "KartRider_5136_01_UNPACK.zip",
+      "sourceMember": "KartRider_5136_01_UNPACK/_rhoOut/theme/village/texture/v_tree01_set.dds",
+      "output": "assets\\textures\\16cccaa14ca5.png",
+      "sha256": "9f269aa115ed5735ce80de3576e8c6540a2c2ed1219aa8682dc867ada92be0ff"
+    },
+    {
+      "sourceArchive": "KartRider_5136_01_UNPACK.zip",
+      "sourceMember": "KartRider_5136_01_UNPACK/_rhoOut/theme/village/texture/v_wall.dds",
+      "output": "assets\\textures\\016b5aa74b3d.png",
+      "sha256": "681c834b7beb8c130245cd8a12c3b5aa40450e31dbf900597c57489ce92d2ef9"
+    },
+    {
+      "sourceArchive": "KartRider_5136_01_UNPACK.zip",
+      "sourceMember": "KartRider_5136_01_UNPACK/_rhoOut/theme/village/texture/village_skyline01.png",
+      "output": "assets\\textures\\d3661ecaa5fd.png",
+      "sha256": "5299c86200e71d17a75799b8a776eaa43b762c75fdbde5b1aa26e17ebe9aefcd"
+    },
+    {
+      "sourceArchive": "KartRider_5136_01_UNPACK.zip",
+      "sourceMember": "KartRider_5136_01_UNPACK/_rhoOut/theme/common/texture/waterdrop.dds",
+      "output": "assets\\textures\\da7d9abfdc12.png",
+      "sha256": "0ceabb562070b96242320ef2f6c662486ecb95880143bc35405ef28720fd32a9"
+    },
+    {
+      "sourceArchive": "KartRider_5136_01_UNPACK.zip",
+      "sourceMember": "KartRider_5136_01_UNPACK/_rhoOut/track/village_R01/xt_minimap.png",
+      "output": "assets\\xt_minimap.png",
+      "sha256": "5cffdf170b554cf5c1432e42988af9d06f509d4fe676d04536ac3d7b1998e89a"
+    },
+    {
+      "sourceArchive": "KartRider_5136_01_UNPACK.zip",
+      "sourceMember": "KartRider_5136_01_UNPACK/_rhoOut/track/village_R01/xt_trackThumb.png",
+      "output": "assets\\xt_trackThumb.png",
+      "sha256": "f7a2f8722e194f1fac4a4614cefa9b13530d70eba0d7946551c5b2048cadb00b"
+    },
+    {
+      "sourceArchive": "KartRider_5136_01_UNPACK.zip",
+      "sourceMember": "KartRider_5136_01_UNPACK/_rhoOut/track/village_R01/xt_trackCard.png",
+      "output": "assets\\xt_trackCard.png",
+      "sha256": "f3b1d81498236b9d01409446e3b943d04059d63dcc8a3adf2d88fd247d57ffc2"
+    },
+    {
+      "sourceArchive": "KartRider_5136_01_UNPACK.zip",
+      "sourceMember": "KartRider_5136_01_UNPACK/_rhoOut/sound/bgm/village/village_01.ogg",
+      "output": "assets\\bgm.ogg",
+      "sha256": "f59ec8d03605f7128d086f063f8623e8cae248f4485fb1aaa0d2334fc13b5d51"
+    }
+  ],
+  "missingTextures": []
+}
