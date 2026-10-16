@@ -77,7 +77,9 @@ function attachDriver(vehicle,charId){if(!vehicle)return;const old=vehicle.getOb
  const head=new THREE.Mesh(new THREE.SphereGeometry(.345,16,12),skin);head.position.set(0,-.23,1.48);group.add(head);
  const helmet=new THREE.Mesh(new THREE.SphereGeometry(.353,16,10,0,Math.PI*2,0,Math.PI*.43),cap);helmet.position.set(0,-.23,1.48);group.add(helmet);
  for(const side of [-1,1]){const ear=new THREE.Mesh(new THREE.SphereGeometry(.105,10,8),skin);ear.position.set(.315*side,-.23,1.49);group.add(ear);}
- const face=new THREE.Mesh(new THREE.PlaneGeometry(.50,.25),new THREE.MeshBasicMaterial({map:textures.get(`assets/characters/${charId}/face.png`),transparent:true,side:THREE.DoubleSide,alphaTest:.05}));face.rotation.x=Math.PI/2;face.position.set(0,-.542,1.47);group.add(face);
+ // The face card must sit beyond the head sphere's front surface (-.575).
+ // Previously it was buried inside the sphere, leaving every rider faceless.
+ const face=new THREE.Mesh(new THREE.PlaneGeometry(.54,.28),new THREE.MeshBasicMaterial({map:textures.get(`assets/characters/${charId}/face.png`),transparent:true,side:THREE.DoubleSide,alphaTest:.05}));face.rotation.x=Math.PI/2;face.position.set(0,-.606,1.47);group.add(face);
  for(const side of [-1,1]){const arm=new THREE.Mesh(new THREE.CapsuleGeometry(.082,.32,4,8),suit);arm.position.set(.29*side,-.35,1.00);arm.rotation.z=-.65*side;arm.rotation.x=Math.PI/2;group.add(arm);const leg=new THREE.Mesh(new THREE.CapsuleGeometry(.105,.22,4,8),dark);leg.position.set(.15*side,-.02,.65);leg.rotation.x=Math.PI/2;group.add(leg);}
  vehicle.add(group);driverGroup=group;
 }

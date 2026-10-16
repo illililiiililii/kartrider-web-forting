@@ -36,21 +36,36 @@ export class DrivingState{
  substep(dt,input){const cfg=this.config(),forward=input.forward?1:0,reverse=input.reverse?1:0,steer=clamp(Number(input.steer)||0,-1,1),drift=!!input.drift;
   if(forward&&!this.previousForward&&this.instantWindow>0){this.instantTime=.5;this.instantWindow=0;}this.previousForward=!!forward;this.instantWindow=Math.max(0,this.instantWindow-dt);this.instantTime=Math.max(0,this.instantTime-dt);
   if(input.boost&&!this.previousBoost&&this.nitro>0&&this.nitroTime<=0){this.nitro--;this.nitroTime=cfg.normalBoosterTime;}this.previousBoost=!!input.boost;this.nitroTime=Math.max(0,this.nitroTime-dt);
-  const axes=this.axes(),v=this.linearVelocity,forwardV=dot(v,axes.forward),sideV=dot(v,axes.right),speed=len(v);const wheel=this.queryWheels(input.groundQuery,axes);this.grounded=wheel.contacts.length>0;this.lastContacts=wheel.contacts.length;let force=[0,0,0],torque=[0,0,0];
-  if(this.grounded){force[2]+=WORLD_G*cfg.mass;for(const c of wheel.contacts){const stat=Math.abs(WORLD_G)*cfg.mass*.5,damping=stat*.2;let f=(c.delta/dt)*damping+stat*c.compression;f*=dot(c.normal,axes.up);force=add(force,mul(axes.up,f));const lever=[this.geometry.halfWidth*c.sx,-this.geometry.halfLength*c.sy,0];torque=add(torque,mul(cross(lever,[0,0,f]),.1));}
+  const axes=this.axes();let v=this.linearVelocity;const forwardV=dot(v,axes.forward),sideV=dot(v,axes.right),speed=len(v),planarSpeed=Math.hypot(forwardV,sideV);const wheel=this.queryWheels(input.groundQuery,axes);this.grounded=wheel.contacts.length>0;this.lastContacts=wheel.contacts.length;let force=[0,0,0],torque=[0,0,0];
+  if(this.grounded){force[2]+=WORLD_G*cfg.mass;for(const c of wheel.contacts){const stat=Math.abs(WORLD_G)*cfg.mass*.5,damping=c.delta<=0?stat*.2:0;let f=(c.delta/dt)*damping+stat*c.compression;if(f<=0)continue;f*=dot(c.normal,axes.up);force=add(force,mul(axes.up,f));const lever=[this.geometry.halfWidth*c.sx,-this.geometry.halfLength*c.sy,0];torque=add(torque,mul(cross(lever,[0,0,f]),.1));}
   const launch=this.startBoostTime>0;this.startBoostTime=Math.max(0,this.startBoostTime-dt);const boostMultiplier=this.nitroTime>0?cfg.boostAccel:(this.instantTime>0?cfg.driftBoostAccel:1);let drive=0;
-   if(forward){drive=launch?cfg.startForwardForce:(this.slipDetected?cfg.escape:cfg.forward)*boostMultiplier;if(forwardV<0)drive+=Math.min(speed,5)*cfg.mass*G;this.reverseTimer=0;}else if(reverse){if(forwardV<=.5){this.reverseTimer+=dt;if(this.reverseTimer<=.2&&Math.abs(sideV)<=.2)this.linearVelocity=add(this.linearVelocity,mul(axes.forward,-forwardV));else if(this.reverseTimer>.2)drive=-cfg.reverse;}else{const b=forwardV/Math.max(speed,.001)<=.8?cfg.slipBrake:cfg.gripBrake;drive-=b*forwardV/Math.max(speed,.001);force=add(force,mul(axes.right,-b*sideV/Math.max(speed,.001)));}}else if(forwardV<=.5&&forwardV>=-.5)this.reverseTimer+=dt;
+   if(forward){
+    drive=launch?cfg.startForwardForce:(this.slipDetected?cfg.escape:cfg.forward)*boostMultiplier;
+    if(forwardV<0)drive+=((this.driftInput||this.slipDetected)?speed:Math.min(speed,5))*cfg.mass*G;
+    this.reverseTimer=0;
+   }else if(reverse){
+    if(forwardV<=.5){
+     this.reverseTimer+=dt;
+     if(forwardV<=-.5)this.reverseTimer=1;
+     if(this.reverseTimer<=.2){
+      if(Math.abs(sideV)<=.2){this.linearVelocity=[0,0,0];v=this.linearVelocity;}
+     }else drive=-cfg.reverse;
+    }else{
+     const b=forwardV/Math.max(speed,.001)<=.8?cfg.slipBrake:cfg.gripBrake;
+     force=add(force,mul(norm(v),-b));
+    }
+   }else if(forwardV<=.5&&forwardV>=-.5)this.reverseTimer+=dt;
    force=add(force,mul(axes.forward,drive));
    if(drift!==this.previousDrift){if(!drift)this.driftInput=false;else if(this.lingerTimer<=0){this.driftInput=true;this.triggerActive=true;this.entryWasForward=forwardV>0;}this.previousDrift=drift;}
    const wasDrifting=this.driftInput||this.slipDetected;if(speed<=5){this.triggerActive=false;this.driftInput=false;this.slipDetected=false;}else if(!this.driftInput&&!this.triggerActive)this.slipDetected=Math.abs(sideV)>Math.abs(forwardV)*1.2;else this.slipDetected=false;
    if(this.triggerActive){if(this.triggerTimer<=0){this.triggerTimer=cfg.triggerTime;this.lingerTimer=cfg.triggerTime*2;}else{this.triggerTimer=Math.max(0,this.triggerTimer-dt);if(this.triggerTimer===0)this.triggerActive=false;}}else if(this.mode==='drift')this.lingerTimer=Math.max(0,this.lingerTimer-dt);
-   const mode=this.mode,max=PI*cfg.maxSteer/180*steer;let filtered=max*Math.exp(-Math.abs(forwardV/cfg.steerConstraint));if(forward&&Math.sign(this.previousSteer)===Math.sign(filtered)&&Math.abs(this.previousSteer)<Math.abs(filtered))filtered=this.previousSteer;this.previousSteer=filtered;const denom=Math.max(speed,5),travel=forwardV<=0?-1:1,steerSlip=speed>=.5?travel*((speed>5&&mode==='drift'&&this.driftInput)?max:filtered):0;
-   const frontSlip=steerSlip-sideV/denom-(this.angularVelocity[2]*.5)/denom,rearSlip=-sideV/denom+(this.angularVelocity[2]*.5)/denom;let ff,rf;if(speed>5&&mode==='trigger'){ff=0;rf=max*cfg.triggerFactor*(-G*cfg.mass)*cfg.frontGrip;}else{ff=frontSlip*G*cfg.mass*cfg.frontGrip;rf=rearSlip*G*cfg.mass*cfg.rearGrip;if(speed>5&&mode==='drift'){ff*=cfg.slipFactor;rf*=cfg.slipFactor;}}
-   force=add(force,mul(axes.right,ff+rf));torque[2]+=.5*ff-.5*rf;if(speed>5&&mode==='grip')force=add(force,mul(axes.forward,Math.abs(ff+rf)*cfg.corner));if(speed>5&&mode==='drift')torque[1]-=(ff+rf)*cfg.driftLean*(speed<=10?.5:1);else if(speed>5&&mode==='grip')torque[1]-=(ff+rf)*cfg.steerLean;
+   const mode=this.mode,max=PI*cfg.maxSteer/180*steer;let filtered=max*Math.exp(-Math.abs(forwardV/cfg.steerConstraint));if(forward&&Math.sign(this.previousSteer)===Math.sign(filtered)&&Math.abs(this.previousSteer)<Math.abs(filtered))filtered=this.previousSteer;this.previousSteer=filtered;const denom=Math.max(planarSpeed,5),travel=forwardV<=0?-1:1,steerSlip=planarSpeed>=.5?travel*((planarSpeed>5&&mode==='drift'&&this.driftInput)?max:filtered):0;
+   const frontSlip=steerSlip-sideV/denom-(this.angularVelocity[2]*.5)/denom,rearSlip=-sideV/denom+(this.angularVelocity[2]*.5)/denom;let ff,rf;if(planarSpeed>5&&mode==='trigger'){ff=0;rf=max*cfg.triggerFactor*(-G*cfg.mass)*cfg.frontGrip;}else{ff=frontSlip*G*cfg.mass*cfg.frontGrip;rf=rearSlip*G*cfg.mass*cfg.rearGrip;if(planarSpeed>5&&mode==='drift'){ff*=cfg.slipFactor;rf*=cfg.slipFactor;}}
+   force=add(force,mul(axes.right,ff+rf));torque[2]+=.5*ff-.5*rf;if(planarSpeed>5&&mode==='grip')force=add(force,mul(axes.forward,Math.abs(ff+rf)*cfg.corner));if(planarSpeed>5&&mode==='drift')torque[1]-=(ff+rf)*cfg.driftLean*(planarSpeed<=10?.5:1);else if(planarSpeed>5&&mode==='grip')torque[1]-=(ff+rf)*cfg.steerLean;
    if(this.entryWasForward&&wasDrifting&&!this.driftInput&&!this.slipDetected&&this.instantWindow===0){this.entryWasForward=false;this.instantWindow=cfg.driftBoostTick;}
    if(mode==='drift'&&Math.abs(steer)>0&&speed>14){this.charge+=dt*.34*Math.min(1,speed/45)*(1+Math.min(1,Math.abs(sideV)/8));if(this.charge>=1){this.charge-=1;this.nitro=Math.min(2,this.nitro+1);}}
   }else{this.driftInput=false;this.slipDetected=false;this.triggerActive=false;force[2]+=WORLD_G*cfg.mass;torque=add(torque,mul(this.angularVelocity,-30));}
-  force=add(force,mul(v,-cfg.air-(this.grounded?speed*cfg.drag*this.geometry.groundedDragScale:0)));torque=add(torque,mul(this.angularVelocity,-cfg.air));
+  force=add(force,mul(v,-cfg.air-(this.grounded?len(v)*cfg.drag*this.geometry.groundedDragScale:0)));torque=add(torque,mul(this.angularVelocity,-cfg.air));
   this.linearVelocity=add(v,mul(force,dt/cfg.mass));this.angularVelocity=add(this.angularVelocity,mul(torque,dt*12/cfg.mass));
   this.position=add(this.position,mul(this.linearVelocity,dt));let omega=[...this.angularVelocity],q=this.orientation;const integrate=w=>quatNorm(quatMul(q,[w[0]*dt/2,w[1]*dt/2,w[2]*dt/2,1]));let nq=integrate(omega),upz=rotate(nq,[0,0,1])[2],tries=0;while(upz<.5&&tries<3){omega[0]*=.1;omega[1]*=.1;nq=integrate(omega);upz=rotate(nq,[0,0,1])[2];tries++;}if(upz<.5){omega[0]=omega[1]=0;nq=integrate(omega);}this.orientation=nq;this.angularVelocity=omega;
   for(const n0 of input.bodyContacts||[]){const n=norm(Array.isArray(n0)?n0:n0.normal||[0,0,1]);const vn=dot(n,this.linearVelocity);if(vn>=0)continue;const normalV=mul(n,vn),tangent=sub(this.linearVelocity,normalV);if(n[2]<=.65){const tn=len(tangent),remove=Math.min(-vn*1.5,tn*.6),td=tn>0?mul(tangent,1/tn):[0,0,0];let correction=add(mul(normalV,-1.5),mul(td,-remove));correction[2]=0;this.linearVelocity=add(this.linearVelocity,correction);}else this.linearVelocity=add(tangent,mul(normalV,-.2));}
