@@ -177,16 +177,28 @@ async function updateRoom(data){room=data;multiplayer=true;$('room-details').hid
 }
 function connectRoom(action){if(ws)leaveRoom();const url=`${location.protocol==='https:'?'wss':'ws'}://${location.host}/multiplayer`;ws=new WebSocket(url);$('room-status').textContent='서버 연결 중…';ws.onopen=()=>send({type:action,name:$('rider-name').value||'Rider',code:$('room-code-input').value,track:selected.track,kart:selected.kart,character:selected.character});ws.onmessage=async e=>{let m;try{m=JSON.parse(e.data);}catch{return;}if(m.type==='hello')ownId=m.id;else if(m.type==='room')await updateRoom(m);else if(m.type==='pose'){const p=remote.get(m.id);if(p)p.pose=m;}else if(m.type==='leave'){const p=remote.get(m.id);if(p?.mesh)scene.remove(p.mesh);remote.delete(m.id);}else if(m.type==='error')$('room-status').textContent=m.message;};ws.onerror=()=>$('room-status').textContent='멀티플레이 서버에 연결할 수 없습니다.';ws.onclose=()=>{if(room)$('room-status').textContent='연결이 끊겼습니다.';};}
 function selectGarageTab(name){for(const b of document.querySelectorAll('[data-tab]'))b.classList.toggle('active',b.dataset.tab===name);for(const kind of ['kart','character','track'])$(kind+'-grid').hidden=kind!==name;}
+function showOriginalMode(type){
+ const menu=$('original-mode-menu');menu.hidden=false;$('original-single-menu').hidden=type!=='single';$('original-multi-menu').hidden=type!=='multi';$('original-mode-title').textContent=type==='single'?'싱글 플레이':'멀티플레이';
+}
 function navigateHome(where){
- if(where==='garage'||where==='play'){$('home-screen').hidden=true;$('garage-screen').hidden=false;selectGarageTab(where==='play'?'track':'kart');$('garage-heading-title').textContent=where==='play'?'트랙 선택 · 스피드전':'내 카트와 캐릭터';return;}
- if(where==='lobby'){$('garage-screen').hidden=true;$('home-screen').hidden=false;return;}
- if(where==='multi'){$('multiplayer').showModal();return;}
+ if(where==='play'){showOriginalMode('single');return;}
+ if(where==='multi'){showOriginalMode('multi');return;}
+ if(where==='garage'||where==='track'){$('original-mode-menu').hidden=true;$('home-screen').hidden=true;$('garage-screen').hidden=false;selectGarageTab(where==='track'?'track':'kart');$('garage-heading-title').textContent=where==='track'?'트랙 선택 · 스피드전':'내 카트와 캐릭터';return;}
+ if(where==='lobby'){$('original-mode-menu').hidden=true;$('garage-screen').hidden=true;$('home-screen').hidden=false;return;}
  if(where==='profile'||where==='club'||where==='tune'||where==='exchange'||where==='shop'){$('info').querySelector('h2').textContent=({profile:'내 정보',club:'클럽',tune:'튜닝',exchange:'교환',shop:'상점'})[where];$('info').querySelector('p').textContent='웹 포팅 로비에서 준비 중인 메뉴입니다.';$('info').showModal();}
 }
 addEventListener('resize',resize);addEventListener('keydown',e=>{const onControl=e.target instanceof HTMLElement&&e.target.closest('button,a,input,dialog');if((state==='race'||state==='countdown')&&['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space','ControlLeft','ControlRight'].includes(e.code))e.preventDefault();if(e.repeat)return;if(e.code==='Escape'){if(!$('info').open&&!$('results').open)pause();return;}if(e.code==='Enter'&&state==='lobby'&&!onControl)startRace();if(e.code==='KeyR'&&state==='race')resetCar();if(!onControl)keys.add(e.code);});addEventListener('keyup',e=>keys.delete(e.code));addEventListener('blur',()=>{keys.clear();if(state==='race'||state==='countdown')pause();});document.addEventListener('visibilitychange',()=>{if(document.hidden&&(state==='race'||state==='countdown'))pause();});
 $('start').onclick=startRace;
 document.querySelectorAll('[data-home]').forEach(b=>b.onclick=()=>navigateHome(b.dataset.home));
-document.querySelectorAll('.mode-choice').forEach(b=>b.onclick=()=>{document.querySelectorAll('.mode-choice').forEach(x=>x.classList.toggle('selected',x===b));navigateHome('play');});
+document.querySelectorAll('.mode-choice').forEach(b=>b.onclick=()=>{document.querySelectorAll('.mode-choice').forEach(x=>x.classList.toggle('selected',x===b));navigateHome(b.dataset.mode==='track'?'track':b.dataset.mode==='time'?'play':'multi');});
+$('original-mode-close').onclick=()=>$('original-mode-menu').hidden=true;
+document.querySelectorAll('[data-original-action]').forEach(b=>b.onclick=()=>{
+ const action=b.dataset.originalAction;
+ if(action==='time')navigateHome('track');
+ else if(action==='kart')navigateHome('garage');
+ else if(action==='rooms'||action==='speed-individual'){$('original-mode-menu').hidden=true;$('multiplayer').showModal();}
+ else {$('original-mode-menu').hidden=true;$('info').querySelector('h2').textContent=b.getAttribute('aria-label')||'게임 모드';$('info').querySelector('p').textContent='이 모드는 아직 구현되지 않았습니다. 현재 웹 멀티플레이는 스피드 개인전 방만 지원합니다.';$('info').showModal();}
+});
 $('garage-back').onclick=()=>navigateHome('lobby');$('again').onclick=()=>room?garage():startRace();$('garage').onclick=garage;$('exit').onclick=garage;$('pause').onclick=pause;
 $('reset').onclick=()=>{if(state==='race'||state==='paused')resetCar();};$('help').onclick=()=>$('info').showModal();$('close-info').onclick=()=>$('info').close();
 $('sound').onclick=()=>{soundOn=!soundOn;$('sound').textContent='사운드 '+(soundOn?'ON':'OFF');$('sound').setAttribute('aria-label','배경음악 '+(soundOn?'끄기':'켜기'));if(soundOn)music.play().catch(()=>{});else music.pause();};

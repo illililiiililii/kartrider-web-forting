@@ -44,6 +44,23 @@ body.racing header{height:38px;background:linear-gradient(#f8fcffed 0 78%,#168ac
  .garage-panel,.race-card{width:100%}
 }
 
+/* P5136 mq_window@kr.bml places both play tabs in a 790 × 505 centered window. */
+.original-mode-menu{position:absolute;z-index:12;left:50%;top:50%;transform:translate(-50%,-50%);width:min(790px,calc(100vw - 28px));min-height:420px;padding:0 0 14px;border:2px solid #ffffff;background:linear-gradient(#d9edf6,#a9d5e9);box-shadow:0 0 0 1px #517c99,0 8px 0 #3b6f92,0 20px 45px #0d2947aa;color:#3d5568;font-family:"Malgun Gothic",sans-serif}
+.original-mode-menu[hidden],.original-mode-content[hidden]{display:none!important}
+.original-mode-title{height:37px;padding:7px 12px;background:linear-gradient(#75bfe0,#338aba);border-bottom:2px solid #fff;color:#fff;text-shadow:0 1px #175d88;display:flex;align-items:center;justify-content:space-between;font-size:16px}
+.original-mode-title button{width:25px;height:25px;border:1px solid #d7f2ff;background:linear-gradient(#f8ffff,#b0ddeb);color:#276487;font-size:20px;line-height:17px;font-weight:bold}
+.original-mode-content{display:grid;grid-template-columns:406fr 378fr;gap:5px;padding:12px 10px 0;min-height:362px}
+.original-mode-options{background:url('assets/original-ui/leftbg.png') center/100% 100% no-repeat;display:flex;flex-direction:column;align-items:center;gap:4px;padding:14px 8px}
+.original-mode-options button{display:block;width:100%;max-width:330px;padding:0;border:0;background:transparent;cursor:pointer;transition:filter .1s,transform .1s}
+.original-mode-options button:hover,.original-mode-options button:focus-visible{filter:brightness(1.12);transform:translateY(-1px);outline:0}
+.original-mode-options img{display:block;width:100%;height:auto;max-height:68px;object-fit:contain}
+.original-speed-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-auto-rows:64px;align-content:start;align-items:start;gap:5px;padding:14px 5px}
+.original-speed-options button{max-width:none}.original-speed-options img{max-height:64px}
+.original-mode-explain{position:relative;margin:0 0 14px;padding:16px 17px;border:1px solid #6f9ab2;background:#f7faf7;box-shadow:inset 0 0 0 3px #fff;color:#4a5f6c;font-size:13px;line-height:1.5}
+.original-mode-explain b{display:block;margin:-16px -17px 16px;padding:7px 12px;background:linear-gradient(#fbffff,#bddce9);border-bottom:1px solid #8daebf;color:#286884;font-size:15px}
+.original-mode-explain p{margin:0;max-width:270px}.original-mode-explain button{position:absolute;left:18px;right:18px;bottom:16px;padding:9px;border:1px solid #518eae;background:linear-gradient(#fff,#c5ebfa);color:#276487;font-weight:900}
+@media(max-width:700px){.original-mode-menu{top:47%;min-height:0}.original-mode-content{grid-template-columns:1fr;min-height:0}.original-mode-options{min-height:140px}.original-speed-options{grid-auto-rows:54px;min-height:130px}.original-speed-options img{max-height:54px}.original-mode-explain{min-height:120px;margin:0;padding:12px;font-size:10px}.original-mode-explain b{margin:-12px -12px 8px;font-size:12px}.original-mode-explain p{max-width:70%}.original-mode-explain button{left:auto;right:9px;bottom:9px;padding:5px;font-size:9px}}
+
 /* P5136 race-screen placement, checked against the running original client. */
 body.racing header{display:none}
 #hud{font-family:"Malgun Gothic","Segoe UI",sans-serif;text-shadow:1px 2px 2px #142439}
