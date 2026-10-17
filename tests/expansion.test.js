@@ -18,6 +18,10 @@ test('the original local forward axis maps to the visible nose and ground contac
  assert.ok(k.vf>0);assert.ok(y>0);assert.equal(k.lastContacts,4);assert.ok(Math.abs(k.position[2])<.06,'flat suspension should settle around static equilibrium');
  const turn=new DrivingState();turn.reset({heading:.7});assert.ok(Math.abs(turn.heading-.7)<1e-8);
 });
+test('left steering moves the kart left while it continues nose-first',()=>{
+ const k=onTrack();for(let i=0;i<200;i++)k.step(.005,{forward:true,steer:1,groundQuery:flatGround});
+ assert.ok(k.position[0]<-1);assert.ok(k.position[1]>1);assert.ok(k.vf>0);
+});
 test('airborne motion uses recovered gravity and has no ground-drive force',()=>{
  const k=new DrivingState();const m=k.step(.002,{forward:true,groundQuery:()=>null});assert.ok(Math.abs(k.linearVelocity[2]+.1176)<1e-8);assert.equal(k.vf,0);assert.equal(m.grounded,false);
 });
