@@ -33,7 +33,7 @@ export class DrivingState{
  get mode(){return this.triggerActive?'trigger':(this.driftInput||this.slipDetected||this.lingerTimer>0?'drift':'grip');}
  startBoost(t){this.startBoostTime=Math.max(this.startBoostTime,Math.max(0,t));}
  collisionSlow(f=.65){this.linearVelocity=mul(this.linearVelocity,f);this.angularVelocity=mul(this.angularVelocity,.45);}
- step(dt,input={}){const old=this.position.slice();let remain=clamp(dt,0,.05),contacts=0,mode=this.mode;while(remain>1e-9){const h=Math.min(STEP,remain);this.substep(h,input);remain-=h;mode=this.mode;}
+ step(dt,input={}){const old=this.position.slice();let remain=clamp(dt,0,.5),contacts=0,mode=this.mode;while(remain>1e-9){const h=Math.min(STEP,remain);this.substep(h,input);remain-=h;mode=this.mode;}
   return {dx:this.position[0]-old[0],dy:this.position[1]-old[1],dz:this.position[2]-old[2],mode,speed:this.speed,skid:Math.atan2(this.vs,Math.max(4,Math.abs(this.vf))),grounded:this.grounded,wheelContacts:this.lastContacts||contacts};}
  substep(dt,input){const cfg=this.config(),forward=input.forward?1:0,reverse=input.reverse?1:0,steer=clamp(Number(input.steer)||0,-1,1),drift=!!input.drift;
   if(forward&&!this.previousForward&&this.instantWindow>0){this.instantTime=.5;this.instantWindow=0;}this.previousForward=!!forward;this.instantWindow=Math.max(0,this.instantWindow-dt);this.instantTime=Math.max(0,this.instantTime-dt);

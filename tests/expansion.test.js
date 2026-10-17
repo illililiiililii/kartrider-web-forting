@@ -44,6 +44,12 @@ test('P5136 automatic lateral slip starts only above its 15-unit planar-speed ga
  assert.equal(fast.slipDetected,true);assert.equal(fast.mode,'drift');
  assert.equal(vertical.mode,'grip','vertical speed must not bypass the planar 5-unit gate');
 });
+test('P5136 accepts up to 500 ms of elapsed time as 2 ms physics substeps',()=>{
+ const delayed=onTrack(),incremental=onTrack(),input={forward:true,groundQuery:flatGround};
+ delayed.step(.5,input);for(let i=0;i<250;i++)incremental.step(.002,input);
+ assert.ok(Math.abs(delayed.position[1]-incremental.position[1])<1e-6);
+ assert.ok(Math.abs(delayed.vf-incremental.vf)<1e-6);
+});
 test('P5136 BodyParam values compose with recovered dynamics defaults',()=>{
  const c=new DrivingState({ForwardAccelForce:154,DragFactor:-.084,SteerConstraint:3.06,DriftEscapeForce:2210,StartForwardAccelFactorSpeed:1.8,StartBoosterTimeSpeed:1400,BoostAccelFactor:1.54,NormalBoosterTime:65}).config();
  assert.equal(c.forward,2304);assert.equal(c.drag,.666);assert.equal(c.steerConstraint,25.31);assert.equal(c.escape,4810);assert.equal(c.startBoosterTime,1.4);assert.equal(c.startAccelFactor,1.8);assert.equal(c.normalBoosterTime,2.965);assert.equal(c.boostAccel,1.534);assert.equal(c.triggerFactor,.2);assert.equal(c.triggerTime,.2);assert.equal(c.gripBrake,2070);assert.equal(c.slipBrake,1415);assert.ok(Math.abs(c.startForwardForce-(2304*1.8-191.644))<1e-9);
