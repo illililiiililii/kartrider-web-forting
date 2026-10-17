@@ -37,6 +37,13 @@ test('steering and drift produce tire slip and angular response on a grounded ka
  const grip=onTrack(),drift=onTrack();for(let i=0;i<300;i++){const steer=i>180?1:0;grip.step(.005,{forward:true,steer,groundQuery:flatGround});drift.step(.005,{forward:true,steer,drift:i>180,groundQuery:flatGround});}
  assert.ok(grip.speed>5);assert.ok(Math.abs(grip.heading)>.01);assert.ok(Math.abs(drift.vs)>Math.abs(grip.vs));assert.ok(['drift','trigger'].includes(drift.mode));
 });
+test('P5136 automatic lateral slip starts only above its 15-unit planar-speed gate',()=>{
+ const slow=onTrack(),fast=onTrack(),vertical=onTrack();slow.vs=10;fast.vs=20;vertical.vs=4;vertical.linearVelocity[2]=20;
+ slow.step(.002,{groundQuery:flatGround});fast.step(.002,{groundQuery:flatGround});vertical.step(.002,{drift:true,groundQuery:flatGround});
+ assert.equal(slow.slipDetected,false);assert.equal(slow.mode,'grip');
+ assert.equal(fast.slipDetected,true);assert.equal(fast.mode,'drift');
+ assert.equal(vertical.mode,'grip','vertical speed must not bypass the planar 5-unit gate');
+});
 test('P5136 BodyParam values compose with recovered dynamics defaults',()=>{
  const c=new DrivingState({ForwardAccelForce:154,DragFactor:-.084,SteerConstraint:3.06,DriftEscapeForce:2210,StartForwardAccelFactorSpeed:1.8,StartBoosterTimeSpeed:1400,BoostAccelFactor:1.54,NormalBoosterTime:65}).config();
  assert.equal(c.forward,2304);assert.equal(c.drag,.666);assert.equal(c.steerConstraint,25.31);assert.equal(c.escape,4810);assert.equal(c.startBoosterTime,1.4);assert.equal(c.startAccelFactor,1.8);assert.equal(c.normalBoosterTime,2.965);assert.equal(c.boostAccel,1.534);assert.equal(c.triggerFactor,.2);assert.equal(c.triggerTime,.2);assert.equal(c.gripBrake,2070);assert.equal(c.slipBrake,1415);assert.ok(Math.abs(c.startForwardForce-(2304*1.8-191.644))<1e-9);

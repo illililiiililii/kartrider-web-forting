@@ -7,6 +7,11 @@ let catalog,selected={track:'village_R01',kart:'spectorV1',character:'dao'},driv
 const car={x:0,y:0,z:0,vx:0,vy:0,vz:0,heading:0,speed:0,drift:false},safe={x:0,y:0,z:0,heading:0};
 const ray=new THREE.Raycaster(),look=new THREE.Vector3(),camTarget=new THREE.Vector3();
 let music=new Audio('assets/tracks/village_R01/bgm.ogg');music.loop=true;music.volume=.28;let soundOn=false;
+const kartSoundRoot='assets/original-ui/sound/fx/kart/',motorSound=new Audio(kartSoundRoot+'engine_V1/motor.ogg'),driftSound=new Audio(kartSoundRoot+'drift.ogg'),boostSound=new Audio(kartSoundRoot+'engine_V1/booster.ogg');motorSound.loop=true;motorSound.volume=.08;driftSound.volume=.33;boostSound.volume=.38;let previousRaceDrift=false,previousRaceBoost=false;
+function playKartSound(sound){if(!soundOn)return;sound.currentTime=0;sound.play().catch(()=>{});}
+const speedGlyphs=new Image(),speedCanvas=document.createElement('canvas');speedCanvas.id='speed-sprite';speedCanvas.width=114;speedCanvas.height=44;speedCanvas.hidden=true;$('speed').parentElement.append(speedCanvas);
+speedGlyphs.onload=()=>{speedCanvas.hidden=false;$('speed').hidden=true;};speedGlyphs.src='assets/original-ui/stage/speedIndiGame/속도_num.png';
+function drawOriginalSpeed(value){if(!speedGlyphs.complete||!speedGlyphs.naturalWidth)return;const ctx=speedCanvas.getContext('2d'),digits=String(Math.min(999,Math.max(0,Math.round(value)))).padStart(3,'0');ctx.clearRect(0,0,114,44);for(let i=0;i<3;i++)ctx.drawImage(speedGlyphs,Number(digits[i])*38,0,38,44,i*38,0,38,44);}
 try{selected={...selected,...JSON.parse(localStorage.getItem('kart-web-selection')||'{}')};}catch{}
 function bestKey(){return `kart-web-best-${selected.track}`;}
 function readBest(){try{best=Number(localStorage.getItem(bestKey()))||null;}catch{best=null;}updateBest();}
@@ -98,10 +103,10 @@ function resetCar(start=false){
  Object.assign(safe,{x:car.x,y:car.y,z:car.z,heading:h});updateKart();camera.position.set(car.x-10*Math.sin(h),car.y-10*Math.cos(h),car.z+5);keys.clear();
 }
 function startRace(){if(!ready)return;if(room){if(room.hostId===ownId&&room.stage==='lobby')send({type:'start'});return;}beginRace();}
-function beginRace(seconds=3){if(!ready)return;for(const d of [$('results'),$('info'),$('multiplayer')])if(d.open)d.close();state='countdown';elapsed=0;countdown=seconds;startBoostArmed=false;progress=new Progress(course.gates,item('track').laps);resetCar(true);$('lobby').hidden=true;$('hud').hidden=false;document.body.classList.add('racing');$('pause').textContent='일시정지 · Esc';if(soundOn)music.play().catch(()=>{});canvas.focus();}
-function garage(){state='lobby';$('garage-screen').hidden=true;$('home-screen').hidden=false;keys.clear();if($('results').open)$('results').close();$('hud').hidden=true;$('lobby').hidden=false;document.body.classList.remove('racing');if(room)leaveRoom();resetCar(true);}
-let beforePause='race';function pause(){if(state==='race'||state==='countdown'){beforePause=state;state='paused';keys.clear();$('message').textContent='PAUSED';$('pause').textContent='계속하기 · Esc';}else if(state==='paused'){state=beforePause;$('message').textContent='';$('pause').textContent='일시정지 · Esc';}}
-function finish(){state='finished';car.speed=0;keys.clear();if(room)send({type:'finish',time:elapsed});$('again').textContent=room?'방에서 나가기':'다시 달리기 ↗';$('finish-time').textContent=formatTime(elapsed);const record=!best||elapsed<best;if(record){best=elapsed;try{localStorage.setItem(bestKey(),String(best));}catch{}}
+function beginRace(seconds=3){if(!ready)return;for(const d of [$('results'),$('info'),$('multiplayer')])if(d.open)d.close();state='countdown';elapsed=0;countdown=seconds;startBoostArmed=false;previousRaceDrift=previousRaceBoost=false;progress=new Progress(course.gates,item('track').laps);resetCar(true);$('lobby').hidden=true;$('hud').hidden=false;document.body.classList.add('racing');$('pause').textContent='일시정지 · Esc';if(soundOn){music.play().catch(()=>{});motorSound.play().catch(()=>{});}canvas.focus();}
+function garage(){state='lobby';motorSound.pause();$('garage-screen').hidden=true;$('home-screen').hidden=false;keys.clear();if($('results').open)$('results').close();$('hud').hidden=true;$('lobby').hidden=false;document.body.classList.remove('racing');if(room)leaveRoom();resetCar(true);}
+let beforePause='race';function pause(){if(state==='race'||state==='countdown'){beforePause=state;state='paused';motorSound.pause();keys.clear();$('message').textContent='PAUSED';$('pause').textContent='계속하기 · Esc';}else if(state==='paused'){state=beforePause;if(soundOn)motorSound.play().catch(()=>{});$('message').textContent='';$('pause').textContent='일시정지 · Esc';}}
+function finish(){state='finished';motorSound.pause();car.speed=0;keys.clear();if(room)send({type:'finish',time:elapsed});$('again').textContent=room?'방에서 나가기':'다시 달리기 ↗';$('finish-time').textContent=formatTime(elapsed);const record=!best||elapsed<best;if(record){best=elapsed;try{localStorage.setItem(bestKey(),String(best));}catch{}}
  updateBest();$('record-status').textContent=record?'새로운 개인 최고 기록입니다.':'완주 기록이 측정되었습니다.';$('results').showModal();}
 function groundQuery(origin,delta){const o=new THREE.Vector3(...origin),d=new THREE.Vector3(...delta),distance=d.length();if(distance<1e-6)return null;ray.set(o,d.normalize());ray.far=distance;const hit=ray.intersectObjects(colliders,false).find(h=>{const n=h.face.normal.clone().transformDirection(h.object.matrixWorld);return n.z>.65;});if(!hit)return null;const n=hit.face.normal.clone().transformDirection(hit.object.matrixWorld);return {point:[hit.point.x,hit.point.y,hit.point.z],normal:[n.x,n.y,n.z]};}
 function bodySweep(from,to,axes){
@@ -138,6 +143,9 @@ function tick(dt){
  elapsed+=dt;if(elapsed>1)$('message').textContent='';
  const old=[car.x,car.y,car.z+.8],throttle=keys.has('ArrowUp')||keys.has('KeyW'),brake=keys.has('ArrowDown')||keys.has('KeyS'),steer=(keys.has('ArrowLeft')||keys.has('KeyA')?1:0)-(keys.has('ArrowRight')||keys.has('KeyD')?1:0);
  const motion=driving.step(dt,{forward:throttle,reverse:brake,steer,drift:keys.has('ShiftLeft')||keys.has('ShiftRight'),boost:keys.has('ControlLeft')||keys.has('ControlRight')||keys.has('Space'),groundQuery,bodySweep});car.x=driving.position[0];car.y=driving.position[1];car.z=driving.position[2];car.heading=driving.heading;car.speed=driving.speed;car.drift=motion.mode==='drift'||motion.mode==='trigger';
+ if(car.drift&&!previousRaceDrift)playKartSound(driftSound);previousRaceDrift=car.drift;
+ const boosting=driving.nitroTime>0;if(boosting&&!previousRaceBoost)playKartSound(boostSound);previousRaceBoost=boosting;
+ motorSound.playbackRate=clamp(.75+Math.abs(driving.vf)/70,.75,1.6);motorSound.volume=clamp(.035+Math.abs(driving.vf)/700,.035,.14);
  car.vz=driving.linearVelocity[2];
  if(car.z<-40||!Number.isFinite(car.x)){resetCar();return;}
  if(progress.update(old,[car.x,car.y,car.z+.8])){if(progress.finished){finish();return;}Object.assign(safe,{x:car.x,y:car.y,z:car.z,heading:car.heading});}
@@ -159,7 +167,7 @@ function frame(now){const dt=Math.min((now-previous)/1000,.05);previous=now;accu
  }
  else{
   const distance=9+Math.min(3,Math.abs(car.speed)*.035);camTarget.set(car.x-Math.sin(car.heading)*distance,car.y-Math.cos(car.heading)*distance,car.z+4.5);camera.position.lerp(camTarget,1-Math.exp(-6*dt));look.set(car.x+Math.sin(car.heading)*10,car.y+Math.cos(car.heading)*10,car.z+1.1);camera.lookAt(look);camera.fov+=( (driving.nitroTime>0?73:63)-camera.fov)*Math.min(1,dt*4);camera.updateProjectionMatrix();
-  $('speed').textContent=Math.round(driving.speed*3.6);$('time').textContent=formatTime(elapsed);$('lap').innerHTML=`${Math.min(progress?.lap||1,item('track').laps)} <em>/ ${item('track').laps}</em>`;$('checkpoint').textContent=`CHECKPOINT ${progress?.next||0} / ${course.gates.length}`;$('boost-fill').style.width=`${driving.charge*100}%`;$('boost-label').textContent=`N₂O ${driving.nitro} / 2 · Ctrl`;$('drift-label').textContent=driving.startBoostTime>0?'START BOOST':driving.nitroTime>0?'BOOST ON':driving.mode==='trigger'?'DRIFT ENTRY':car.drift?'DRIFT':'GRIP';drawMap();
+  const speedKmh=driving.speed*3.6;$('speed').textContent=Math.round(speedKmh);drawOriginalSpeed(speedKmh);$('time').textContent=formatTime(elapsed);$('lap').innerHTML=`${Math.min(progress?.lap||1,item('track').laps)} <em>/ ${item('track').laps}</em>`;$('checkpoint').textContent=`CHECKPOINT ${progress?.next||0} / ${course.gates.length}`;$('boost-fill').style.width=`${driving.charge*100}%`;$('boost-label').textContent=`N₂O ${driving.nitro} / 2 · Ctrl`;$('drift-label').textContent=driving.startBoostTime>0?'START BOOST':driving.nitroTime>0?'BOOST ON':driving.mode==='trigger'?'DRIFT ENTRY':car.drift?'DRIFT':'GRIP';drawMap();
  }
  if(room&&state==='race'&&now-lastPose>65){lastPose=now;send({type:'pose',x:car.x,y:car.y,z:car.z,heading:car.heading,speed:car.speed});}
  for(const peer of remote.values())if(peer.mesh&&peer.pose){const p=peer.pose;peer.mesh.position.lerp(new THREE.Vector3(p.x,p.y,p.z),Math.min(1,dt*12));peer.mesh.rotation.z=Math.PI-p.heading;}
@@ -201,7 +209,7 @@ document.querySelectorAll('[data-original-action]').forEach(b=>b.onclick=()=>{
 });
 $('garage-back').onclick=()=>navigateHome('lobby');$('again').onclick=()=>room?garage():startRace();$('garage').onclick=garage;$('exit').onclick=garage;$('pause').onclick=pause;
 $('reset').onclick=()=>{if(state==='race'||state==='paused')resetCar();};$('help').onclick=()=>$('info').showModal();$('close-info').onclick=()=>$('info').close();
-$('sound').onclick=()=>{soundOn=!soundOn;$('sound').textContent='사운드 '+(soundOn?'ON':'OFF');$('sound').setAttribute('aria-label','배경음악 '+(soundOn?'끄기':'켜기'));if(soundOn)music.play().catch(()=>{});else music.pause();};
+$('sound').onclick=()=>{soundOn=!soundOn;$('sound').textContent='사운드 '+(soundOn?'ON':'OFF');$('sound').setAttribute('aria-label','배경음악 '+(soundOn?'끄기':'켜기'));if(soundOn){music.play().catch(()=>{});if(state==='race'||state==='countdown')motorSound.play().catch(()=>{});}else{music.pause();motorSound.pause();}};
 for(const tab of document.querySelectorAll('[data-tab]'))tab.onclick=()=>selectGarageTab(tab.dataset.tab);
 $('multi-open').onclick=()=>$('multiplayer').showModal();$('multi-close').onclick=()=>$('multiplayer').close();$('room-create').onclick=()=>connectRoom('create');$('room-join').onclick=()=>connectRoom('join');$('room-start').onclick=startRace;$('room-leave').onclick=leaveRoom;
 for(const b of document.querySelectorAll('[data-key]')){b.addEventListener('pointerdown',e=>{e.preventDefault();b.setPointerCapture(e.pointerId);keys.add(b.dataset.key);});for(const t of ['pointerup','pointercancel','lostpointercapture'])b.addEventListener(t,()=>keys.delete(b.dataset.key));}

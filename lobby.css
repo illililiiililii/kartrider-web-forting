@@ -118,3 +118,16 @@ body:not(.racing) #lobby{inset:34px 0 0;background:linear-gradient(90deg,#203549
 .original-dock .dock-icon{color:#8296aa;text-shadow:none}
 .dock-account{color:#66839b}.dock-account .small{color:#426b85;background:#e9f1f6;border-color:#b7cad9}
 @media(max-width:700px){body:not(.racing) header .top-nav{padding:0 5px;font-size:8px}body:not(.racing) header .profile-top{display:none}.home-modes,.home-events{top:11%}.lobby-bottom{height:52px}.original-dock button{height:50px;min-width:0;width:12.5%;font-size:7px}}
+
+/* Unpacked P5136 speed-individual HUD sprites (tachometer.xml/boostGauge.xml). */
+#hud .speed-block{left:50%;right:auto;bottom:10px;transform:translateX(-50%);width:198px;height:93px;padding:0;border:0;border-radius:0;background:url('assets/original-ui/stage/speedIndiGame/tacho.png') center bottom/146px 32px no-repeat;box-shadow:none;text-align:center;overflow:visible}
+#hud .speed-block>div{position:absolute;top:8px;left:50%;transform:translateX(-50%);width:114px;height:44px}
+#hud .speed-block>div b{display:block;font-size:39px;line-height:44px;letter-spacing:0;color:#ffbd17}
+#hud .speed-block>div small{display:none}
+#speed-sprite{display:block;width:114px;height:44px;image-rendering:auto}
+#speed-sprite[hidden]{display:none}
+#hud .speed-block .boost-meter{position:absolute;left:0;right:auto;top:-27px;width:198px;height:26px;margin:0;padding:7px 7px 7px 43px;border:0;border-radius:0;background:url('assets/original-ui/stage/speedIndiGame/n2o_solo.png') center/198px 26px no-repeat;box-shadow:none;overflow:hidden}
+#hud .speed-block .boost-meter i{width:0;height:12px;background:url('assets/original-ui/stage/speedIndiGame/n2o_solo_bar.png') -43px -7px/198px 26px no-repeat;box-shadow:none}
+#hud .speed-block #boost-label{top:-43px;left:0;right:0;font-size:9px;color:#fff}
+#hud .speed-block #drift-label{position:absolute;top:51px;left:0;right:0;font-size:8px;color:#ffd44c}
+@media(max-width:700px){#hud .speed-block{bottom:93px;transform:translateX(-50%) scale(.8);transform-origin:center bottom}}
