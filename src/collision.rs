@@ -24,6 +24,38 @@ pub fn uses_upward_contact_velocity_branch(
         && (contact_normal.z > UPWARD_CONTACT_NORMAL_Z_THRESHOLD || override_at_db0)
 }
 
+/// The wall-side branch and its reported impact magnitude in `0x00A3AB30`.
+///
+/// The native function records `length(normal * dot(velocity, normal))` in the
+/// optional collision report before performing further wall response. This
+/// function does not implement that subsequent force or angular response.
+#[must_use]
+pub fn wall_contact_reported_speed(
+    has_collision_hit: bool,
+    iteration: u32,
+    maximum_iterations_at_e5c: u32,
+    contact_normal: Vec3,
+    world_velocity: Vec3,
+    override_at_db0: bool,
+) -> Option<f32> {
+    let normal_speed = contact_normal.dot(world_velocity);
+    if !has_collision_hit
+        || iteration >= maximum_iterations_at_e5c
+        || !(normal_speed < 0.0)
+        || contact_normal.z > UPWARD_CONTACT_NORMAL_Z_THRESHOLD
+        || override_at_db0
+    {
+        return None;
+    }
+    let normal_component = contact_normal.scaled(normal_speed);
+    Some(
+        (normal_component.x * normal_component.x
+            + normal_component.y * normal_component.y
+            + normal_component.z * normal_component.z)
+            .sqrt(),
+    )
+}
+
 /// Velocity replacement in the upward-contact branch of native `0x00A3AB30`.
 ///
 /// The collision normal is the vector supplied by the native contact query.
@@ -113,5 +145,31 @@ mod tests {
             incoming,
             true
         ));
+    }
+
+    #[test]
+    fn wall_side_branch_reports_normal_component_magnitude() {
+        let report = wall_contact_reported_speed(
+            true,
+            0,
+            1,
+            Vec3::new(1.0, 0.0, 0.0),
+            Vec3::new(-8.0, 3.0, 0.0),
+            false,
+        );
+        assert_eq!(report, Some(8.0));
+    }
+
+    #[test]
+    fn upward_contact_and_override_do_not_report_wall_impact() {
+        let incoming = Vec3::new(-8.0, 0.0, -8.0);
+        assert_eq!(
+            wall_contact_reported_speed(true, 0, 1, Vec3::new(0.0, 0.0, 1.0), incoming, false),
+            None
+        );
+        assert_eq!(
+            wall_contact_reported_speed(true, 0, 1, Vec3::new(1.0, 0.0, 0.0), incoming, true),
+            None
+        );
     }
 }

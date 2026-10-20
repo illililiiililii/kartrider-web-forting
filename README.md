@@ -2,7 +2,18 @@
 
 This is a new, from-scratch browser port based on the supplied Korean KartRider P5136 client, its expanded data, and measurements taken from that client. No code or tuning values from the rejected earlier web project are used.
 
-The repository is currently at the physics-evidence gate. It is not yet a playable browser game: presenting a lobby before the original time step, state layout, force order, and controlled replay comparison are complete would violate the required implementation order.
+The repository is still at the physics-evidence gate. The temporary 2D browser sandbox below is for input and Wasm smoke testing, **not** a playable P5136 port or original-physics validation.
+
+## Try the temporary 2D sandbox
+
+The local server is currently available at [http://127.0.0.1:4173/](http://127.0.0.1:4173/) on this computer. To rebuild and restart later, run these commands in this repository:
+
+```powershell
+.\tools\build-preview.ps1
+python -m http.server 4173 --bind 127.0.0.1 --directory web-preview
+```
+
+Use W/↑ to accelerate, S/↓ to brake/reverse, A/D or ←/→ to steer, Shift to drift, Space for boost, and R to reset. Touch buttons are also provided. The canvas and controls are JavaScript, while all 2D state updates run in Rust/Wasm. The 1–2 ms substep schedule and steering expressions are recovered from the client; drive force, grip, drift, gauge, boost, and simple square walls are explicitly provisional. This sandbox is intentionally separate from the required original-client time-series comparison.
 
 ## Implemented now
 
@@ -33,7 +44,7 @@ The verified release artifact is:
 
 `..\..\work\kart-web-target\wasm32-unknown-unknown\release\p5136_wasm_core.wasm`
 
-Its current SHA-256 is `56276F7D308AFA06BD700CB2EA0C56CA3968A0C9E3E1133773042D08A6C5D3F3` and its size is 26,857 bytes. It exports WebAssembly memory plus:
+The current preview Wasm SHA-256 is `7999B71903EA5ECD7EDC913AA7B14A74C6ED66E977F37AA7F57C84AA267D0887` (37,313 bytes). It exports WebAssembly memory plus:
 
 - `p5136_abi_version`
 - `p5136_plan_substeps` and `p5136_substep_count`
@@ -52,8 +63,10 @@ Its current SHA-256 is `56276F7D308AFA06BD700CB2EA0C56CA3968A0C9E3E1133773042D08
 - `p5136_integrate_position_after_collision`
 - `p5136_upward_contact_velocity`
 - `p5136_uses_upward_contact_velocity_branch`
+- `p5136_wall_contact_reported_speed`
+- `p5136_preview_new`, `p5136_preview_step`, `p5136_preview_reset`
 
-Thirty-three Rust unit tests pass.
+Thirty-eight Rust unit tests pass. The preview page and Wasm return HTTP 200 locally, and a direct Wasm call with throttle input advances both speed and position. Browser visual/input behavior still needs user testing.
 
 ## Native original-client instrumentation
 

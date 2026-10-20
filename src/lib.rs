@@ -9,6 +9,7 @@ pub mod integrator;
 pub mod kart_spec;
 pub mod longitudinal;
 pub mod native_layout;
+pub mod preview;
 pub mod scheduler;
 pub mod steering;
 pub mod suspension;
@@ -24,6 +25,49 @@ use suspension::SuspensionParameters;
 /// Version of the raw WebAssembly ABI exposed by this crate.
 #[no_mangle]
 pub extern "C" fn p5136_abi_version() -> u32 {
+    1
+}
+
+/// Allocate a temporary 2D tester state in Wasm memory.
+#[no_mangle]
+pub extern "C" fn p5136_preview_new() -> *mut preview::PreviewState {
+    Box::into_raw(Box::new(preview::PreviewState::default()))
+}
+
+/// Advance the temporary tester; this is not the original P5136 force model.
+#[no_mangle]
+pub unsafe extern "C" fn p5136_preview_step(
+    state: *mut preview::PreviewState,
+    elapsed_ms: u32,
+    throttle: u32,
+    brake: u32,
+    steer: f32,
+    drift: u32,
+    boost: u32,
+) -> u32 {
+    let Some(state) = (unsafe { state.as_mut() }) else {
+        return 0;
+    };
+    state.advance(
+        elapsed_ms,
+        preview::PreviewInput {
+            throttle: throttle != 0,
+            brake: brake != 0,
+            steer,
+            drift: drift != 0,
+            boost: boost != 0,
+        },
+    );
+    1
+}
+
+/// Restore the temporary tester to its start position.
+#[no_mangle]
+pub unsafe extern "C" fn p5136_preview_reset(state: *mut preview::PreviewState) -> u32 {
+    let Some(state) = (unsafe { state.as_mut() }) else {
+        return 0;
+    };
+    *state = preview::PreviewState::default();
     1
 }
 
@@ -335,6 +379,36 @@ pub unsafe extern "C" fn p5136_uses_upward_contact_velocity_branch(
     ) as u32
 }
 
+/// Report native wall-side contact speed without applying its unresolved response.
+/// Returns 1 if the wall branch is entered and writes the reported magnitude;
+/// otherwise returns 0 and writes zero. Vector pointers address three `f32`s.
+#[no_mangle]
+pub unsafe extern "C" fn p5136_wall_contact_reported_speed(
+    has_collision_hit: u32,
+    iteration: u32,
+    maximum_iterations_at_e5c: u32,
+    contact_normal: *const f32,
+    world_velocity: *const f32,
+    override_at_db0: u32,
+    output_speed: *mut f32,
+) -> u32 {
+    if contact_normal.is_null() || world_velocity.is_null() || output_speed.is_null() {
+        return 0;
+    }
+    let normal = unsafe { core::slice::from_raw_parts(contact_normal, 3) };
+    let velocity = unsafe { core::slice::from_raw_parts(world_velocity, 3) };
+    let report = collision::wall_contact_reported_speed(
+        has_collision_hit != 0,
+        iteration,
+        maximum_iterations_at_e5c,
+        Vec3::new(normal[0], normal[1], normal[2]),
+        Vec3::new(velocity[0], velocity[1], velocity[2]),
+        override_at_db0 != 0,
+    );
+    unsafe { output_speed.write(report.unwrap_or(0.0)) };
+    report.is_some() as u32
+}
+
 /// Native initial steer angle in radians, before speed attenuation and tire forces.
 #[no_mangle]
 pub extern "C" fn p5136_base_steer_radians(
@@ -486,5 +560,25 @@ mod tests {
             },
             1
         );
+    }
+
+    #[test]
+    fn raw_wall_report_abi_writes_native_normal_speed_magnitude() {
+        let normal = [1.0, 0.0, 0.0];
+        let incoming = [-8.0, 3.0, 0.0];
+        let mut reported_speed = 0.0;
+        let found = unsafe {
+            p5136_wall_contact_reported_speed(
+                1,
+                0,
+                1,
+                normal.as_ptr(),
+                incoming.as_ptr(),
+                0,
+                &mut reported_speed,
+            )
+        };
+        assert_eq!(found, 1);
+        assert_eq!(reported_speed, 8.0);
     }
 }

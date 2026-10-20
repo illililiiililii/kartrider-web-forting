@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>P5136 Wasm 2D 주행 테스트</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main>
+    <header>
+      <div>
+        <h1>P5136 Wasm · 2D 주행 테스트</h1>
+        <p>임시 조작 시험장 — 원작 물리 비교가 끝난 완성 게임이 아닙니다.</p>
+      </div>
+      <span id="status" role="status">Wasm 로딩 중…</span>
+    </header>
+    <div class="layout">
+      <section class="arena" aria-label="2D 테스트 주행장">
+        <canvas id="track" width="900" height="600"></canvas>
+        <div class="touch-controls" aria-label="터치 조작">
+          <button data-key="left">◀</button><button data-key="right">▶</button>
+          <button data-key="throttle">가속</button><button data-key="brake">브레이크</button>
+          <button data-key="drift">드리프트</button><button data-key="boost">부스터</button>
+        </div>
+      </section>
+      <aside>
+        <h2>텔레메트리</h2>
+        <dl>
+          <dt>속도</dt><dd><strong id="speed">0</strong> km/h</dd>
+          <dt>방향</dt><dd id="heading">0°</dd>
+          <dt>각속도</dt><dd id="yaw">0°/s</dd>
+          <dt>드리프트</dt><dd id="drift">꺼짐</dd>
+          <dt>게이지</dt><dd id="gauge">0%</dd>
+          <dt>부스터</dt><dd id="boost">0.0초</dd>
+          <dt>벽 접촉</dt><dd id="hits">0</dd>
+        </dl>
+        <button id="reset">시작 위치로 재설정 (R)</button>
+        <p class="help">W/↑ 가속 · S/↓ 브레이크/후진 · A/D 또는 ←/→ 조향 · Shift 드리프트 · Space 부스터</p>
+        <p class="warning">원본 근거: 1–2ms 서브스텝, 기본 조향각, 속도 감쇠식. 임시 실험식: 가속·브레이크·횡그립·드리프트·게이지·부스터·사각 벽. 수치나 느낌을 원본과 동일하다고 판단하지 마세요.</p>
+      </aside>
+    </div>
+  </main>
+  <script type="module" src="main.js"></script>
+</body>
+</html>
