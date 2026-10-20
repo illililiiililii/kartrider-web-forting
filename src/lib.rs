@@ -277,10 +277,10 @@ pub unsafe extern "C" fn p5136_integrate_position_after_collision(
     1
 }
 
-/// Native wall-impact velocity branch after the caller has resolved contact.
+/// Native upward-surface velocity branch after the caller has resolved contact.
 /// Each vector pointer addresses three consecutive `f32` values.
 #[no_mangle]
-pub unsafe extern "C" fn p5136_wall_impact_velocity(
+pub unsafe extern "C" fn p5136_upward_contact_velocity(
     world_velocity: *const f32,
     contact_normal: *const f32,
     body_forward_axis: *const f32,
@@ -296,7 +296,7 @@ pub unsafe extern "C" fn p5136_wall_impact_velocity(
     let velocity = unsafe { core::slice::from_raw_parts(world_velocity, 3) };
     let normal = unsafe { core::slice::from_raw_parts(contact_normal, 3) };
     let forward = unsafe { core::slice::from_raw_parts(body_forward_axis, 3) };
-    let result = collision::wall_impact_velocity(
+    let result = collision::upward_contact_velocity(
         Vec3::new(velocity[0], velocity[1], velocity[2]),
         Vec3::new(normal[0], normal[1], normal[2]),
         Vec3::new(forward[0], forward[1], forward[2]),
@@ -309,16 +309,15 @@ pub unsafe extern "C" fn p5136_wall_impact_velocity(
     1
 }
 
-/// Whether the P5136 main-tick wall collision selects its impact branch.
+/// Whether the P5136 main-tick collision selects its upward-contact branch.
 /// Both vector pointers address three consecutive `f32` values.
 #[no_mangle]
-pub unsafe extern "C" fn p5136_uses_wall_impact_velocity_branch(
+pub unsafe extern "C" fn p5136_uses_upward_contact_velocity_branch(
     has_collision_hit: u32,
     iteration: u32,
     maximum_iterations_at_e5c: u32,
     contact_normal: *const f32,
     world_velocity: *const f32,
-    query_scalar_at_contact_plus_8: f32,
     override_at_db0: u32,
 ) -> u32 {
     if contact_normal.is_null() || world_velocity.is_null() {
@@ -326,13 +325,12 @@ pub unsafe extern "C" fn p5136_uses_wall_impact_velocity_branch(
     }
     let normal = unsafe { core::slice::from_raw_parts(contact_normal, 3) };
     let velocity = unsafe { core::slice::from_raw_parts(world_velocity, 3) };
-    collision::uses_wall_impact_velocity_branch(
+    collision::uses_upward_contact_velocity_branch(
         has_collision_hit != 0,
         iteration,
         maximum_iterations_at_e5c,
         Vec3::new(normal[0], normal[1], normal[2]),
         Vec3::new(velocity[0], velocity[1], velocity[2]),
-        query_scalar_at_contact_plus_8,
         override_at_db0 != 0,
     ) as u32
 }
@@ -454,13 +452,13 @@ mod tests {
     }
 
     #[test]
-    fn raw_wall_impact_abi_matches_native_vector_path() {
-        let velocity = [-10.0, 3.0, 0.0];
-        let normal = [1.0, 0.0, 0.0];
-        let forward = [1.0, 0.0, 0.0];
+    fn raw_upward_contact_abi_matches_native_vector_path() {
+        let velocity = [3.0, 0.0, -10.0];
+        let normal = [0.0, 0.0, 1.0];
+        let forward = [0.0, 0.0, 1.0];
         let mut output = [0.0; 3];
         let success = unsafe {
-            p5136_wall_impact_velocity(
+            p5136_upward_contact_velocity(
                 velocity.as_ptr(),
                 normal.as_ptr(),
                 forward.as_ptr(),
@@ -468,22 +466,21 @@ mod tests {
             )
         };
         assert_eq!(success, 1);
-        assert_eq!(output, [7.0, 3.0, 0.0]);
+        assert_eq!(output, [3.0, 0.0, 7.0]);
     }
 
     #[test]
-    fn raw_wall_impact_predicate_abi_uses_original_threshold() {
-        let normal = [1.0, 0.0, 0.0];
-        let incoming = [-1.0, 0.0, 0.0];
+    fn raw_upward_contact_predicate_abi_uses_normal_z() {
+        let normal = [0.0, 0.0, 1.0];
+        let incoming = [0.0, 0.0, -1.0];
         assert_eq!(
             unsafe {
-                p5136_uses_wall_impact_velocity_branch(
+                p5136_uses_upward_contact_velocity_branch(
                     1,
                     0,
                     1,
                     normal.as_ptr(),
                     incoming.as_ptr(),
-                    0.66,
                     0,
                 )
             },

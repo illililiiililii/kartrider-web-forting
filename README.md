@@ -8,7 +8,7 @@ The repository is currently at the physics-evidence gate. It is not yet a playab
 
 - Rust core with the original tick scheduler: elapsed time is clamped to 500 ms and split into 2 ms substeps plus a possible 1 ms tail.
 - Exact decoder and all 70 named fields for the 235-byte effective `KartSpec` race-start block.
-- Version-pinned native layout constants, exact body-axis velocity projection and speed magnitude, recovered scalar suspension, input-channel selection, drift-input transitions and release countdown, the initial plus speed-attenuated steering target, the forward force-vector path, the normal linear-velocity substep, one wall-impact velocity branch, and the post-collision position substep.
+- Version-pinned native layout constants, exact body-axis velocity projection and speed magnitude, recovered scalar suspension, input-channel selection, drift-input transitions and release countdown, the initial plus speed-attenuated steering target, the forward force-vector path, the normal linear-velocity substep, one upward-surface contact velocity branch, and the post-collision position substep.
 - Dependency-free raw WebAssembly ABI for querying and writing substep plans.
 - Version-pinned 32-bit native telemetry, injector, and scan-code input driver for controlled original-client captures.
 - Checked-in controlled-run evidence and a deterministic PowerShell slicer/summary generator.
@@ -33,7 +33,7 @@ The verified release artifact is:
 
 `..\..\work\kart-web-target\wasm32-unknown-unknown\release\p5136_wasm_core.wasm`
 
-Its current SHA-256 is `3EF96A2CEACB6CCD5668551101917D2EDF914DDD20A343896AE29921B931336B` and its size is 26,858 bytes. It exports WebAssembly memory plus:
+Its current SHA-256 is `56276F7D308AFA06BD700CB2EA0C56CA3968A0C9E3E1133773042D08A6C5D3F3` and its size is 26,857 bytes. It exports WebAssembly memory plus:
 
 - `p5136_abi_version`
 - `p5136_plan_substeps` and `p5136_substep_count`
@@ -50,8 +50,8 @@ Its current SHA-256 is `3EF96A2CEACB6CCD5668551101917D2EDF914DDD20A343896AE29921
 - `p5136_forward_force_vector`
 - `p5136_integrate_linear_velocity`
 - `p5136_integrate_position_after_collision`
-- `p5136_wall_impact_velocity`
-- `p5136_uses_wall_impact_velocity_branch`
+- `p5136_upward_contact_velocity`
+- `p5136_uses_upward_contact_velocity_branch`
 
 Thirty-three Rust unit tests pass.
 
