@@ -8,7 +8,7 @@ The repository is currently at the physics-evidence gate. It is not yet a playab
 
 - Rust core with the original tick scheduler: elapsed time is clamped to 500 ms and split into 2 ms substeps plus a possible 1 ms tail.
 - Exact decoder and all 70 named fields for the 235-byte effective `KartSpec` race-start block.
-- Version-pinned native layout constants, exact body-axis velocity projection and speed magnitude, recovered scalar suspension, input-channel selection, drift-input transitions and release countdown, the initial plus speed-attenuated steering target, the forward force-vector path, and the normal linear-velocity substep.
+- Version-pinned native layout constants, exact body-axis velocity projection and speed magnitude, recovered scalar suspension, input-channel selection, drift-input transitions and release countdown, the initial plus speed-attenuated steering target, the forward force-vector path, the normal linear-velocity substep, and the post-collision position substep.
 - Dependency-free raw WebAssembly ABI for querying and writing substep plans.
 - Version-pinned 32-bit native telemetry, injector, and scan-code input driver for controlled original-client captures.
 - Checked-in controlled-run evidence and a deterministic PowerShell slicer/summary generator.
@@ -33,7 +33,7 @@ The verified release artifact is:
 
 `..\..\work\kart-web-target\wasm32-unknown-unknown\release\p5136_wasm_core.wasm`
 
-Its current SHA-256 is `C5D04AB32E8F343AF0CB83FB70D3F2D19E72D3F4BA5934628AF8F813132716FA` and its size is 26,335 bytes. It exports WebAssembly memory plus:
+Its current SHA-256 is `DF9FAA9FE964C2FE8CFFA596CEEE7FE98BFBFBE8996EF6B418B99F1190C65523` and its size is 26,495 bytes. It exports WebAssembly memory plus:
 
 - `p5136_abi_version`
 - `p5136_plan_substeps` and `p5136_substep_count`
@@ -49,8 +49,9 @@ Its current SHA-256 is `C5D04AB32E8F343AF0CB83FB70D3F2D19E72D3F4BA5934628AF8F813
 - `p5136_forward_drive_input` and `p5136_reverse_brake_input`
 - `p5136_forward_force_vector`
 - `p5136_integrate_linear_velocity`
+- `p5136_integrate_position_after_collision`
 
-Twenty-five Rust unit tests pass.
+Twenty-seven Rust unit tests pass.
 
 ## Native original-client instrumentation
 

@@ -249,6 +249,33 @@ pub unsafe extern "C" fn p5136_integrate_linear_velocity(
     1
 }
 
+/// Native normal-branch position update after collision velocity correction.
+/// Each vector pointer addresses three consecutive `f32` values.
+#[no_mangle]
+pub unsafe extern "C" fn p5136_integrate_position_after_collision(
+    world_position: *const f32,
+    collision_corrected_velocity: *const f32,
+    dt_seconds: f32,
+    output_xyz: *mut f32,
+) -> u32 {
+    if world_position.is_null() || collision_corrected_velocity.is_null() || output_xyz.is_null() {
+        return 0;
+    }
+    let position = unsafe { core::slice::from_raw_parts(world_position, 3) };
+    let velocity = unsafe { core::slice::from_raw_parts(collision_corrected_velocity, 3) };
+    let result = integrator::position_after_collision_step(
+        Vec3::new(position[0], position[1], position[2]),
+        Vec3::new(velocity[0], velocity[1], velocity[2]),
+        dt_seconds,
+    );
+    unsafe {
+        output_xyz.write(result.x);
+        output_xyz.add(1).write(result.y);
+        output_xyz.add(2).write(result.z);
+    }
+    1
+}
+
 /// Native initial steer angle in radians, before speed attenuation and tire forces.
 #[no_mangle]
 pub extern "C" fn p5136_base_steer_radians(
@@ -344,5 +371,24 @@ mod tests {
     #[test]
     fn raw_speed_magnitude_matches_three_dimensional_length() {
         assert_eq!(p5136_speed_magnitude(3.0, 4.0, 12.0), 13.0);
+    }
+
+    #[test]
+    fn raw_position_abi_uses_corrected_velocity() {
+        let position = [1.0, 2.0, 3.0];
+        let corrected_velocity = [0.0, -4.0, 5.0];
+        let mut output = [0.0; 3];
+        let success = unsafe {
+            p5136_integrate_position_after_collision(
+                position.as_ptr(),
+                corrected_velocity.as_ptr(),
+                0.002,
+                output.as_mut_ptr(),
+            )
+        };
+        assert_eq!(success, 1);
+        assert_eq!(output[0], 1.0);
+        assert!((output[1] - 1.992).abs() < 1e-6);
+        assert!((output[2] - 3.01).abs() < 1e-6);
     }
 }
