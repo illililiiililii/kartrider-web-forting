@@ -3,6 +3,18 @@ import { createPreviewRenderer } from './render3d.js';
 const canvas = document.querySelector('#track');
 const view = createPreviewRenderer(canvas);
 const status = document.querySelector('#status');
+const modelLabel = document.querySelector('#model-label');
+const kartChoice = document.querySelector('#kart-choice');
+async function selectKart() {
+  modelLabel.textContent = '원본 카트 메시 로딩 중';
+  try {
+    modelLabel.textContent = `${await view.setKart(kartChoice.value)} · 임시 주행장`;
+  } catch (error) {
+    modelLabel.textContent = `${error.message} · 임시 도형 카트`;
+  }
+}
+kartChoice.addEventListener('change', selectKart);
+selectKart();
 const controls = { throttle: false, brake: false, left: false, right: false, drift: false, boost: false };
 const keyMap = {
   KeyW: 'throttle', ArrowUp: 'throttle', KeyS: 'brake', ArrowDown: 'brake',

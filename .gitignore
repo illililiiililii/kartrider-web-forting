@@ -2,3 +2,4 @@
 *.user
 *.suo
 /.vs/
+/web-preview/assets/*.mesh.json

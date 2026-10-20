@@ -13,7 +13,16 @@ The local server is currently available at [http://127.0.0.1:4173/](http://127.0
 python -m http.server 4173 --bind 127.0.0.1 --directory web-preview
 ```
 
-Use W/↑ to accelerate, S/↓ to brake/reverse, A/D or ←/→ to steer, Shift to drift, Space for boost, and R to reset. To test reverse drifting, hold S until moving backward, then press Shift and a steering key. Touch buttons and chase/overhead camera views are provided. Three.js renders a temporary geometric kart, driver, and square test arena; position, heading, driving forces, drift, boost, and wall collision remain in Rust/Wasm. The preview turns more slowly, rebounds from square walls, and keeps sliding after drift-key release until countersteer or lower speed ends it. Slip angle and drift time are displayed. The 1–2 ms substep schedule, steering expressions, and speed-squared drift-release scalar are recovered from the client; **how that scalar affects tire forces remains unknown**. Its use as a persistence timer, reverse-drift handling, steering settings, wall restitution, drive force, grip, gauge, and boost are provisional. The geometric visuals are **not** converted original `.1s` assets. This prototype is intentionally separate from the required original-client time-series comparison.
+Use W/↑ to accelerate, S/↓ to brake/reverse, A/D or ←/→ to steer, Shift to drift, Space for boost, and R to reset. To test reverse drifting, hold S until moving backward, then press Shift and a steering key. Touch buttons and chase/overhead camera views are provided. Three.js renders the selected **actual P5136 `.1s` kart geometry** when locally converted files exist; materials, textures, driver, and square test arena remain provisional. Position, heading, driving forces, drift, boost, and wall collision remain in Rust/Wasm. The 1–2 ms substep schedule, steering expressions, and speed-squared drift-release scalar are recovered from the client; **how that scalar affects tire forces remains unknown**. Its use as a persistence timer, reverse-drift handling, steering settings, wall restitution, drive force, grip, gauge, and boost are provisional. This prototype is intentionally separate from the required original-client time-series comparison.
+
+To recreate local kart geometry (Python 3.12, no third-party package required), run:
+
+```powershell
+python .\tools\convert-1s-preview.py '..\..\work\original-assets\whiteKnight1-model.1s' '.\web-preview\assets\whiteKnight1.mesh.json'
+python .\tools\convert-1s-preview.py '..\..\work\original-assets\cotton11-model.1s' '.\web-preview\assets\cotton11.mesh.json'
+```
+
+Those two local copies were extracted from the supplied original data. Generated model JSON is ignored by Git and is **not published to the public remote**; a fresh checkout without those files displays the fallback geometric kart. The mesh parser adapts the [MIT-licensed 1S converter](https://github.com/VT-Tuzki/kartrider_model_1s_to_obj); its required notice is in `tools/THIRD_PARTY_1S_LICENSE.txt`. The two converted files total about 168 KB, but texture size and loading time are not yet measured.
 
 ## Implemented now
 
@@ -44,7 +53,7 @@ The verified release artifact is:
 
 `..\..\work\kart-web-target\wasm32-unknown-unknown\release\p5136_wasm_core.wasm`
 
-The current preview Wasm SHA-256 is `08661C041BD63DEBDF91F818CE1E107D092B01C8B973574192F2572783D0F783` (38,995 bytes). It exports WebAssembly memory plus:
+The current preview Wasm SHA-256 is `67986D9CE023B8F3E0A083E95802739B5A064A04AB6AA36301ABE680A60E7AE5` (38,995 bytes). It exports WebAssembly memory plus:
 
 - `p5136_abi_version`
 - `p5136_plan_substeps` and `p5136_substep_count`
@@ -66,7 +75,7 @@ The current preview Wasm SHA-256 is `08661C041BD63DEBDF91F818CE1E107D092B01C8B97
 - `p5136_wall_contact_reported_speed`
 - `p5136_preview_new`, `p5136_preview_step`, `p5136_preview_reset`
 
-Forty-five Rust unit tests pass, including reverse drift from rest, after drift-key release, and wall-contact episode counting. After user feedback, the broad high-speed physics/camera/ramp changes of `5745a8f` were reverted. The previous 3D camera and force model are restored; only ordinary steering (−14%), boosted drift yaw (approximately −15%), reverse-drift yaw (approximately +19%), and wall-contact counting differ. The page, local Three.js modules, and Wasm load in the browser. Browser driving feel still needs user testing.
+Forty-seven Rust unit tests pass, including reverse drift from rest, after drift-key release, wall-contact episode counting, and relative boosted/reverse drift yaw. After user feedback, the broad high-speed physics/camera/ramp changes of `5745a8f` were reverted. The previous 3D camera and force model are restored; ordinary steering is reduced 14% from the earlier preview, boosted drift yaw is lower, and reverse-drift yaw is stronger. The page, local Three.js modules, and Wasm load in the browser. Browser driving feel still needs user testing.
 
 ## Native original-client instrumentation
 

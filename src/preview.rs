@@ -116,14 +116,14 @@ impl PreviewState {
             self.drift_direction
                 * forward_speed.signum()
                 * (forward_speed.abs() / 25.0).clamp(0.0, 1.0)
-                * if forward_speed < 0.0 { 0.38 } else if self.boost_seconds > 0.0 { 0.27 } else { 0.32 }
+                * if forward_speed < 0.0 { 0.43 } else if self.boost_seconds > 0.0 { 0.22 } else { 0.32 }
         } else {
             0.0
         };
         let turn_factor = if drifting && forward_speed < 0.0 {
-            1.55
+            1.75
         } else if drifting && self.boost_seconds > 0.0 {
-            1.08
+            0.86
         } else if drifting {
             1.25
         } else {
@@ -404,5 +404,27 @@ mod tests {
             steering::base_steer_radians(1.0, false, 20.0), 20.0, 70.0, 0.25,
         ).tan() / 4.0;
         assert!(state.yaw_rate < old_target * 16.0 / 1000.0 * 6.0);
+    }
+
+    #[test]
+    fn boosted_drift_yaws_less_than_unboosted_drift() {
+        let base = PreviewState { velocity_x: 20.0, speed: 20.0, ..PreviewState::default() };
+        let mut normal = base;
+        let mut boosted = PreviewState { boost_seconds: 1.0, ..base };
+        let input = PreviewInput { throttle: true, steer: 1.0, drift: true, ..PreviewInput::default() };
+        normal.advance(16, input);
+        boosted.advance(16, input);
+        assert!(boosted.yaw_rate.abs() < normal.yaw_rate.abs());
+    }
+
+    #[test]
+    fn reverse_drift_yaws_more_than_reverse_steering() {
+        let base = PreviewState { velocity_x: -12.0, speed: 12.0, ..PreviewState::default() };
+        let mut steering_only = base;
+        let mut drifting = base;
+        let input = PreviewInput { brake: true, steer: 1.0, ..PreviewInput::default() };
+        steering_only.advance(16, input);
+        drifting.advance(16, PreviewInput { drift: true, ..input });
+        assert!(drifting.yaw_rate.abs() > steering_only.yaw_rate.abs());
     }
 }

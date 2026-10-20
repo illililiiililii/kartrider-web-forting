@@ -30,3 +30,4 @@ button:hover, button.active { background: #426da5; }
   .touch-controls { display: grid; position: absolute; bottom: 8px; left: 8px; right: 8px; grid-template-columns: repeat(3, 1fr); gap: 5px; }
   .touch-controls button { min-height: 54px; padding: 6px; }
 }
+select { width: 100%; margin: 0.5rem 0 1rem; padding: 0.7rem; border: 1px solid #59718a; border-radius: 0.55rem; background: #24344b; color: #fff; }

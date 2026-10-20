@@ -56,35 +56,68 @@ export function createPreviewRenderer(canvas) {
 
   const kart = new THREE.Group();
   scene.add(kart);
+  const proxy = new THREE.Group();
+  kart.add(proxy);
+  let original = null;
   const shell = material(0x33b6e4, 0.32, 0.32);
   const dark = material(0x192936, 0.18, 0.6);
   const rubber = material(0x161a21);
   const light = material(0xe7faff, 0.1, 0.3);
   const red = material(0xff554e, 0.1, 0.4);
-  box(kart, 2.55, 0.42, 1.65, 0, 0.48, 0, shell);
-  box(kart, 0.7, 0.34, 1.68, 1.15, 0.55, 0, shell);
-  box(kart, 0.35, 0.2, 1.7, -1.38, 0.5, 0, dark);
-  box(kart, 0.35, 0.2, 1.7, 1.48, 0.5, 0, shell);
-  box(kart, 0.75, 0.22, 1.1, -0.22, 0.82, 0, dark);
-  box(kart, 0.26, 0.12, 0.42, 1.58, 0.59, -0.45, light);
-  box(kart, 0.26, 0.12, 0.42, 1.58, 0.59, 0.45, light);
-  box(kart, 0.13, 0.12, 0.3, -1.58, 0.58, -0.48, red);
-  box(kart, 0.13, 0.12, 0.3, -1.58, 0.58, 0.48, red);
+  box(proxy, 2.55, 0.42, 1.65, 0, 0.48, 0, shell);
+  box(proxy, 0.7, 0.34, 1.68, 1.15, 0.55, 0, shell);
+  box(proxy, 0.35, 0.2, 1.7, -1.38, 0.5, 0, dark);
+  box(proxy, 0.35, 0.2, 1.7, 1.48, 0.5, 0, shell);
+  box(proxy, 0.75, 0.22, 1.1, -0.22, 0.82, 0, dark);
+  box(proxy, 0.26, 0.12, 0.42, 1.58, 0.59, -0.45, light);
+  box(proxy, 0.26, 0.12, 0.42, 1.58, 0.59, 0.45, light);
+  box(proxy, 0.13, 0.12, 0.3, -1.58, 0.58, -0.48, red);
+  box(proxy, 0.13, 0.12, 0.3, -1.58, 0.58, 0.48, red);
   const wheelGeometry = new THREE.CylinderGeometry(0.43, 0.43, 0.3, 16);
   const wheels = [];
   for (const x of [-0.95, 0.95]) for (const z of [-0.94, 0.94]) {
     const wheel = new THREE.Mesh(wheelGeometry, rubber);
     wheel.rotation.x = Math.PI / 2;
     wheel.position.set(x, 0.43, z);
-    kart.add(wheel);
+    proxy.add(wheel);
     wheels.push(wheel);
   }
   // Temporary geometric driver, not an original .1s character model.
   const helmet = new THREE.Mesh(new THREE.SphereGeometry(0.43, 16, 12), material(0xffdf7b));
   helmet.position.set(-0.38, 1.43, 0);
-  kart.add(helmet);
-  box(kart, 0.6, 0.43, 0.6, -0.38, 0.99, 0, material(0x4562b5));
-  box(kart, 0.09, 0.16, 0.55, -0.03, 1.12, 0, dark);
+  proxy.add(helmet);
+  box(proxy, 0.6, 0.43, 0.6, -0.38, 0.99, 0, material(0x4562b5));
+  box(proxy, 0.09, 0.16, 0.55, -0.03, 1.12, 0, dark);
+
+  async function setKart(name) {
+    const response = await fetch(`./assets/${name}.mesh.json`);
+    if (!response.ok) throw new Error(`원본 카트 변환 파일 없음 (${response.status})`);
+    const data = await response.json();
+    if (data.format !== 'p5136-preview-mesh-v1' || !Array.isArray(data.parts)) {
+      throw new Error('알 수 없는 카트 메시 형식');
+    }
+    const group = new THREE.Group();
+    for (const part of data.parts) {
+      const geometry = new THREE.BufferGeometry();
+      geometry.setAttribute('position', new THREE.Float32BufferAttribute(part.positions, 3));
+      geometry.setIndex(part.indices);
+      geometry.computeVertexNormals();
+      const color = part.name.startsWith('wheel') ? 0x262a31
+        : part.name.startsWith('lamp') ? 0xe4f0f2
+        : part.name === 'seat' ? 0xcbd4da : 0x556b79;
+      group.add(new THREE.Mesh(geometry, new THREE.MeshStandardMaterial({ color, side: THREE.DoubleSide })));
+    }
+    if (original) {
+      kart.remove(original);
+      original.traverse((node) => {
+        if (node.isMesh) { node.geometry.dispose(); node.material.dispose(); }
+      });
+    }
+    original = group;
+    kart.add(group);
+    proxy.visible = false;
+    return `${data.source}: ${data.parts.length}개 부품`;
+  }
 
   const camera = new THREE.PerspectiveCamera(65, 1, 0.1, 350);
   camera.position.set(-8, 5, 0);
@@ -119,5 +152,5 @@ export function createPreviewRenderer(canvas) {
     renderer.render(scene, camera);
   }
 
-  return { render, toggleCamera: () => { overhead = !overhead; firstFrame = true; return overhead; } };
+  return { render, setKart, toggleCamera: () => { overhead = !overhead; firstFrame = true; return overhead; } };
 }
