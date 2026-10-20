@@ -28,6 +28,8 @@ struct Sample {
     std::uint8_t accumulator_enabled = 0;
     std::uint8_t accumulator_step = 0;
     std::uint8_t drift_gate = 0;
+    std::uint8_t state_a74 = 0;
+    std::uint8_t state_a88 = 0;
     std::uint8_t contact_any = 0;
     std::array<std::uint8_t, 4> wheel_contacts{};
     float booster_gauge = 0.0F;
@@ -39,7 +41,9 @@ struct Sample {
     std::array<float, 3> linear_velocity{};
     std::array<float, 3> angular_velocity{};
     std::array<float, 3> local_velocity{};
-    std::array<float, 8> control_state{};
+    std::array<float, 5> control_state{};
+    std::array<float, 23> protected_parameters{};
+    std::array<float, 12> raw_physics_parameters{};
     std::array<float, 9> unresolved{};
 };
 
@@ -114,6 +118,8 @@ extern "C" void __cdecl observe_physics_tick(void* kart_pointer, std::uint32_t c
     sample.accumulator_enabled = read_u8(kart, 0x0F20u);
     sample.accumulator_step = read_u8(kart, 0x0F21u);
     sample.drift_gate = read_u8(kart, 0x0A9Cu);
+    sample.state_a74 = read_u8(kart, 0x0A74u);
+    sample.state_a88 = read_u8(kart, 0x0A88u);
     sample.contact_any = read_u8(kart, 0x0188u);
     for (std::size_t index = 0; index < sample.wheel_contacts.size(); ++index) {
         sample.wheel_contacts[index] = read_u8(kart, 0x09C4u + index);
@@ -132,9 +138,18 @@ extern "C" void __cdecl observe_physics_tick(void* kart_pointer, std::uint32_t c
     constexpr std::array<std::size_t, 3> linear_velocity_offsets = {0x00C0u, 0x00C4u, 0x00C8u};
     constexpr std::array<std::size_t, 3> angular_velocity_offsets = {0x00CCu, 0x00D0u, 0x00D4u};
     constexpr std::array<std::size_t, 3> local_velocity_offsets = {0x0A5Cu, 0x0A6Cu, 0x0A70u};
-    constexpr std::array<std::size_t, 8> control_offsets = {
-        0x0A20u, 0x0A24u, 0x0A28u, 0x0A74u,
-        0x0A78u, 0x0A88u, 0x0A8Cu, 0x0A9Cu,
+    constexpr std::array<std::size_t, 5> control_offsets = {
+        0x0A20u, 0x0A24u, 0x0A28u, 0x0A78u, 0x0A8Cu,
+    };
+    constexpr std::array<std::size_t, 23> protected_parameter_offsets = {
+        0x0644u, 0x0658u, 0x0670u, 0x06BCu, 0x06C8u, 0x06FCu,
+        0x0708u, 0x0714u, 0x0720u, 0x0734u, 0x0740u, 0x07DCu,
+        0x07E8u, 0x0880u, 0x088Cu, 0x08BCu, 0x0920u, 0x0938u, 0x0A60u,
+        0x0AC4u, 0x0AD0u, 0x0B38u, 0x0B44u,
+    };
+    constexpr std::array<std::size_t, 12> raw_physics_parameter_offsets = {
+        0x0650u, 0x0654u, 0x06F0u, 0x06F4u, 0x06F8u, 0x074Cu,
+        0x0794u, 0x0798u, 0x079Cu, 0x0970u, 0x0974u, 0x0978u,
     };
     constexpr std::array<std::size_t, 9> unresolved_offsets = {
         0x007Cu, 0x0080u, 0x0084u,
@@ -152,6 +167,12 @@ extern "C" void __cdecl observe_physics_tick(void* kart_pointer, std::uint32_t c
     }
     for (std::size_t index = 0; index < control_offsets.size(); ++index) {
         sample.control_state[index] = read_float(kart, control_offsets[index]);
+    }
+    for (std::size_t index = 0; index < protected_parameter_offsets.size(); ++index) {
+        sample.protected_parameters[index] = read_protected_float(kart, protected_parameter_offsets[index]);
+    }
+    for (std::size_t index = 0; index < raw_physics_parameter_offsets.size(); ++index) {
+        sample.raw_physics_parameters[index] = read_float(kart, raw_physics_parameter_offsets[index]);
     }
     InterlockedExchange(&sample.ready, 1);
 }
@@ -304,12 +325,23 @@ bool open_log() noexcept {
     }
     const char header[] =
         "sequence,qpc,client_time_ms,kart,delta_ms,accumulator,accumulator_enabled,accumulator_step,"
-        "drift_gate,contact_any,wheel_contact_0,wheel_contact_1,wheel_contact_2,wheel_contact_3,"
+        "drift_gate,state_a74,state_a88,contact_any,"
+        "wheel_contact_0,wheel_contact_1,wheel_contact_2,wheel_contact_3,"
         "booster_gauge,speed_gauge,gauge_total,gauge_cap,"
         "pos_x,pos_y,pos_z,orientation_00,orientation_01,orientation_02,orientation_10,orientation_11,"
         "orientation_12,orientation_20,orientation_21,orientation_22,vel_x,vel_y,vel_z,"
-        "angular_vel_x,angular_vel_y,angular_vel_z,local_vel_x,local_vel_y,local_vel_z,"
-        "control_a20,control_a24,control_a28,control_a74,control_a78,control_a88,control_a8c,control_a9c,"
+        "angular_vel_x,angular_vel_y,angular_vel_z,local_forward_vel_a5c,local_vertical_vel_a6c,"
+        "world_speed_magnitude_a70,"
+        "control_a20,control_a24,control_a28,control_a78,control_a8c,"
+        "mass_644,draft_mul_accel_658,drift_boost_mul_accel_670,forward_accel_force_6bc,"
+        "backward_accel_force_6c8,drift_trigger_factor_6fc,drift_trigger_time_708,"
+        "drift_slip_factor_714,drift_escape_force_720,drift_max_gauge_734,corner_draw_factor_740,"
+        "trans_accel_factor_7dc,boost_accel_factor_7e8,dual_mul_accel_factor_880,"
+        "dual_trans_low_speed_88c,protected_8bc,protected_920,protected_938,local_lateral_velocity_a60,"
+        "protected_ac4,protected_ad0,protected_b38,protected_b44,"
+        "raw_650,raw_654,steer_constraint_6f0,grip_brake_force_6f4,slip_brake_force_6f8,"
+        "front_grip_factor_74c,suspension_spring_794,suspension_positive_damping_798,"
+        "suspension_non_positive_damping_79c,raw_970,raw_974,raw_978,"
         "unresolved_07c,unresolved_080,unresolved_084,unresolved_5fc,unresolved_600,unresolved_604,"
         "unresolved_608,unresolved_60c,unresolved_610\r\n";
     DWORD written = 0;
@@ -329,10 +361,10 @@ DWORD WINAPI writer_thread(void*) noexcept {
             char line[2048] = {};
             int count = sprintf_s(
                 line, sizeof(line),
-                "%u,%llu,%u,0x%08X,%u,%.9g,%u,%u,%u,%u,%u,%u,%u,%u,%.9g,%.9g,%.9g,%.9g",
+                "%u,%llu,%u,0x%08X,%u,%.9g,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u,%.9g,%.9g,%.9g,%.9g",
                 sample.sequence, qpc, sample.client_time_ms, sample.kart, sample.delta_ms,
                 sample.accumulator, sample.accumulator_enabled, sample.accumulator_step,
-                sample.drift_gate, sample.contact_any,
+                sample.drift_gate, sample.state_a74, sample.state_a88, sample.contact_any,
                 sample.wheel_contacts[0], sample.wheel_contacts[1],
                 sample.wheel_contacts[2], sample.wheel_contacts[3],
                 sample.booster_gauge, sample.speed_gauge, sample.gauge_total, sample.gauge_cap);
@@ -352,6 +384,12 @@ DWORD WINAPI writer_thread(void*) noexcept {
                 count += sprintf_s(line + count, sizeof(line) - static_cast<std::size_t>(count), ",%.9g", value);
             }
             for (float value : sample.control_state) {
+                count += sprintf_s(line + count, sizeof(line) - static_cast<std::size_t>(count), ",%.9g", value);
+            }
+            for (float value : sample.protected_parameters) {
+                count += sprintf_s(line + count, sizeof(line) - static_cast<std::size_t>(count), ",%.9g", value);
+            }
+            for (float value : sample.raw_physics_parameters) {
                 count += sprintf_s(line + count, sizeof(line) - static_cast<std::size_t>(count), ",%.9g", value);
             }
             for (float value : sample.unresolved) {

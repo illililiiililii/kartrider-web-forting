@@ -1,46 +1,57 @@
-# Open analysis and implementation gaps
+# 분석 및 구현 과제
 
-This file is deliberately candid. A value is not described as original-client behavior until static or runtime evidence supports it.
+본 문서는 매우 솔직하게 작성되었습니다. 정적 분석이나 런타임 데이터로 뒷받침되지 않는 한, 특정 값을 '원본 클라이언트의 동작'으로 간주하지 않습니다.
 
-## Closed evidence items
+## 확인 완료된 항목
 
-- Main tick timing is recovered: clamp elapsed time to 500 ms, then integrate in 2 ms chunks with an optional 1 ms tail.
-- The principal native call order has been recovered at address level.
-- `GoPlayKart + 0x90` and `+0xC0` are runtime-confirmed world position and linear velocity.
-- `+0x188` is a wheel-contact aggregate, not a drift state. Four per-wheel contact bytes begin at `+0x9C4`.
-- The wheel suspension loop and its compression/damping shape have been decompiled.
-- The exact 235-byte effective `KartSpec` layout and legacy scalar decoding are implemented in Rust and compile to WebAssembly.
-- A controlled scan-code run and deterministic phase summary are checked into `evidence/`.
+- 메인 틱(tick) 타이밍을 복구했습니다. 경과 시간을 최대 500ms로 제한(clamp)한 뒤, 2ms 단위로 누적(integrate)하며, 마지막에 1ms를 추가할 수 있도록 구성했습니다.
+- 주요 네이티브 호출 순서를 메모리 주소 수준에서 복구했습니다.
+- `GoPlayKart + 0x90` 및 `+0xC0`은 런타임 분석을 통해 월드 위치(world position)와 선속도(linear velocity)임을 확인했습니다.
+- `+0x188`은 드리프트 상태가 아니라, 바퀴 접지 상태를 종합적으로 나타내는 값입니다. 각 바퀴의 접지 여부를 나타내는 바이트는 `+0x9C4`부터 시작됩니다.
+- 서스펜션 루프와 그 압축/감쇠(compression/damping) 로직을 디컴파일했습니다.
+- 시리얼라이저(serializer) `0x00A3DCD0`을 분석하여 네이티브 `KartSpec` 객체의 루트와 핵심 필드 오프셋을 복구했습니다.
+- 235바이트 규모의 `KartSpec` 레이아웃과 기존 스칼라(scalar) 데이터 디코딩 방식을 Rust로 구현하고, 이를 WebAssembly로 컴파일했습니다.
+- 제어된 환경에서의 스캔 코드(scan-code) 실행 결과와 결정론적 단계 요약을 `evidence/` 디렉토리에 포함했습니다.
 
-## Physics gate still open
+## 물리 엔진 관련 미해결 과제
 
-- Longitudinal force integration, air-friction/drag application, and the terminal-speed equation still need protected getter calls resolved to `KartSpec` field names.
-- Front/rear slip angle and lateral-force curves in `0x00A37920` need expression recovery and a controlled, collision-free trace.
-- Drift entry, hold, chained-drift, and exit predicates need state-field labels. `+0xA9C` is only a candidate gate, not a proven full drift state.
-- Start boost and post-drift instant boost predicates are not yet recovered.
-- The suspension formula shape is known, but the protected spring/damper parameter getters and contact ray geometry are not fully named.
-- Gravity, jump, airborne attitude, floor/wall collision response, and recovery require additional static labeling and isolated runs.
-- The current controlled trace hits or follows track geometry during recovery. It is valid evidence of client response but is not an isolated straight-line calibration run.
-- No Rust force integrator is claimed equivalent yet. The Rust core currently implements only evidence-closed scheduling and protocol decoding.
+- 종방향 힘(longitudinal force)의 누적, 공기 저항(drag) 적용, 그리고 종단 속도(terminal speed) 계산식과 관련된 '보호된 게터(protected getter)' 호출을 `KartSpec` 필드 이름으로 매핑해야 합니다.
+- `0x00A37920`에 정의된 전/후륜 슬립 각도 및 횡방향 힘(lateral-force) 곡선에 대해, 수식을 복구하고 충돌이 없는 제어된 환경에서 추적(trace) 분석을 수행해야 합니다.
+- 조향 목표의 기본 각도와 속도별 `exp` 감쇠식은 복구했지만 `GoPlayKart+0xB38` 보호 값의 실시간 값·역할, 조향 메모리 필드 `+0xA28`, 그 뒤의 타이어 토크 연결은 아직 확인해야 합니다. 다음 분석 지점은 `0x00A37A4F..0x00A37BBB`와 확장 텔레메트리의 `+0xB38` 열입니다.
+- 드리프트 해제 시 `+0x640 = 10 × (월드 속도/120)²`가 특정 조건에서 기록되는 것은 확인했으나, 이 값의 후속 소비 위치·게임 내 역할은 미확정입니다. 다음 분석 지점은 `0x00A2D540`에서 기록된 `+0x640`의 참조 목록과 확장 텔레메트리입니다.
+- 드리프트 진입, 유지, 연속 드리프트, 종료 조건(predicate)을 식별하고 상태 필드에 이름을 지정해야 합니다. `+0xA9C`는 드리프트 상태일 가능성이 있는 후보일 뿐, 완전한 드리프트 상태로 확정된 것은 아닙니다.
+- 출발 부스트(start boost) 및 드리프트 종료 직후의 순간 부스트(instant boost) 조건은 아직 복구되지 않았습니다.
+- 서스펜션 계산식의 형태는 파악했으나, 스프링/댐퍼 파라미터를 가져오는 '보호된 게터'와 접지 레이(ray) 기하 구조에 대한 명확한 명칭은 아직 확인되지 않았습니다.
+- 중력, 점프, 공중 자세, 바닥/벽면 충돌 반응, 그리고 복구(recovery) 로직에 대해서는 추가적인 정적 분석을 통한 명칭 부여와 독립적인 실행 테스트가 필요합니다. - 현재 제어 추적은 복구 중에 트랙 형상을 따라가거나 근접합니다. 이는 클라이언트 응답에 대한 유효한 증거이지만, 독립적인 직선 보정 실행은 아닙니다.
 
-## Comparison gate
+- 아직 Rust에서 동등한 포스 적분기는 개발되지 않았습니다. Rust 코어는 현재 증거 기반 스케줄링 및 프로토콜 디코딩만 구현하고 있습니다.
 
-- The Rust state row must be extended to position, orientation, linear/angular/local velocity, contact mask, drift state, and booster state.
-- The same effective kart block, track start transform, and input timestamps must be replayed in native and Rust runs.
-- Time-series comparison must report speed, three-dimensional position, wrapped orientation, angular velocity, contact, drift state, and gauge errors.
-- Large mismatches must be corrected and rerun before browser UI work starts.
+- 확장된 텔레메트리 DLL은 빌드되었지만, Windows에서 새로 권한이 상승된 클라이언트에 대한 원격 주입 도우미 실행을 거부했습니다. 이 제어는 우회되지 않았으며, 추가된 방향/매개변수 열에 대한 새로운 캡처가 아직 진행 중입니다.
 
-## Assets
+## 비교 기준
 
-- The expanded `_rhoOut` tree has character and track data; supplied `Data\kart.rho` contains 930 `model.1s` entries.
-- Exact extracted fixtures exist for White Knight and Cotton kart models and BML parameters.
-- `.1s` geometry, skeleton, animation, material, and collision semantics still require a new converter with golden fixtures.
-- No model from the rejected previous web project will be copied.
+- Rust 상태 행은 위치, 방향, 선형/각도/국부 속도, 접촉 마스크, 드리프트 상태 및 부스터 상태를 포함하도록 확장되어야 합니다.
 
-## Browser systems not started
+- 동일한 유효 카트 블록, 트랙 시작 변환 및 입력 타임스탬프가 네이티브 실행과 Rust 실행에서 재현되어야 합니다.
 
-Renderer bridge, converted original assets, audio, lobby, HUD, mobile input, race/checkpoint/lap state, and multiplayer remain intentionally unimplemented until the physics comparison gate closes. Consequently there is no playable URL yet.
+- 시계열 비교는 속도, 3차원 위치, 래핑된 방향, 각속도, 접촉, 드리프트 상태 및 게이지 오차를 보고해야 합니다.
 
-## Rejected evidence
+- 큰 불일치는 브라우저 UI 작업 시작 전에 수정하고 다시 실행해야 합니다.
 
-Controlled runs `01` through `03` used virtual-key injection. They operated menu UI but did not reach the game's DirectInput driving state, so the kart remained stationary. They are retained only as failed-method notes and are excluded from physics fitting. Run `04` uses scan-code input and is the first valid controlled driving trace.
+## 에셋
+
+- 확장된 `_rhoOut` 트리에는 캐릭터 및 트랙 데이터가 포함되어 있으며, 제공된 `Data\kart.rho`에는 930개의 `model.1s` 항목이 있습니다.
+
+- White Knight 및 Cotton 카트 모델과 BML 파라미터에 대한 정확한 추출된 픽스처가 존재합니다.
+
+- `.1s` 지오메트리, 스켈레톤, 애니메이션, 재질 및 충돌 시맨틱은 골든 픽스처를 사용하는 새로운 변환기가 필요합니다.
+
+- 이전에 거부된 웹 프로젝트의 모델은 복사되지 않습니다.
+
+## 브라우저 시스템 미실행
+
+렌더러 브리지, 변환된 원본 에셋, 오디오, 로비, HUD, 모바일 입력, 레이스/체크포인트/랩 상태 및 멀티플레이어는 물리 비교 게이트가 닫힐 때까지 의도적으로 구현되지 않았습니다. 따라서 아직 플레이 가능한 URL이 없습니다.
+
+## 거부된 증거
+
+제어된 실행 `01`부터 `03`까지는 가상 키 주입을 사용했습니다. 메뉴 UI는 작동했지만 게임의 DirectInput 주행 상태에 도달하지 못하여 카트가 정지된 상태로 유지되었습니다. 이러한 데이터는 실패한 방법에 대한 기록으로만 보관되며 물리적 피팅에서 제외됩니다. 실행 '04'는 스캔 코드 입력을 사용하며, 이는 최초로 유효한 제어 주행 추적입니다.

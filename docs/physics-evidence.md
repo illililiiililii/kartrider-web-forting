@@ -67,10 +67,39 @@ A saved Ghidra project was built from the analysis-only PE and a deterministic e
 
 The following roles are supported strongly enough to guide the next probes:
 
-- `0x00A35B20` projects the world linear velocity at `+0xC0` onto three body axes stored from `+0xA38`, `+0xA44`, and `+0xA50`. It writes body-local velocity components at `+0xA5C`, `+0xA6C`, and `+0xA70`.
+- `0x00A35B20` projects world linear velocity `+0xC0` onto the forward axis at `+0xA50`, the lateral axis at `+0xA38`, and the vertical axis at `+0xA44`. It writes forward velocity to raw `+0xA5C`, lateral velocity through the protected-float setter at `+0xA60`, and vertical velocity to raw `+0xA6C`. It separately writes `sqrt(vx²+vy²+vz²)` to `+0xA70`; this is world-speed magnitude, not a fourth local component.
 - `0x00A35D00` performs four wheel contact tests, writing one byte per wheel at `+0x9C4..+0x9C7`, suspension/contact values at `+0x9D4` and deltas at `+0x9E4`, and wheel contact points beginning at `+0x994`. It also writes the aggregate contact byte at `+0x188`.
 - `0x00A36E30` iterates the four wheels. For a contacting wheel it applies a suspension force shaped as `spring * compression + damping * compression_delta / dt`; the code chooses between two damping values according to the sign of the compression delta and applies the force along the body's vertical axis at the wheel point. Protected getters supplying the three coefficients are not named yet.
 - `0x00A37920` contains the main tire/grip/steering/drift force and torque integration. It has a low-speed boundary of `5.0`, reads fields around `+0xA74`, `+0xA78`, `+0xA88`, `+0xA8C`, and `+0xA9C`, and applies transformed forces/torques through the orientation matrix. Those fields remain candidates until runtime transitions and protected getters are correlated.
+
+The initial steering target is now **confirmed/static** from `0x00A41DC0`, `0x00A41CF0`, and call sequence `0x00A37A05..0x00A37ADE`. A sign byte at the steering subobject's `+0x2C` selects `+1` or `-1`; this multiplies the subobject's `+0x20` input. The result multiplies `(π_native * MaxSteerAngle / 180)`, with `π_native` stored as `f32` bits `0x40490FD8`. The following attenuation is `exp(-abs((forward_velocity / SteerConstraint) * protected(+0xB38)))`. Native `0x0067A7D0` performs the absolute value, while `0x00A420D0` converts to double, calls the exponential routine at `0x01013710`, then converts back to float. The `+0xB38` value's role and runtime magnitude are still unknown, as is the later steering memory and tire-force path. The targeted instruction listing is retained at `work/analysis/steer-listing.md` with SHA-256 `0C2AC94A016FCE8765934CDC8F1456F0307A68FA1B0EC161DC2592E992CB39EC`.
+
+The sole identified writer wrapper for `+0xB38` is `0x00A2F090`. Its callers `0x00AD9BE0` and `0x00AD9D60` assign `1.0` when two compared identities/values coincide; otherwise they derive a value of the form `1 - min(constant, nonnegative_difference / denominator)`. Captured constants in those caller branches include `0.05`, `0.1`, `400`, `500`, `1000`, and `16000`. The compared identities and the difference's gameplay meaning remain unverified, so a fixed `+0xB38 = 1` is not justified for all races. The decompilation report is `work/analysis/steer-factor-functions.md`, SHA-256 `17CFC813CAF2BE35164BE96B4E88A7738069F16D3A09D1F31F69800753A7AD6C`.
+
+Native drift-input function `0x00A2D540` also has a **confirmed/static** release-side scalar update. If `+0x1D0 == 1`, `+0xA74` was pressed, and raw `+0x640 <= 0`, releasing drift sets `+0x640 = 10 * (world_speed(+0xA70) / 120)^2` before clearing `+0xA74` and `+0xE7C`. The subsequent consumer and gameplay name of `+0x640` remain unknown.
+
+Native function `0x00A3DCD0` serializes the parameter object rooted at `GoPlayKart+0x644`. Its field order matches the recovered `KartSpec` order through the core and dual-booster fields. This closes the following direct layout map:
+
+| Effective field | `GoPlayKart` offset | Native storage |
+|---|---:|---|
+| mass | `+0x644` | protected float |
+| forward / backward acceleration force | `+0x6BC` / `+0x6C8` | protected float |
+| air friction / drag factor | `+0x6D4` / `+0x6E0` | protected float |
+| max steer angle / steer constraint | `+0x6EC` / `+0x6F0` | protected float / raw float |
+| grip / slip brake force | `+0x6F4` / `+0x6F8` | raw float |
+| drift trigger factor / time / slip factor | `+0x6FC` / `+0x708` / `+0x714` | protected float |
+| drift escape force | `+0x720` | protected float |
+| drift lean / steer lean | `+0x72C` / `+0x730` | raw float |
+| drift max gauge / corner draw | `+0x734` / `+0x740` | protected float |
+| front / rear grip factor | `+0x74C` / `+0x750` | raw float |
+| normal through super booster time | `+0x7A0` through `+0x7D0` in 12-byte protected-value strides | protected float |
+| transform / boost acceleration factor | `+0x7DC` / `+0x7E8` | protected float |
+| item / speed start-booster time | `+0x7F4` / `+0x800` | protected float |
+| item / speed start-forward force | `+0x80C` / `+0x818` | protected float |
+| boost-only-item / anti-collision / gauge preserve | `+0x824` / `+0x834` / `+0x84C` | protected float |
+| dual multiplier / low-speed transition | `+0x880` / `+0x88C` | protected float |
+
+The serializer omits the six parts-lock bytes present in the 235-byte race-start block, so it is not being asserted as a byte-for-byte wire serializer. It is nevertheless direct static evidence for the listed field identities. Its 28,752-byte instruction report has SHA-256 `FF557CC8E49991A34112CDB3481B080C27388E8C521D03A624E92E50B41986A7`.
 
 Captured native constants used around these functions include `0.001`, `0.002`, `0.004`, `0.005`, `0.11`, `0.5`, `0.8`, `0.9`, `0.99`, `1.08`, `1.14`, `1.2`, `5`, `7`, `10`, `15`, `24`, `200`, `-0.35`, `-0.5`, `-1`, and `-4`. A constant's presence is not treated as a named physical parameter until its call/data flow is recovered.
 
@@ -115,7 +144,7 @@ The measured phase summary is:
 
 The full valid run moved 16.777 world units in X, 173.981 in Y, and 7.201 in Z and reached a vector speed of 52.202. The recovery segment is affected by track geometry/collision, so it must not be fitted as isolated longitudinal deceleration. Candidate `+0xCC/+0xD0/+0xD4` values ranged approximately `-0.62..1.05`, `-0.71..0.72`, and `-7.27..4.30`; static force/torque data flow supports treating this triplet as angular velocity in the next extended capture, but that label remains pending runtime orientation correlation.
 
-The telemetry source now records the `+0x9C` orientation matrix, `+0xCC` angular-velocity candidate, local velocity, four individual contact bytes, and candidate steering/drift fields explicitly. The extended DLL builds cleanly with MSVC `/W4 /WX` and has SHA-256 `78AC352DE469B4C5D242301B3708ADA8D6A7171A1BFC550463F34AAAC08DF540`. A new client launch and reinjection are required before those additional columns can be captured.
+The telemetry source now records the `+0x9C` orientation matrix, `+0xCC` angular-velocity candidate, local velocity, four individual contact bytes, candidate steering/drift fields, mapped core `KartSpec` values, and the three suspension coefficients explicitly. The extended DLL builds cleanly with MSVC `/W4 /WX` and has SHA-256 `D9EDAECE11A45517CF004CC907D2919E8E673B88246850189B734D7BBBD251D9`. A new original client was launched, but Windows denied launching the remote-injection helper against the elevated process. That control was not bypassed, so capture of these new columns remains pending.
 
 ## Rust and WebAssembly evidence boundary
 
@@ -124,9 +153,16 @@ The fresh Rust crate implements only evidence-closed behavior at this stage:
 - exact 500 ms clamp and 2/1 ms substep planning;
 - the recovered P5136 scalar substitution decoder;
 - all 70 named fields and exact length validation for the 235-byte effective `KartSpec` block;
-- a dependency-free raw WebAssembly ABI for the substep planner.
+- native layout constants for evidence-mapped `KartSpec` and state fields;
+- the exact three-dot-product world-to-body velocity projection from `0x00A35B20`;
+- the world-speed magnitude stored at `+0xA70` by `0x006612B0`;
+- the contact-gated scalar suspension spring/damper branch from `0x00A36E30`;
+- the input-side drift state transition from `0x00A2D540`, excluding unresolved downstream gauge and force effects;
+- the conditional speed-squared `+0x640` scalar written on drift release; its downstream interpretation is unresolved;
+- the initial steering target and speed-dependent exponential attenuation from the native steering path, with `+0xB38` supplied as an unresolved input;
+- a dependency-free raw WebAssembly ABI for these operations.
 
-Six unit tests pass. The release `wasm32-unknown-unknown` module is 15,705 bytes with SHA-256 `48E4BC5B9C7C54D125B8BA7D1F8D6104F5A72C78F7F3ED1601CE91826DDBCA62`. It exports memory plus `p5136_abi_version`, `p5136_plan_substeps`, and `p5136_substep_count`. No JavaScript physics integrator exists, and no unverified native force formula is represented as equivalent yet.
+Twenty-one unit tests pass. The release `wasm32-unknown-unknown` module is 25,802 bytes with SHA-256 `135BF621C089FE09D3AA243BF9D442E7652E1C30C69634D6835D93A324449F23`. It exports memory plus `p5136_abi_version`, `p5136_plan_substeps`, `p5136_substep_count`, `p5136_validate_kart_spec`, `p5136_project_world_velocity`, `p5136_speed_magnitude`, `p5136_suspension_scalar_force`, `p5136_apply_drift_input`, `p5136_drift_release_scalar`, `p5136_base_steer_radians`, and `p5136_speed_attenuated_steer_radians`. No JavaScript physics integrator exists, and no unverified native force formula is represented as equivalent yet.
 
 ## Required runtime comparison schema
 
