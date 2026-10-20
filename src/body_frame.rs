@@ -29,6 +29,16 @@ impl Vec3 {
     pub fn scaled(self, factor: f32) -> Self {
         Self::new(self.x * factor, self.y * factor, self.z * factor)
     }
+
+    #[must_use]
+    pub fn added(self, other: Self) -> Self {
+        Self::new(self.x + other.x, self.y + other.y, self.z + other.z)
+    }
+
+    #[must_use]
+    pub fn divided(self, divisor: f32) -> Self {
+        Self::new(self.x / divisor, self.y / divisor, self.z / divisor)
+    }
 }
 
 /// Three body axes used by P5136 to project world velocity before force work.

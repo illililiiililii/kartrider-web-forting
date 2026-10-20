@@ -4,6 +4,7 @@ pub mod body_frame;
 pub mod drift;
 pub mod drive_input;
 pub mod encoded;
+pub mod integrator;
 pub mod kart_spec;
 pub mod longitudinal;
 pub mod native_layout;
@@ -209,6 +210,41 @@ pub unsafe extern "C" fn p5136_forward_force_vector(
         output_xyz.write(force.x);
         output_xyz.add(1).write(force.y);
         output_xyz.add(2).write(force.z);
+    }
+    1
+}
+
+/// Normal-input native linear-velocity substep; each vector pointer has 3 floats.
+#[no_mangle]
+pub unsafe extern "C" fn p5136_integrate_linear_velocity(
+    world_velocity: *const f32,
+    accumulated_force: *const f32,
+    additional_force_at_b2c: *const f32,
+    mass: f32,
+    dt_seconds: f32,
+    output_xyz: *mut f32,
+) -> u32 {
+    if world_velocity.is_null()
+        || accumulated_force.is_null()
+        || additional_force_at_b2c.is_null()
+        || output_xyz.is_null()
+    {
+        return 0;
+    }
+    let velocity = unsafe { core::slice::from_raw_parts(world_velocity, 3) };
+    let force = unsafe { core::slice::from_raw_parts(accumulated_force, 3) };
+    let additional = unsafe { core::slice::from_raw_parts(additional_force_at_b2c, 3) };
+    let result = integrator::linear_velocity_after_step(
+        Vec3::new(velocity[0], velocity[1], velocity[2]),
+        Vec3::new(force[0], force[1], force[2]),
+        Vec3::new(additional[0], additional[1], additional[2]),
+        mass,
+        dt_seconds,
+    );
+    unsafe {
+        output_xyz.write(result.x);
+        output_xyz.add(1).write(result.y);
+        output_xyz.add(2).write(result.z);
     }
     1
 }

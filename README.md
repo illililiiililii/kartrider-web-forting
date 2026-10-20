@@ -8,7 +8,7 @@ The repository is currently at the physics-evidence gate. It is not yet a playab
 
 - Rust core with the original tick scheduler: elapsed time is clamped to 500 ms and split into 2 ms substeps plus a possible 1 ms tail.
 - Exact decoder and all 70 named fields for the 235-byte effective `KartSpec` race-start block.
-- Version-pinned native layout constants, exact body-axis velocity projection and speed magnitude, recovered scalar suspension, input-channel selection, drift-input transitions and release countdown, the initial plus speed-attenuated steering target, and the forward force-vector path.
+- Version-pinned native layout constants, exact body-axis velocity projection and speed magnitude, recovered scalar suspension, input-channel selection, drift-input transitions and release countdown, the initial plus speed-attenuated steering target, the forward force-vector path, and the normal linear-velocity substep.
 - Dependency-free raw WebAssembly ABI for querying and writing substep plans.
 - Version-pinned 32-bit native telemetry, injector, and scan-code input driver for controlled original-client captures.
 - Checked-in controlled-run evidence and a deterministic PowerShell slicer/summary generator.
@@ -33,7 +33,7 @@ The verified release artifact is:
 
 `..\..\work\kart-web-target\wasm32-unknown-unknown\release\p5136_wasm_core.wasm`
 
-Its current SHA-256 is `C1F560A0EF5F09E1B746351CC4419DECF79EBFF8F7D0DD4658CDA7E9CF697097` and its size is 26,151 bytes. It exports WebAssembly memory plus:
+Its current SHA-256 is `C5D04AB32E8F343AF0CB83FB70D3F2D19E72D3F4BA5934628AF8F813132716FA` and its size is 26,335 bytes. It exports WebAssembly memory plus:
 
 - `p5136_abi_version`
 - `p5136_plan_substeps` and `p5136_substep_count`
@@ -48,8 +48,9 @@ Its current SHA-256 is `C1F560A0EF5F09E1B746351CC4419DECF79EBFF8F7D0DD4658CDA7E9
 - `p5136_speed_attenuated_steer_radians`
 - `p5136_forward_drive_input` and `p5136_reverse_brake_input`
 - `p5136_forward_force_vector`
+- `p5136_integrate_linear_velocity`
 
-Twenty-four Rust unit tests pass.
+Twenty-five Rust unit tests pass.
 
 ## Native original-client instrumentation
 
@@ -62,7 +63,7 @@ cmake --build '..\..\work\telemetry-build' --config Release --parallel
 
 The telemetry DLL refuses to hook a client whose nine-byte physics-tick prologue differs from the pinned P5136 build. The callback only fills a preallocated ring buffer; CSV I/O runs on a separate below-normal-priority thread. Input uses keyboard scan codes because virtual-key events reached the old UI but not the game's DirectInput driving path.
 
-The extended telemetry DLL was rebuilt with `/W4 /WX`; its current SHA-256 is `74F2B0E75191D33AEF0590350FA496D382ED1129E2B8B9A8AB7CA038145362FE`.
+The extended telemetry DLL was rebuilt with `/W4 /WX`; its current SHA-256 is `1F7E43DFE5B0F16FC5B85575A188FDFC962726895F8AE8438CE8789D3467B01E`.
 
 ## Reproduce the checked-in controlled trace
 

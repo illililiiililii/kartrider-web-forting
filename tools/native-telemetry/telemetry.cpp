@@ -42,6 +42,7 @@ struct Sample {
     std::array<float, 3> angular_velocity{};
     std::array<float, 3> local_velocity{};
     std::array<float, 3> force_direction_contact_vector_9c8{};
+    std::array<float, 3> additional_force_b2c{};
     float drive_a04 = 0.0F;
     float drive_a10 = 0.0F;
     std::uint8_t drive_swap_a1c = 0;
@@ -148,6 +149,7 @@ extern "C" void __cdecl observe_physics_tick(void* kart_pointer, std::uint32_t c
     constexpr std::array<std::size_t, 3> angular_velocity_offsets = {0x00CCu, 0x00D0u, 0x00D4u};
     constexpr std::array<std::size_t, 3> local_velocity_offsets = {0x0A5Cu, 0x0A6Cu, 0x0A70u};
     constexpr std::array<std::size_t, 3> force_direction_offsets = {0x09C8u, 0x09CCu, 0x09D0u};
+    constexpr std::array<std::size_t, 3> additional_force_offsets = {0x0B2Cu, 0x0B30u, 0x0B34u};
     constexpr std::array<std::size_t, 5> control_offsets = {
         0x0A20u, 0x0A24u, 0x0A28u, 0x0A78u, 0x0A8Cu,
     };
@@ -171,6 +173,7 @@ extern "C" void __cdecl observe_physics_tick(void* kart_pointer, std::uint32_t c
         sample.angular_velocity[index] = read_float(kart, angular_velocity_offsets[index]);
         sample.local_velocity[index] = read_float(kart, local_velocity_offsets[index]);
         sample.force_direction_contact_vector_9c8[index] = read_float(kart, force_direction_offsets[index]);
+        sample.additional_force_b2c[index] = read_float(kart, additional_force_offsets[index]);
     }
     for (std::size_t index = 0; index < orientation_offsets.size(); ++index) {
         sample.orientation[index] = read_float(kart, orientation_offsets[index]);
@@ -344,6 +347,7 @@ bool open_log() noexcept {
         "angular_vel_x,angular_vel_y,angular_vel_z,local_forward_vel_a5c,local_vertical_vel_a6c,"
         "world_speed_magnitude_a70,"
         "force_direction_vector_9c8_x,force_direction_vector_9c8_y,force_direction_vector_9c8_z,"
+        "additional_force_b2c_x,additional_force_b2c_y,additional_force_b2c_z,"
         "drive_a04,drive_a10,drive_swap_a1c,drift_release_timer_640,"
         "control_a20,control_a24,control_a28,control_a78,control_a8c,"
         "mass_644,draft_mul_accel_658,drift_boost_mul_accel_670,forward_accel_force_6bc,"
@@ -397,6 +401,9 @@ DWORD WINAPI writer_thread(void*) noexcept {
                 count += sprintf_s(line + count, sizeof(line) - static_cast<std::size_t>(count), ",%.9g", value);
             }
             for (float value : sample.force_direction_contact_vector_9c8) {
+                count += sprintf_s(line + count, sizeof(line) - static_cast<std::size_t>(count), ",%.9g", value);
+            }
+            for (float value : sample.additional_force_b2c) {
                 count += sprintf_s(line + count, sizeof(line) - static_cast<std::size_t>(count), ",%.9g", value);
             }
             count += sprintf_s(
