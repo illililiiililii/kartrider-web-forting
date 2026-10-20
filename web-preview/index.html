@@ -3,21 +3,22 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>P5136 Wasm 2D 주행 테스트</title>
+  <title>P5136 Wasm 3D 주행 프로토타입</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <main>
     <header>
       <div>
-        <h1>P5136 Wasm · 2D 주행 테스트</h1>
-        <p>임시 조작 시험장 — 원작 물리 비교가 끝난 완성 게임이 아닙니다.</p>
+        <h1>P5136 Wasm · 3D 주행 프로토타입</h1>
+        <p>기존 Wasm 주행 물리 + 임시 3D 렌더링. 원작 모델·트랙과 동일한 완성 게임은 아닙니다.</p>
       </div>
       <span id="status" role="status">Wasm 로딩 중…</span>
     </header>
     <div class="layout">
-      <section class="arena" aria-label="2D 테스트 주행장">
+      <section class="arena" aria-label="3D 테스트 주행장">
         <canvas id="track" width="900" height="600"></canvas>
+        <div class="scene-label">3D TEST CIRCUIT <span>임시 카트 · 임시 주행장</span></div>
         <div class="touch-controls" aria-label="터치 조작">
           <button data-key="left">◀</button><button data-key="right">▶</button>
           <button data-key="throttle">가속</button><button data-key="brake">브레이크</button>
@@ -28,6 +29,7 @@
         <h2>텔레메트리</h2>
         <dl>
           <dt>속도</dt><dd><strong id="speed">0</strong> km/h</dd>
+          <dt>주행 방향</dt><dd id="gear">D · 전진</dd>
           <dt>방향</dt><dd id="heading">0°</dd>
           <dt>각속도</dt><dd id="yaw">0°/s</dd>
           <dt>드리프트</dt><dd id="drift">꺼짐</dd>
@@ -38,8 +40,9 @@
           <dt>벽 접촉</dt><dd id="hits">0</dd>
         </dl>
         <button id="reset">시작 위치로 재설정 (R)</button>
-        <p class="help">W/↑ 가속 · S/↓ 브레이크/후진 · A/D 또는 ←/→ 조향 · Shift 드리프트 · Space 부스터</p>
-        <p class="warning">원본 근거: 1–2ms 서브스텝, 기본 조향각, 속도 감쇠식, 드리프트 해제 시 속도 제곱 기반 잔여 스칼라. 임시 실험식: 가속·브레이크·횡그립·차체 회전·드리프트 지속 효과·게이지·부스터·사각 벽 반발. 수치나 느낌을 원본과 동일하다고 판단하지 마세요.</p>
+        <button id="camera">카메라: 추적 시점</button>
+        <p class="help">W/↑ 가속 · S/↓ 브레이크/후진 · A/D 또는 ←/→ 조향 · Shift 드리프트 · Space 부스터. 후진하며 방향키+Shift로 역방향 드리프트를 시험할 수 있습니다.</p>
+        <p class="warning">원본 근거: 1–2ms 서브스텝, 기본 조향각, 속도 감쇠식, 드리프트 해제 시 속도 제곱 기반 잔여 스칼라. 임시 실험식: 가속·브레이크·횡그립·차체 회전·전후진 드리프트 효과·게이지·부스터·사각 벽 반발. 3D 카트·캐릭터·주행장은 임시 도형이며 원본 .1s 에셋이 아닙니다.</p>
       </aside>
     </div>
   </main>

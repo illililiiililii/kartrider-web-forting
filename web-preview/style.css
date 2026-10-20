@@ -9,14 +9,16 @@ p { margin: 0; line-height: 1.5; color: #afbdd1; }
 #status { color: #85deb1; white-space: nowrap; }
 .layout { display: grid; grid-template-columns: minmax(0, 1fr) 280px; gap: 18px; }
 .arena, aside { border: 1px solid #314058; border-radius: 14px; background: #1b2433; overflow: hidden; }
-.arena { position: relative; min-height: 400px; }
-canvas { display: block; width: 100%; height: auto; background: #202d38; }
+.arena { position: relative; min-height: 400px; align-self: start; }
+canvas { display: block; width: 100%; height: min(72vh, 650px); min-height: 420px; background: #9bc8d4; }
+.scene-label { position: absolute; left: 18px; top: 16px; padding: 9px 12px; border: 1px solid #ffffff75; border-radius: 8px; color: white; background: #10263ab5; font-size: 12px; font-weight: 800; letter-spacing: .09em; pointer-events: none; }
+.scene-label span { display: block; margin-top: 2px; color: #d6e7ef; font-weight: 500; letter-spacing: 0; }
 aside { padding: 18px; }
 dl { display: grid; grid-template-columns: 1fr auto; gap: 11px; margin: 20px 0; }
 dt { color: #afbdd1; } dd { margin: 0; font-variant-numeric: tabular-nums; }
 button { border: 1px solid #758bb2; border-radius: 9px; background: #32496c; color: white; padding: 10px 14px; font: inherit; cursor: pointer; touch-action: none; }
 button:hover, button.active { background: #426da5; }
-#reset { width: 100%; }
+#reset, #camera { width: 100%; margin-bottom: 8px; }
 .help, .warning { margin-top: 18px; font-size: 13px; }
 .warning { color: #f5c683; }
 .touch-controls { display: none; }
@@ -24,6 +26,7 @@ button:hover, button.active { background: #426da5; }
   main { padding: 10px; } header { align-items: flex-start; flex-direction: column; }
   .layout { grid-template-columns: 1fr; }
   .arena { min-height: 0; padding-bottom: 132px; }
+  canvas { height: min(60vh, 520px); min-height: 330px; }
   .touch-controls { display: grid; position: absolute; bottom: 8px; left: 8px; right: 8px; grid-template-columns: repeat(3, 1fr); gap: 5px; }
   .touch-controls button { min-height: 54px; padding: 6px; }
 }

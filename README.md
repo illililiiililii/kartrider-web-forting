@@ -2,9 +2,9 @@
 
 This is a new, from-scratch browser port based on the supplied Korean KartRider P5136 client, its expanded data, and measurements taken from that client. No code or tuning values from the rejected earlier web project are used.
 
-The repository is still at the physics-evidence gate. The temporary 2D browser sandbox below is for input and Wasm smoke testing, **not** a playable P5136 port or original-physics validation.
+The repository is still at the physics-evidence gate. The temporary 3D browser prototype below is for input, rendering, and Wasm smoke testing, **not** a playable P5136 port or original-physics validation.
 
-## Try the temporary 2D sandbox
+## Try the temporary 3D prototype
 
 The local server is currently available at [http://127.0.0.1:4173/](http://127.0.0.1:4173/) on this computer. To rebuild and restart later, run these commands in this repository:
 
@@ -13,7 +13,7 @@ The local server is currently available at [http://127.0.0.1:4173/](http://127.0
 python -m http.server 4173 --bind 127.0.0.1 --directory web-preview
 ```
 
-Use W/↑ to accelerate, S/↓ to brake/reverse, A/D or ←/→ to steer, Shift to drift, Space for boost, and R to reset. Touch buttons are also provided. The canvas and controls are JavaScript, while all 2D state updates run in Rust/Wasm. Following user test feedback, the preview turns more slowly, visibly rebounds from square walls, and keeps sliding after drift-key release until countersteer or lower speed ends it. Slip angle and drift time are displayed. The 1–2 ms substep schedule, steering expressions, and speed-squared drift-release scalar are recovered from the client; **how that scalar affects tire forces remains unknown**. Its use as a 2D persistence timer, the steering settings, wall restitution, drive force, grip, gauge, and boost are provisional. This sandbox is intentionally separate from the required original-client time-series comparison.
+Use W/↑ to accelerate, S/↓ to brake/reverse, A/D or ←/→ to steer, Shift to drift, Space for boost, and R to reset. To test reverse drifting, hold S until moving backward, then press Shift and a steering key. Touch buttons and chase/overhead camera views are provided. Three.js renders a temporary geometric kart, driver, and square test arena; position, heading, driving forces, drift, boost, and wall collision remain in Rust/Wasm. The preview turns more slowly, rebounds from square walls, and keeps sliding after drift-key release until countersteer or lower speed ends it. Slip angle and drift time are displayed. The 1–2 ms substep schedule, steering expressions, and speed-squared drift-release scalar are recovered from the client; **how that scalar affects tire forces remains unknown**. Its use as a persistence timer, reverse-drift handling, steering settings, wall restitution, drive force, grip, gauge, and boost are provisional. The geometric visuals are **not** converted original `.1s` assets. This prototype is intentionally separate from the required original-client time-series comparison.
 
 ## Implemented now
 
@@ -44,7 +44,7 @@ The verified release artifact is:
 
 `..\..\work\kart-web-target\wasm32-unknown-unknown\release\p5136_wasm_core.wasm`
 
-The current preview Wasm SHA-256 is `E639A0D6394449D5F04C5F7B3557503432EA8EC49E5B33F903DC965D564B0882` (38,714 bytes). It exports WebAssembly memory plus:
+The current preview Wasm SHA-256 is `C0A0CED9311E0357634F7236BB1E5170BA7F8B2C881DED6C5FED2895E21D2D68` (38,725 bytes). It exports WebAssembly memory plus:
 
 - `p5136_abi_version`
 - `p5136_plan_substeps` and `p5136_substep_count`
@@ -66,7 +66,7 @@ The current preview Wasm SHA-256 is `E639A0D6394449D5F04C5F7B3557503432EA8EC49E5
 - `p5136_wall_contact_reported_speed`
 - `p5136_preview_new`, `p5136_preview_step`, `p5136_preview_reset`
 
-Forty-one Rust unit tests pass. The preview page and Wasm return HTTP 200 locally, and direct Wasm calls verify acceleration, sustained drift with countersteer decay, and wall rebound. Browser feel still needs user testing.
+Forty-three Rust unit tests pass, including reverse drift from rest and after drift-key release. The page, local Three.js modules, and Wasm load in the browser; the 3D kart and both camera views were visually checked. Browser driving feel still needs user testing.
 
 ## Native original-client instrumentation
 

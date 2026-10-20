@@ -82,8 +82,8 @@ impl PreviewState {
         // measured effective KartSpec values for any original kart.
         let base_angle = steering::base_steer_radians(steer, false, 20.0);
         let attenuated_angle =
-            steering::speed_attenuated_steer_radians(base_angle, forward_speed, 70.0, 0.25);
-        let drift_press_eligible = input.drift && forward_speed > 4.0 && steer.abs() > 0.05;
+            steering::speed_attenuated_steer_radians(base_angle, forward_speed.abs(), 70.0, 0.25);
+        let drift_press_eligible = input.drift && forward_speed.abs() > 4.0 && steer.abs() > 0.05;
         let was_drifting_with_key = self.drift_pressed != 0.0;
         if drift_press_eligible && !was_drifting_with_key {
             self.drift_direction = steer.signum();
@@ -104,14 +104,17 @@ impl PreviewState {
             self.drift_release_seconds =
                 drift::decay_release_scalar(self.drift_release_seconds, dt);
         }
-        if forward_speed < 3.5 {
+        if forward_speed.abs() < 3.5 {
             self.drift_release_seconds = 0.0;
         }
-        let drifting =
-            forward_speed > 3.5 && (self.drift_pressed != 0.0 || self.drift_release_seconds > 0.0);
+        let drifting = forward_speed.abs() > 3.5
+            && (self.drift_pressed != 0.0 || self.drift_release_seconds > 0.0);
         self.drifting = f32::from(drifting);
         let drift_yaw = if drifting && !countersteering {
-            self.drift_direction * (forward_speed / 25.0).clamp(0.0, 1.0) * 0.32
+            self.drift_direction
+                * forward_speed.signum()
+                * (forward_speed.abs() / 25.0).clamp(0.0, 1.0)
+                * 0.32
         } else {
             0.0
         };
@@ -284,6 +287,60 @@ mod tests {
         );
         assert!(state.drift_release_seconds > 0.0);
         assert!(state.drifting > 0.0);
+    }
+
+    #[test]
+    fn reverse_drift_can_start_and_linger_after_release() {
+        let mut state = PreviewState {
+            velocity_x: -12.0,
+            speed: 12.0,
+            ..PreviewState::default()
+        };
+        state.advance(
+            16,
+            PreviewInput {
+                brake: true,
+                steer: 1.0,
+                drift: true,
+                ..PreviewInput::default()
+            },
+        );
+        assert!(state.drifting > 0.0);
+        assert!(state.yaw_rate < 0.0);
+        state.advance(
+            16,
+            PreviewInput {
+                brake: true,
+                ..PreviewInput::default()
+            },
+        );
+        assert!(state.drift_release_seconds > 0.0);
+        assert!(state.drifting > 0.0);
+    }
+
+    #[test]
+    fn reverse_drift_is_reachable_from_rest_with_brake_held() {
+        let mut state = PreviewState::default();
+        for _ in 0..100 {
+            state.advance(
+                16,
+                PreviewInput {
+                    brake: true,
+                    ..PreviewInput::default()
+                },
+            );
+        }
+        assert!(state.velocity_x < -4.0);
+        state.advance(
+            16,
+            PreviewInput {
+                brake: true,
+                steer: 1.0,
+                drift: true,
+                ..PreviewInput::default()
+            },
+        );
+        assert_eq!(state.drifting, 1.0);
     }
 
     #[test]

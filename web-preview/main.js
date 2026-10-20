@@ -1,5 +1,7 @@
+import { createPreviewRenderer } from './render3d.js';
+
 const canvas = document.querySelector('#track');
-const ctx = canvas.getContext('2d');
+const view = createPreviewRenderer(canvas);
 const status = document.querySelector('#status');
 const controls = { throttle: false, brake: false, left: false, right: false, drift: false, boost: false };
 const keyMap = {
@@ -21,6 +23,9 @@ for (const type of ['keydown', 'keyup']) {
 }
 window.addEventListener('blur', () => Object.keys(controls).forEach((key) => { controls[key] = false; }));
 document.querySelector('#reset').addEventListener('click', () => wasm?.p5136_preview_reset(statePointer));
+document.querySelector('#camera').addEventListener('click', (event) => {
+  event.currentTarget.textContent = view.toggleCamera() ? '카메라: 위에서 보기' : '카메라: 추적 시점';
+});
 for (const button of document.querySelectorAll('[data-key]')) {
   const key = button.dataset.key;
   const set = (pressed) => { controls[key] = pressed; button.classList.toggle('active', pressed); };
@@ -32,31 +37,14 @@ let wasm;
 let statePointer = 0;
 let previousTime = 0;
 let accumulator = 0;
-const telemetry = Object.fromEntries(['speed', 'heading', 'yaw', 'drift', 'slip', 'linger', 'gauge', 'boost', 'hits'].map((id) => [id, document.getElementById(id)]));
+const telemetry = Object.fromEntries(['speed', 'gear', 'heading', 'yaw', 'drift', 'slip', 'linger', 'gauge', 'boost', 'hits'].map((id) => [id, document.getElementById(id)]));
 
 function draw(state) {
-  const [x, y, heading, vx, vy, yawRate, speed, gauge, boost, drifting, , hits, linger, , , slip] = state;
-  const w = canvas.width;
-  const h = canvas.height;
-  ctx.fillStyle = '#203840'; ctx.fillRect(0, 0, w, h);
-  ctx.strokeStyle = '#638d83'; ctx.lineWidth = 2;
-  const scale = Math.min((w - 50) / 160, (h - 50) / 160);
-  const sx = (value) => w / 2 + value * scale;
-  const sy = (value) => h / 2 - value * scale;
-  for (let i = -80; i <= 80; i += 20) {
-    ctx.beginPath(); ctx.moveTo(sx(i), sy(-80)); ctx.lineTo(sx(i), sy(80)); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(sx(-80), sy(i)); ctx.lineTo(sx(80), sy(i)); ctx.stroke();
-  }
-  ctx.strokeStyle = '#e6a56c'; ctx.lineWidth = 8;
-  ctx.strokeRect(sx(-80), sy(80), 160 * scale, 160 * scale);
-  const px = sx(x); const py = sy(y);
-  ctx.strokeStyle = '#92c9ff'; ctx.lineWidth = 2;
-  ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(px + vx * 2, py - vy * 2); ctx.stroke();
-  ctx.save(); ctx.translate(px, py); ctx.rotate(-heading);
-  ctx.fillStyle = boost > 0 ? '#ffd458' : drifting ? '#ff82ad' : '#81c7ff';
-  ctx.beginPath(); ctx.moveTo(18, 0); ctx.lineTo(-13, -10); ctx.lineTo(-8, 0); ctx.lineTo(-13, 10); ctx.closePath(); ctx.fill();
-  ctx.restore();
+  const [, , heading, vx, vy, yawRate, speed, gauge, boost, drifting, , hits, linger, , , slip] = state;
+  view.render(state);
+  const signedSpeed = vx * Math.cos(heading) + vy * Math.sin(heading);
   telemetry.speed.textContent = Math.round(speed * 3.6);
+  telemetry.gear.textContent = signedSpeed < -0.5 ? 'R · 후진' : 'D · 전진';
   telemetry.heading.textContent = `${Math.round(heading * 180 / Math.PI)}°`;
   telemetry.yaw.textContent = `${Math.round(yawRate * 180 / Math.PI)}°/s`;
   telemetry.drift.textContent = drifting ? '켜짐' : '꺼짐';
@@ -87,7 +75,7 @@ try {
   wasm = result.instance.exports;
   statePointer = wasm.p5136_preview_new();
   if (!statePointer) throw new Error('Wasm 상태 생성 실패');
-  status.textContent = 'Wasm 실행 중';
+  status.textContent = '3D / Wasm 실행 중';
   requestAnimationFrame(frame);
 } catch (error) {
   status.textContent = `실행 실패: ${error.message}`;
