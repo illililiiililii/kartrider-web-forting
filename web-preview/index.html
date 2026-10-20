@@ -31,13 +31,15 @@
           <dt>방향</dt><dd id="heading">0°</dd>
           <dt>각속도</dt><dd id="yaw">0°/s</dd>
           <dt>드리프트</dt><dd id="drift">꺼짐</dd>
+          <dt>미끄럼각</dt><dd id="slip">0°</dd>
+          <dt>드리프트 잔여</dt><dd id="linger">0.0초</dd>
           <dt>게이지</dt><dd id="gauge">0%</dd>
           <dt>부스터</dt><dd id="boost">0.0초</dd>
           <dt>벽 접촉</dt><dd id="hits">0</dd>
         </dl>
         <button id="reset">시작 위치로 재설정 (R)</button>
         <p class="help">W/↑ 가속 · S/↓ 브레이크/후진 · A/D 또는 ←/→ 조향 · Shift 드리프트 · Space 부스터</p>
-        <p class="warning">원본 근거: 1–2ms 서브스텝, 기본 조향각, 속도 감쇠식. 임시 실험식: 가속·브레이크·횡그립·드리프트·게이지·부스터·사각 벽. 수치나 느낌을 원본과 동일하다고 판단하지 마세요.</p>
+        <p class="warning">원본 근거: 1–2ms 서브스텝, 기본 조향각, 속도 감쇠식, 드리프트 해제 시 속도 제곱 기반 잔여 스칼라. 임시 실험식: 가속·브레이크·횡그립·차체 회전·드리프트 지속 효과·게이지·부스터·사각 벽 반발. 수치나 느낌을 원본과 동일하다고 판단하지 마세요.</p>
       </aside>
     </div>
   </main>

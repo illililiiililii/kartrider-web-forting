@@ -177,7 +177,7 @@ The fresh Rust crate implements only evidence-closed behavior at this stage:
 - the initial steering target and speed-dependent exponential attenuation from the native steering path, with `+0xB38` supplied as an unresolved input;
 - a dependency-free raw WebAssembly ABI for these operations.
 
-Thirty-eight unit tests pass. The current release `wasm32-unknown-unknown` module is 37,313 bytes with SHA-256 `7999B71903EA5ECD7EDC913AA7B14A74C6ED66E977F37AA7F57C84AA267D0887`. In addition to the native-evidence primitives, it exports `p5136_wall_contact_reported_speed` and the explicitly provisional `p5136_preview_new`, `p5136_preview_step`, and `p5136_preview_reset` functions. The latter implement a temporary 2D input sandbox, not a verified original P5136 force model. No JavaScript physics integrator exists, and no unverified native force formula is represented as equivalent yet.
+Forty-one unit tests pass. The current release `wasm32-unknown-unknown` module is 38,714 bytes with SHA-256 `E639A0D6394449D5F04C5F7B3557503432EA8EC49E5B33F903DC965D564B0882`. In addition to the native-evidence primitives, it exports `p5136_wall_contact_reported_speed` and the explicitly provisional `p5136_preview_new`, `p5136_preview_step`, and `p5136_preview_reset` functions. Following user feedback, the temporary 2D tester uses the native speed-squared release scalar as a visible persistence timer; this mapping and its `×3.6` speed conversion are **preview hypotheses**, not recovered native tire-force equations. Steering response and wall rebound values are likewise temporary. No JavaScript physics integrator exists, and no unverified native force formula is represented as equivalent yet.
 
 ## Required runtime comparison schema
 

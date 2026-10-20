@@ -32,10 +32,10 @@ let wasm;
 let statePointer = 0;
 let previousTime = 0;
 let accumulator = 0;
-const telemetry = Object.fromEntries(['speed', 'heading', 'yaw', 'drift', 'gauge', 'boost', 'hits'].map((id) => [id, document.getElementById(id)]));
+const telemetry = Object.fromEntries(['speed', 'heading', 'yaw', 'drift', 'slip', 'linger', 'gauge', 'boost', 'hits'].map((id) => [id, document.getElementById(id)]));
 
 function draw(state) {
-  const [x, y, heading, vx, vy, yawRate, speed, gauge, boost, drifting, , hits] = state;
+  const [x, y, heading, vx, vy, yawRate, speed, gauge, boost, drifting, , hits, linger, , , slip] = state;
   const w = canvas.width;
   const h = canvas.height;
   ctx.fillStyle = '#203840'; ctx.fillRect(0, 0, w, h);
@@ -60,6 +60,8 @@ function draw(state) {
   telemetry.heading.textContent = `${Math.round(heading * 180 / Math.PI)}°`;
   telemetry.yaw.textContent = `${Math.round(yawRate * 180 / Math.PI)}°/s`;
   telemetry.drift.textContent = drifting ? '켜짐' : '꺼짐';
+  telemetry.slip.textContent = `${Math.round(slip)}°`;
+  telemetry.linger.textContent = `${linger.toFixed(1)}초`;
   telemetry.gauge.textContent = `${Math.round(gauge)}%`;
   telemetry.boost.textContent = `${boost.toFixed(1)}초`;
   telemetry.hits.textContent = Math.round(hits);
@@ -74,7 +76,7 @@ function frame(time) {
       (+controls.left) - (+controls.right), +controls.drift, +controls.boost);
     accumulator -= 16;
   }
-  draw(new Float32Array(wasm.memory.buffer, statePointer, 12));
+  draw(new Float32Array(wasm.memory.buffer, statePointer, 16));
   requestAnimationFrame(frame);
 }
 

@@ -3,7 +3,7 @@
 //! acceleration, yaw response, drift, boost, and rectangular walls below are
 //! deliberately provisional until the original client is traced and compared.
 
-use crate::{scheduler::SubstepPlan, steering};
+use crate::{drift, scheduler::SubstepPlan, steering};
 
 #[repr(C)]
 #[derive(Debug, Clone, Copy)]
@@ -20,6 +20,10 @@ pub struct PreviewState {
     pub drifting: f32,
     pub elapsed_seconds: f32,
     pub wall_hits: f32,
+    pub drift_release_seconds: f32,
+    pub drift_direction: f32,
+    pub drift_pressed: f32,
+    pub slip_degrees: f32,
 }
 
 impl Default for PreviewState {
@@ -37,6 +41,10 @@ impl Default for PreviewState {
             drifting: 0.0,
             elapsed_seconds: 0.0,
             wall_hits: 0.0,
+            drift_release_seconds: 0.0,
+            drift_direction: 0.0,
+            drift_pressed: 0.0,
+            slip_degrees: 0.0,
         }
     }
 }
@@ -70,14 +78,47 @@ impl PreviewState {
         let forward_speed = self.velocity_x * forward_x + self.velocity_y * forward_y;
         let lateral_speed = self.velocity_x * lateral_x + self.velocity_y * lateral_y;
 
-        let base_angle = steering::base_steer_radians(steer, false, 28.0);
+        // Preview-only inputs to the recovered expression; these are not
+        // measured effective KartSpec values for any original kart.
+        let base_angle = steering::base_steer_radians(steer, false, 20.0);
         let attenuated_angle =
             steering::speed_attenuated_steer_radians(base_angle, forward_speed, 70.0, 0.25);
-        let drifting = input.drift && forward_speed > 4.0 && steer.abs() > 0.05;
+        let drift_press_eligible = input.drift && forward_speed > 4.0 && steer.abs() > 0.05;
+        let was_drifting_with_key = self.drift_pressed != 0.0;
+        if drift_press_eligible && !was_drifting_with_key {
+            self.drift_direction = steer.signum();
+            self.drift_release_seconds = 0.0;
+        }
+        if !input.drift && was_drifting_with_key {
+            // Native +0x640 release scalar is speed-squared. Applying it as
+            // visible 2D drift persistence is provisional, not proven equivalent.
+            self.drift_release_seconds =
+                drift::scalar_after_release(1, true, self.drift_release_seconds, self.speed * 3.6);
+        }
+        self.drift_pressed =
+            f32::from(input.drift && (was_drifting_with_key || drift_press_eligible));
+        let countersteering = self.drift_direction != 0.0 && steer * self.drift_direction < -0.35;
+        if countersteering {
+            self.drift_release_seconds = (self.drift_release_seconds - dt * 8.0).max(0.0);
+        } else {
+            self.drift_release_seconds =
+                drift::decay_release_scalar(self.drift_release_seconds, dt);
+        }
+        if forward_speed < 3.5 {
+            self.drift_release_seconds = 0.0;
+        }
+        let drifting =
+            forward_speed > 3.5 && (self.drift_pressed != 0.0 || self.drift_release_seconds > 0.0);
         self.drifting = f32::from(drifting);
-        let yaw_target =
-            forward_speed * attenuated_angle.tan() / 3.2 * if drifting { 1.45 } else { 1.0 };
-        let yaw_response = (dt * if drifting { 5.0 } else { 8.0 }).min(1.0);
+        let drift_yaw = if drifting && !countersteering {
+            self.drift_direction * (forward_speed / 25.0).clamp(0.0, 1.0) * 0.32
+        } else {
+            0.0
+        };
+        let yaw_target = forward_speed * attenuated_angle.tan() / 4.0
+            * if drifting { 1.25 } else { 1.0 }
+            + drift_yaw;
+        let yaw_response = (dt * if drifting { 3.2 } else { 6.0 }).min(1.0);
         self.yaw_rate += (yaw_target - self.yaw_rate) * yaw_response;
         self.heading += self.yaw_rate * dt;
 
@@ -97,9 +138,10 @@ impl PreviewState {
         } else {
             0.0
         };
-        let drag = forward_speed * (0.4 + forward_speed.abs() * 0.012);
+        let drag = forward_speed * (0.4 + forward_speed.abs() * 0.012)
+            + if drifting { forward_speed * 0.12 } else { 0.0 };
         let forward_delta = (drive_accel - drag) * dt;
-        let lateral_delta = -lateral_speed * if drifting { 1.3 } else { 8.0 } * dt;
+        let lateral_delta = -lateral_speed * if drifting { 0.45 } else { 8.0 } * dt;
         self.velocity_x += forward_x * forward_delta + lateral_x * lateral_delta;
         self.velocity_y += forward_y * forward_delta + lateral_y * lateral_delta;
         self.x += self.velocity_x * dt;
@@ -111,16 +153,21 @@ impl PreviewState {
         ] {
             if *position < -80.0 {
                 *position = -80.0;
-                *velocity *= -0.22;
+                *velocity *= -0.68;
                 self.wall_hits += 1.0;
             } else if *position > 80.0 {
                 *position = 80.0;
-                *velocity *= -0.22;
+                *velocity *= -0.68;
                 self.wall_hits += 1.0;
             }
         }
 
         self.speed = self.velocity_x.hypot(self.velocity_y);
+        let new_forward_x = self.heading.cos();
+        let new_forward_y = self.heading.sin();
+        self.slip_degrees = (new_forward_x * self.velocity_y - new_forward_y * self.velocity_x)
+            .atan2(new_forward_x * self.velocity_x + new_forward_y * self.velocity_y)
+            .to_degrees();
         if drifting {
             self.drift_gauge = (self.drift_gauge + steer.abs() * self.speed * 0.7 * dt).min(100.0);
         }
@@ -164,5 +211,91 @@ mod tests {
         );
         assert_eq!(state.drift_gauge, 0.0);
         assert!(state.boost_seconds > 1.9);
+    }
+
+    #[test]
+    fn drift_lingers_after_release_until_countersteer_or_low_speed() {
+        let mut state = PreviewState {
+            velocity_x: 20.0,
+            speed: 20.0,
+            ..PreviewState::default()
+        };
+        state.advance(
+            16,
+            PreviewInput {
+                throttle: true,
+                steer: 1.0,
+                drift: true,
+                ..PreviewInput::default()
+            },
+        );
+        state.advance(
+            16,
+            PreviewInput {
+                throttle: true,
+                ..PreviewInput::default()
+            },
+        );
+        assert!(state.drifting > 0.0);
+        assert!(state.drift_release_seconds > 0.0);
+        let no_countersteer = state.drift_release_seconds;
+        state.advance(
+            16,
+            PreviewInput {
+                throttle: true,
+                steer: -1.0,
+                ..PreviewInput::default()
+            },
+        );
+        assert!(state.drift_release_seconds < no_countersteer - 0.1);
+    }
+
+    #[test]
+    fn drift_stays_active_when_steering_is_released_before_drift_key() {
+        let mut state = PreviewState {
+            velocity_x: 20.0,
+            speed: 20.0,
+            ..PreviewState::default()
+        };
+        state.advance(
+            16,
+            PreviewInput {
+                steer: 1.0,
+                drift: true,
+                throttle: true,
+                ..PreviewInput::default()
+            },
+        );
+        state.advance(
+            16,
+            PreviewInput {
+                drift: true,
+                throttle: true,
+                ..PreviewInput::default()
+            },
+        );
+        assert!(state.drifting > 0.0);
+        state.advance(
+            16,
+            PreviewInput {
+                throttle: true,
+                ..PreviewInput::default()
+            },
+        );
+        assert!(state.drift_release_seconds > 0.0);
+        assert!(state.drifting > 0.0);
+    }
+
+    #[test]
+    fn wall_contact_reverses_outward_velocity() {
+        let mut state = PreviewState {
+            x: 79.9,
+            velocity_x: 20.0,
+            speed: 20.0,
+            ..PreviewState::default()
+        };
+        state.advance(16, PreviewInput::default());
+        assert!(state.velocity_x < -10.0);
+        assert!(state.wall_hits >= 1.0);
     }
 }

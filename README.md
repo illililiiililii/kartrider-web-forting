@@ -13,7 +13,7 @@ The local server is currently available at [http://127.0.0.1:4173/](http://127.0
 python -m http.server 4173 --bind 127.0.0.1 --directory web-preview
 ```
 
-Use W/↑ to accelerate, S/↓ to brake/reverse, A/D or ←/→ to steer, Shift to drift, Space for boost, and R to reset. Touch buttons are also provided. The canvas and controls are JavaScript, while all 2D state updates run in Rust/Wasm. The 1–2 ms substep schedule and steering expressions are recovered from the client; drive force, grip, drift, gauge, boost, and simple square walls are explicitly provisional. This sandbox is intentionally separate from the required original-client time-series comparison.
+Use W/↑ to accelerate, S/↓ to brake/reverse, A/D or ←/→ to steer, Shift to drift, Space for boost, and R to reset. Touch buttons are also provided. The canvas and controls are JavaScript, while all 2D state updates run in Rust/Wasm. Following user test feedback, the preview turns more slowly, visibly rebounds from square walls, and keeps sliding after drift-key release until countersteer or lower speed ends it. Slip angle and drift time are displayed. The 1–2 ms substep schedule, steering expressions, and speed-squared drift-release scalar are recovered from the client; **how that scalar affects tire forces remains unknown**. Its use as a 2D persistence timer, the steering settings, wall restitution, drive force, grip, gauge, and boost are provisional. This sandbox is intentionally separate from the required original-client time-series comparison.
 
 ## Implemented now
 
@@ -44,7 +44,7 @@ The verified release artifact is:
 
 `..\..\work\kart-web-target\wasm32-unknown-unknown\release\p5136_wasm_core.wasm`
 
-The current preview Wasm SHA-256 is `7999B71903EA5ECD7EDC913AA7B14A74C6ED66E977F37AA7F57C84AA267D0887` (37,313 bytes). It exports WebAssembly memory plus:
+The current preview Wasm SHA-256 is `E639A0D6394449D5F04C5F7B3557503432EA8EC49E5B33F903DC965D564B0882` (38,714 bytes). It exports WebAssembly memory plus:
 
 - `p5136_abi_version`
 - `p5136_plan_substeps` and `p5136_substep_count`
@@ -66,7 +66,7 @@ The current preview Wasm SHA-256 is `7999B71903EA5ECD7EDC913AA7B14A74C6ED66E977F
 - `p5136_wall_contact_reported_speed`
 - `p5136_preview_new`, `p5136_preview_step`, `p5136_preview_reset`
 
-Thirty-eight Rust unit tests pass. The preview page and Wasm return HTTP 200 locally, and a direct Wasm call with throttle input advances both speed and position. Browser visual/input behavior still needs user testing.
+Forty-one Rust unit tests pass. The preview page and Wasm return HTTP 200 locally, and direct Wasm calls verify acceleration, sustained drift with countersteer decay, and wall rebound. Browser feel still needs user testing.
 
 ## Native original-client instrumentation
 
