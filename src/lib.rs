@@ -5,7 +5,6 @@ pub mod collision;
 pub mod drift;
 pub mod drive_input;
 pub mod encoded;
-pub mod gauge;
 pub mod integrator;
 pub mod kart_spec;
 pub mod longitudinal;
@@ -29,7 +28,7 @@ pub extern "C" fn p5136_abi_version() -> u32 {
     1
 }
 
-/// Allocate a temporary 3D tester state in Wasm memory.
+/// Allocate a temporary 2D tester state in Wasm memory.
 #[no_mangle]
 pub extern "C" fn p5136_preview_new() -> *mut preview::PreviewState {
     Box::into_raw(Box::new(preview::PreviewState::default()))
@@ -57,36 +56,6 @@ pub unsafe extern "C" fn p5136_preview_step(
             steer,
             drift: drift != 0,
             boost: boost != 0,
-            exceed: false,
-        },
-    );
-    1
-}
-
-/// Expanded prototype input ABI: Space/Exceed is separate from Ctrl/booster.
-#[no_mangle]
-pub unsafe extern "C" fn p5136_preview_step_v2(
-    state: *mut preview::PreviewState,
-    elapsed_ms: u32,
-    throttle: u32,
-    brake: u32,
-    steer: f32,
-    drift: u32,
-    boost: u32,
-    exceed: u32,
-) -> u32 {
-    let Some(state) = (unsafe { state.as_mut() }) else {
-        return 0;
-    };
-    state.advance(
-        elapsed_ms,
-        preview::PreviewInput {
-            throttle: throttle != 0,
-            brake: brake != 0,
-            steer,
-            drift: drift != 0,
-            boost: boost != 0,
-            exceed: exceed != 0,
         },
     );
     1

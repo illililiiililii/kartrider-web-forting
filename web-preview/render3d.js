@@ -10,7 +10,7 @@ export function createPreviewRenderer(canvas) {
 
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(0x9bc8d4);
-  scene.fog = new THREE.Fog(0x9bc8d4, 150, 360);
+  scene.fog = new THREE.Fog(0x9bc8d4, 85, 200);
   scene.add(new THREE.HemisphereLight(0xeaf8ff, 0x456357, 2.4));
   const sun = new THREE.DirectionalLight(0xfff2d6, 3.2);
   sun.position.set(-25, 48, 30);
@@ -18,11 +18,11 @@ export function createPreviewRenderer(canvas) {
 
   const material = (color, metalness = 0, roughness = 0.8) =>
     new THREE.MeshStandardMaterial({ color, metalness, roughness });
-  const ground = new THREE.Mesh(new THREE.PlaneGeometry(400, 400), material(0x3f6c68));
+  const ground = new THREE.Mesh(new THREE.PlaneGeometry(160, 160), material(0x3f6c68));
   ground.rotation.x = -Math.PI / 2;
   ground.position.y = -0.05;
   scene.add(ground);
-  const grid = new THREE.GridHelper(400, 20, 0x8cb5aa, 0x71968e);
+  const grid = new THREE.GridHelper(160, 16, 0x8cb5aa, 0x71968e);
   grid.position.y = 0.005;
   scene.add(grid);
 
@@ -35,30 +35,17 @@ export function createPreviewRenderer(canvas) {
     parent.add(mesh);
     return mesh;
   }
-  // The visible walls use the same ±200 m square as the provisional Wasm collision.
-  box(scene, 400, 0.03, 7, 0, 0.01, 0, road);
-  box(scene, 7, 0.03, 400, 0, 0.012, 0, road);
-  function ramp(x0, x1, h0, h1) {
-    const geometry = new THREE.BufferGeometry();
-    geometry.setAttribute('position', new THREE.Float32BufferAttribute([
-      x0, h0 + 0.025, -6, x1, h1 + 0.025, -6, x0, h0 + 0.025, 6,
-      x1, h1 + 0.025, -6, x1, h1 + 0.025, 6, x0, h0 + 0.025, 6,
-    ], 3));
-    geometry.computeVertexNormals();
-    const mesh = new THREE.Mesh(geometry, new THREE.MeshStandardMaterial({ color: 0x526b72, side: THREE.DoubleSide }));
-    scene.add(mesh);
-  }
-  ramp(-45, -25, 0, 2);
-  ramp(-25, -5, 2, 0);
-  ramp(25, 42, 0, 2.5);
-  for (const edge of [-200, 200]) {
-    box(scene, 400, 1.8, 1, 0, 0.9, edge, barrier);
-    box(scene, 1, 1.8, 400, edge, 0.9, 0, barrier);
-    box(scene, 400, 0.16, 1.1, 0, 1.86, edge, barrierTop);
-    box(scene, 1.1, 0.16, 400, edge, 1.86, 0, barrierTop);
+  // The visible walls use the same ±80 m square as the provisional Wasm collision.
+  box(scene, 160, 0.03, 7, 0, 0.01, 0, road);
+  box(scene, 7, 0.03, 160, 0, 0.012, 0, road);
+  for (const edge of [-80, 80]) {
+    box(scene, 160, 1.8, 1, 0, 0.9, edge, barrier);
+    box(scene, 1, 1.8, 160, edge, 0.9, 0, barrier);
+    box(scene, 160, 0.16, 1.1, 0, 1.86, edge, barrierTop);
+    box(scene, 1.1, 0.16, 160, edge, 1.86, 0, barrierTop);
   }
   const stripe = material(0xf9e8c4);
-  for (let i = -190; i <= 190; i += 10) {
+  for (let i = -70; i <= 70; i += 10) {
     box(scene, 4, 0.015, 0.15, i, 0.035, 0, stripe);
     box(scene, 0.15, 0.015, 4, 0, 0.037, i, stripe);
   }
@@ -108,37 +95,26 @@ export function createPreviewRenderer(canvas) {
 
   function render(state) {
     const [x, y, heading, vx, vy, , speed, , boost, drifting] = state;
-    const height = state[17];
-    const verticalVelocity = state[18];
-    const exceed = state[20];
     const width = Math.max(canvas.clientWidth, 1);
-    const canvasHeight = Math.max(canvas.clientHeight, 1);
+    const height = Math.max(canvas.clientHeight, 1);
     if (canvas.width !== Math.round(width * renderer.getPixelRatio()) ||
-        canvas.height !== Math.round(canvasHeight * renderer.getPixelRatio())) {
-      renderer.setSize(width, canvasHeight, false);
-      camera.aspect = width / canvasHeight;
+        canvas.height !== Math.round(height * renderer.getPixelRatio())) {
+      renderer.setSize(width, height, false);
+      camera.aspect = width / height;
       camera.updateProjectionMatrix();
     }
-    kart.position.set(x, height, -y);
+    kart.position.set(x, 0, -y);
     kart.rotation.y = heading;
-    kart.rotation.z = THREE.MathUtils.clamp(verticalVelocity / Math.max(speed, 10), -0.18, 0.18);
-    shell.color.setHex(exceed > 0 ? 0xf5f5f5 : boost > 0 ? 0xffcd4f : drifting ? 0xf779a8 : 0x33b6e4);
+    shell.color.setHex(boost > 0 ? 0xffcd4f : drifting ? 0xf779a8 : 0x33b6e4);
     const localSpeed = vx * Math.cos(heading) + vy * Math.sin(heading);
     for (const wheel of wheels) wheel.rotation.z -= localSpeed * 0.016 / 0.43;
 
-    const speedFeel = THREE.MathUtils.clamp(speed / 55, 0, 1);
-    const targetFov = overhead ? 65 : 65 + speedFeel * 11;
-    if (Math.abs(camera.fov - targetFov) > 0.05) {
-      camera.fov += (targetFov - camera.fov) * 0.07;
-      camera.updateProjectionMatrix();
-    }
-    if (overhead) desired.set(x, height + 28, -y + 0.01);
-    else desired.set(x - Math.cos(heading) * (8.8 + speedFeel * 1.6),
-      height + 5.3 - speedFeel * 1.25, -y + Math.sin(heading) * (8.8 + speedFeel * 1.6));
+    if (overhead) desired.set(x, 28, -y + 0.01);
+    else desired.set(x - Math.cos(heading) * 8.8, 5.3, -y + Math.sin(heading) * 8.8);
     if (firstFrame) { camera.position.copy(desired); firstFrame = false; }
     else camera.position.lerp(desired, overhead ? 0.12 : 0.09);
-    look.set(x + Math.cos(heading) * (overhead ? 0 : 3.2 + speedFeel * 1.8), height + 0.8,
-      -y - Math.sin(heading) * (overhead ? 0 : 3.2 + speedFeel * 1.8));
+    look.set(x + Math.cos(heading) * (overhead ? 0 : 3.2), 0.8,
+      -y - Math.sin(heading) * (overhead ? 0 : 3.2));
     camera.lookAt(look);
     renderer.render(scene, camera);
   }

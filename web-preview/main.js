@@ -3,13 +3,11 @@ import { createPreviewRenderer } from './render3d.js';
 const canvas = document.querySelector('#track');
 const view = createPreviewRenderer(canvas);
 const status = document.querySelector('#status');
-const controls = { throttle: false, brake: false, left: false, right: false, drift: false, boost: false, exceed: false };
+const controls = { throttle: false, brake: false, left: false, right: false, drift: false, boost: false };
 const keyMap = {
   KeyW: 'throttle', ArrowUp: 'throttle', KeyS: 'brake', ArrowDown: 'brake',
   KeyA: 'left', ArrowLeft: 'left', KeyD: 'right', ArrowRight: 'right',
-  Numpad8: 'throttle', Numpad2: 'brake', Numpad4: 'left', Numpad6: 'right',
-  ShiftLeft: 'drift', ShiftRight: 'drift', ControlLeft: 'boost', ControlRight: 'boost',
-  Space: 'exceed',
+  ShiftLeft: 'drift', ShiftRight: 'drift', Space: 'boost',
 };
 for (const type of ['keydown', 'keyup']) {
   window.addEventListener(type, (event) => {
@@ -39,13 +37,10 @@ let wasm;
 let statePointer = 0;
 let previousTime = 0;
 let accumulator = 0;
-const telemetry = Object.fromEntries(['speed', 'gear', 'heading', 'yaw', 'drift', 'slip', 'linger', 'gauge', 'boost', 'exceed', 'height', 'grounded', 'hits'].map((id) => [id, document.getElementById(id)]));
-const speedVeil = document.querySelector('#speed-veil');
-const speedBar = document.querySelector('#speed-bar');
+const telemetry = Object.fromEntries(['speed', 'gear', 'heading', 'yaw', 'drift', 'slip', 'linger', 'gauge', 'boost', 'hits'].map((id) => [id, document.getElementById(id)]));
 
 function draw(state) {
-  const [, , heading, vx, vy, yawRate, speed, gauge, boost, drifting, , hits, linger, , , slip,
-    , height, , grounded, exceed] = state;
+  const [, , heading, vx, vy, yawRate, speed, gauge, boost, drifting, , hits, linger, , , slip] = state;
   view.render(state);
   const signedSpeed = vx * Math.cos(heading) + vy * Math.sin(heading);
   telemetry.speed.textContent = Math.round(speed * 3.6);
@@ -55,15 +50,9 @@ function draw(state) {
   telemetry.drift.textContent = drifting ? '켜짐' : '꺼짐';
   telemetry.slip.textContent = `${Math.round(slip)}°`;
   telemetry.linger.textContent = `${linger.toFixed(1)}초`;
-  telemetry.gauge.textContent = `${Math.round(gauge / 3810 * 100)}%`;
+  telemetry.gauge.textContent = `${Math.round(gauge)}%`;
   telemetry.boost.textContent = `${boost.toFixed(1)}초`;
-  telemetry.exceed.textContent = `${exceed.toFixed(1)}초`;
-  telemetry.height.textContent = `${height.toFixed(1)} m`;
-  telemetry.grounded.textContent = grounded ? '접지' : '공중';
   telemetry.hits.textContent = Math.round(hits);
-  const speedRatio = Math.min(speed / 55, 1);
-  speedVeil.style.opacity = (speedRatio * 0.54).toFixed(2);
-  speedBar.style.width = `${Math.round(speedRatio * 100)}%`;
 }
 
 function frame(time) {
@@ -71,11 +60,11 @@ function frame(time) {
   accumulator = Math.min(accumulator + Math.min(time - previousTime, 100), 100);
   previousTime = time;
   while (accumulator >= 16) {
-    wasm.p5136_preview_step_v2(statePointer, 16, +controls.throttle, +controls.brake,
-      (+controls.left) - (+controls.right), +controls.drift, +controls.boost, +controls.exceed);
+    wasm.p5136_preview_step(statePointer, 16, +controls.throttle, +controls.brake,
+      (+controls.left) - (+controls.right), +controls.drift, +controls.boost);
     accumulator -= 16;
   }
-  draw(new Float32Array(wasm.memory.buffer, statePointer, 23));
+  draw(new Float32Array(wasm.memory.buffer, statePointer, 16));
   requestAnimationFrame(frame);
 }
 
