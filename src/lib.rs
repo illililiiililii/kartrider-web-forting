@@ -5,6 +5,7 @@ pub mod collision;
 pub mod drift;
 pub mod drive_input;
 pub mod encoded;
+pub mod gauge;
 pub mod integrator;
 pub mod kart_spec;
 pub mod longitudinal;
