@@ -44,7 +44,7 @@ The verified release artifact is:
 
 `..\..\work\kart-web-target\wasm32-unknown-unknown\release\p5136_wasm_core.wasm`
 
-The current preview Wasm SHA-256 is `C0A0CED9311E0357634F7236BB1E5170BA7F8B2C881DED6C5FED2895E21D2D68` (38,725 bytes). It exports WebAssembly memory plus:
+The current preview Wasm SHA-256 is `08661C041BD63DEBDF91F818CE1E107D092B01C8B973574192F2572783D0F783` (38,995 bytes). It exports WebAssembly memory plus:
 
 - `p5136_abi_version`
 - `p5136_plan_substeps` and `p5136_substep_count`
@@ -66,7 +66,7 @@ The current preview Wasm SHA-256 is `C0A0CED9311E0357634F7236BB1E5170BA7F8B2C881
 - `p5136_wall_contact_reported_speed`
 - `p5136_preview_new`, `p5136_preview_step`, `p5136_preview_reset`
 
-Forty-three Rust unit tests pass, including reverse drift from rest and after drift-key release. The page, local Three.js modules, and Wasm load in the browser; the 3D kart and both camera views were visually checked. Browser driving feel still needs user testing.
+Forty-five Rust unit tests pass, including reverse drift from rest, after drift-key release, and wall-contact episode counting. After user feedback, the broad high-speed physics/camera/ramp changes of `5745a8f` were reverted. The previous 3D camera and force model are restored; only ordinary steering (−14%), boosted drift yaw (approximately −15%), reverse-drift yaw (approximately +19%), and wall-contact counting differ. The page, local Three.js modules, and Wasm load in the browser. Browser driving feel still needs user testing.
 
 ## Native original-client instrumentation
 
