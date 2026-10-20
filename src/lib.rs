@@ -1,6 +1,7 @@
 #![forbid(unsafe_op_in_unsafe_fn)]
 
 pub mod body_frame;
+pub mod collision;
 pub mod drift;
 pub mod drive_input;
 pub mod encoded;
@@ -276,6 +277,38 @@ pub unsafe extern "C" fn p5136_integrate_position_after_collision(
     1
 }
 
+/// Native wall-impact velocity branch after the caller has resolved contact.
+/// Each vector pointer addresses three consecutive `f32` values.
+#[no_mangle]
+pub unsafe extern "C" fn p5136_wall_impact_velocity(
+    world_velocity: *const f32,
+    contact_normal: *const f32,
+    body_forward_axis: *const f32,
+    output_xyz: *mut f32,
+) -> u32 {
+    if world_velocity.is_null()
+        || contact_normal.is_null()
+        || body_forward_axis.is_null()
+        || output_xyz.is_null()
+    {
+        return 0;
+    }
+    let velocity = unsafe { core::slice::from_raw_parts(world_velocity, 3) };
+    let normal = unsafe { core::slice::from_raw_parts(contact_normal, 3) };
+    let forward = unsafe { core::slice::from_raw_parts(body_forward_axis, 3) };
+    let result = collision::wall_impact_velocity(
+        Vec3::new(velocity[0], velocity[1], velocity[2]),
+        Vec3::new(normal[0], normal[1], normal[2]),
+        Vec3::new(forward[0], forward[1], forward[2]),
+    );
+    unsafe {
+        output_xyz.write(result.x);
+        output_xyz.add(1).write(result.y);
+        output_xyz.add(2).write(result.z);
+    }
+    1
+}
+
 /// Native initial steer angle in radians, before speed attenuation and tire forces.
 #[no_mangle]
 pub extern "C" fn p5136_base_steer_radians(
@@ -390,5 +423,23 @@ mod tests {
         assert_eq!(output[0], 1.0);
         assert!((output[1] - 1.992).abs() < 1e-6);
         assert!((output[2] - 3.01).abs() < 1e-6);
+    }
+
+    #[test]
+    fn raw_wall_impact_abi_matches_native_vector_path() {
+        let velocity = [-10.0, 3.0, 0.0];
+        let normal = [1.0, 0.0, 0.0];
+        let forward = [1.0, 0.0, 0.0];
+        let mut output = [0.0; 3];
+        let success = unsafe {
+            p5136_wall_impact_velocity(
+                velocity.as_ptr(),
+                normal.as_ptr(),
+                forward.as_ptr(),
+                output.as_mut_ptr(),
+            )
+        };
+        assert_eq!(success, 1);
+        assert_eq!(output, [7.0, 3.0, 0.0]);
     }
 }
