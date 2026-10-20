@@ -33,7 +33,7 @@ The verified release artifact is:
 
 `..\..\work\kart-web-target\wasm32-unknown-unknown\release\p5136_wasm_core.wasm`
 
-Its current SHA-256 is `9C9E79F3397D722A8ADB943DA9EC2FD243C55088761EA776B47BFFE3F272BF83` and its size is 26,709 bytes. It exports WebAssembly memory plus:
+Its current SHA-256 is `3EF96A2CEACB6CCD5668551101917D2EDF914DDD20A343896AE29921B931336B` and its size is 26,858 bytes. It exports WebAssembly memory plus:
 
 - `p5136_abi_version`
 - `p5136_plan_substeps` and `p5136_substep_count`
@@ -51,8 +51,9 @@ Its current SHA-256 is `9C9E79F3397D722A8ADB943DA9EC2FD243C55088761EA776B47BFFE3
 - `p5136_integrate_linear_velocity`
 - `p5136_integrate_position_after_collision`
 - `p5136_wall_impact_velocity`
+- `p5136_uses_wall_impact_velocity_branch`
 
-Thirty Rust unit tests pass.
+Thirty-three Rust unit tests pass.
 
 ## Native original-client instrumentation
 

@@ -1,5 +1,29 @@
 use crate::body_frame::Vec3;
 
+/// Main-tick argument passed to `0x00A3AB30` for this P5136 build.
+pub const WALL_IMPACT_QUERY_THRESHOLD: f32 = 0.65;
+
+/// Entry predicate for the velocity-replacement branch of `0x00A3AB30`.
+///
+/// `query_scalar_at_contact_plus_8` is kept deliberately opaque: its source
+/// and comparison are recovered, but its physical meaning is not yet proven.
+/// `iteration` is zero-based, matching the native `+0xE5C` loop limit.
+#[must_use]
+pub fn uses_wall_impact_velocity_branch(
+    has_collision_hit: bool,
+    iteration: u32,
+    maximum_iterations_at_e5c: u32,
+    contact_normal: Vec3,
+    world_velocity: Vec3,
+    query_scalar_at_contact_plus_8: f32,
+    override_at_db0: bool,
+) -> bool {
+    has_collision_hit
+        && iteration < maximum_iterations_at_e5c
+        && contact_normal.dot(world_velocity) < 0.0
+        && (query_scalar_at_contact_plus_8 > WALL_IMPACT_QUERY_THRESHOLD || override_at_db0)
+}
+
 /// Velocity replacement in the impact branch of native `0x00A3AB30`.
 ///
 /// The collision normal is the vector supplied by the native contact query.
@@ -46,5 +70,41 @@ mod tests {
             Vec3::new(0.5, 0.5, 0.0),
         );
         assert_eq!(after, Vec3::new(3.5, 3.0, 0.0));
+    }
+
+    #[test]
+    fn native_impact_branch_requires_hit_limit_and_incoming_motion() {
+        let normal = Vec3::new(1.0, 0.0, 0.0);
+        let incoming = Vec3::new(-1.0, 0.0, 0.0);
+        assert!(uses_wall_impact_velocity_branch(
+            true, 0, 1, normal, incoming, 0.66, false
+        ));
+        assert!(!uses_wall_impact_velocity_branch(
+            false, 0, 1, normal, incoming, 0.66, false
+        ));
+        assert!(!uses_wall_impact_velocity_branch(
+            true, 1, 1, normal, incoming, 0.66, false
+        ));
+        assert!(!uses_wall_impact_velocity_branch(
+            true,
+            0,
+            1,
+            normal,
+            Vec3::new(1.0, 0.0, 0.0),
+            0.66,
+            false
+        ));
+    }
+
+    #[test]
+    fn native_impact_branch_uses_strict_threshold_or_override() {
+        let normal = Vec3::new(1.0, 0.0, 0.0);
+        let incoming = Vec3::new(-1.0, 0.0, 0.0);
+        assert!(!uses_wall_impact_velocity_branch(
+            true, 0, 1, normal, incoming, 0.65, false
+        ));
+        assert!(uses_wall_impact_velocity_branch(
+            true, 0, 1, normal, incoming, 0.65, true
+        ));
     }
 }
