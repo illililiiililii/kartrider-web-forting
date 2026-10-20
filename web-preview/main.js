@@ -15,11 +15,13 @@ async function selectKart() {
 }
 kartChoice.addEventListener('change', selectKart);
 selectKart();
-const controls = { throttle: false, brake: false, left: false, right: false, drift: false, boost: false };
+const controls = { throttle: false, brake: false, left: false, right: false, drift: false, boost: false, exceed: false };
 const keyMap = {
-  KeyW: 'throttle', ArrowUp: 'throttle', KeyS: 'brake', ArrowDown: 'brake',
-  KeyA: 'left', ArrowLeft: 'left', KeyD: 'right', ArrowRight: 'right',
-  ShiftLeft: 'drift', ShiftRight: 'drift', Space: 'boost',
+  KeyW: 'throttle', ArrowUp: 'throttle', Numpad8: 'throttle',
+  KeyS: 'brake', ArrowDown: 'brake', Numpad2: 'brake',
+  KeyA: 'left', ArrowLeft: 'left', Numpad4: 'left',
+  KeyD: 'right', ArrowRight: 'right', Numpad6: 'right',
+  ShiftLeft: 'drift', ShiftRight: 'drift', ControlLeft: 'boost', ControlRight: 'boost', Space: 'exceed',
 };
 for (const type of ['keydown', 'keyup']) {
   window.addEventListener(type, (event) => {
@@ -49,7 +51,7 @@ let wasm;
 let statePointer = 0;
 let previousTime = 0;
 let accumulator = 0;
-const telemetry = Object.fromEntries(['speed', 'gear', 'heading', 'yaw', 'drift', 'slip', 'linger', 'gauge', 'boost', 'hits'].map((id) => [id, document.getElementById(id)]));
+const telemetry = Object.fromEntries(['speed', 'gear', 'heading', 'yaw', 'drift', 'slip', 'linger', 'gauge', 'boost', 'exceed', 'hits'].map((id) => [id, document.getElementById(id)]));
 
 function draw(state) {
   const [, , heading, vx, vy, yawRate, speed, gauge, boost, drifting, , hits, linger, , , slip] = state;
@@ -64,6 +66,7 @@ function draw(state) {
   telemetry.linger.textContent = `${linger.toFixed(1)}초`;
   telemetry.gauge.textContent = `${Math.round(gauge)}%`;
   telemetry.boost.textContent = `${boost.toFixed(1)}초`;
+  telemetry.exceed.textContent = `${state[17].toFixed(1)}초`;
   telemetry.hits.textContent = Math.round(hits);
 }
 
@@ -72,11 +75,11 @@ function frame(time) {
   accumulator = Math.min(accumulator + Math.min(time - previousTime, 100), 100);
   previousTime = time;
   while (accumulator >= 16) {
-    wasm.p5136_preview_step(statePointer, 16, +controls.throttle, +controls.brake,
-      (+controls.left) - (+controls.right), +controls.drift, +controls.boost);
+    wasm.p5136_preview_step_v2(statePointer, 16, +controls.throttle, +controls.brake,
+      (+controls.left) - (+controls.right), +controls.drift, +controls.boost, +controls.exceed);
     accumulator -= 16;
   }
-  draw(new Float32Array(wasm.memory.buffer, statePointer, 16));
+  draw(new Float32Array(wasm.memory.buffer, statePointer, 19));
   requestAnimationFrame(frame);
 }
 

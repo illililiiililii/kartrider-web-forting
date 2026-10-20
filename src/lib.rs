@@ -56,8 +56,29 @@ pub unsafe extern "C" fn p5136_preview_step(
             steer,
             drift: drift != 0,
             boost: boost != 0,
+            exceed: false,
         },
     );
+    1
+}
+
+/// Preview-only extended input: separate Ctrl booster and Space exceed.
+#[no_mangle]
+pub unsafe extern "C" fn p5136_preview_step_v2(
+    state: *mut preview::PreviewState,
+    elapsed_ms: u32,
+    throttle: u32,
+    brake: u32,
+    steer: f32,
+    drift: u32,
+    boost: u32,
+    exceed: u32,
+) -> u32 {
+    let Some(state) = (unsafe { state.as_mut() }) else { return 0; };
+    state.advance(elapsed_ms, preview::PreviewInput {
+        throttle: throttle != 0, brake: brake != 0, steer,
+        drift: drift != 0, boost: boost != 0, exceed: exceed != 0,
+    });
     1
 }
 

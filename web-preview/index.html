@@ -22,7 +22,7 @@
         <div class="touch-controls" aria-label="터치 조작">
           <button data-key="left">◀</button><button data-key="right">▶</button>
           <button data-key="throttle">가속</button><button data-key="brake">브레이크</button>
-          <button data-key="drift">드리프트</button><button data-key="boost">부스터</button>
+          <button data-key="drift">드리프트</button><button data-key="boost">부스터</button><button data-key="exceed">익시드</button>
         </div>
       </section>
       <aside>
@@ -39,11 +39,12 @@
           <dt>드리프트 잔여</dt><dd id="linger">0.0초</dd>
           <dt>게이지</dt><dd id="gauge">0%</dd>
           <dt>부스터</dt><dd id="boost">0.0초</dd>
+          <dt>익시드</dt><dd id="exceed">0.0초</dd>
           <dt>벽 접촉</dt><dd id="hits">0</dd>
         </dl>
         <button id="reset">시작 위치로 재설정 (R)</button>
         <button id="camera">카메라: 추적 시점</button>
-        <p class="help">W/↑ 가속 · S/↓ 브레이크/후진 · A/D 또는 ←/→ 조향 · Shift 드리프트 · Space 부스터. 후진하며 방향키+Shift로 역방향 드리프트를 시험할 수 있습니다.</p>
+        <p class="help">방향키 또는 넘버패드 8/2/4/6 주행 · Shift 드리프트 · Ctrl 부스터 · Space 익시드 · R 초기화. W/A/S/D도 사용 가능합니다. 익시드 지속·쿨다운은 아직 임시입니다.</p>
         <p class="warning">카트는 로컬 원본 .1s에서 변환한 실제 메시입니다. 재질·텍스처, 캐릭터, 주행장과 물리 계수는 아직 임시입니다. 변환 파일이 없는 새 체크아웃에서는 임시 도형 카트가 표시됩니다.</p>
       </aside>
     </div>

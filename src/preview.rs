@@ -25,6 +25,8 @@ pub struct PreviewState {
     pub drift_pressed: f32,
     pub slip_degrees: f32,
     pub wall_contact_mask: f32,
+    pub exceed_seconds: f32,
+    pub exceed_cooldown_seconds: f32,
 }
 
 impl Default for PreviewState {
@@ -47,6 +49,8 @@ impl Default for PreviewState {
             drift_pressed: 0.0,
             slip_degrees: 0.0,
             wall_contact_mask: 0.0,
+            exceed_seconds: 0.0,
+            exceed_cooldown_seconds: 0.0,
         }
     }
 }
@@ -58,6 +62,7 @@ pub struct PreviewInput {
     pub steer: f32,
     pub drift: bool,
     pub boost: bool,
+    pub exceed: bool,
 }
 
 impl PreviewState {
@@ -65,6 +70,10 @@ impl PreviewState {
         if input.boost && self.boost_seconds <= 0.0 && self.drift_gauge >= 100.0 {
             self.drift_gauge -= 100.0;
             self.boost_seconds = 2.0;
+        }
+        if input.exceed && self.exceed_cooldown_seconds <= 0.0 {
+            self.exceed_seconds = 0.7;
+            self.exceed_cooldown_seconds = 6.0;
         }
         for dt in SubstepPlan::new(elapsed_ms).seconds() {
             self.substep(dt, input);
@@ -138,7 +147,9 @@ impl PreviewState {
 
         let boost_active = self.boost_seconds > 0.0;
         let drive_accel = if input.throttle {
-            if boost_active {
+            if self.exceed_seconds > 0.0 {
+                26.0
+            } else if boost_active {
                 24.0
             } else {
                 15.0
@@ -197,6 +208,8 @@ impl PreviewState {
             self.drift_gauge = (self.drift_gauge + steer.abs() * self.speed * 0.7 * dt).min(100.0);
         }
         self.boost_seconds = (self.boost_seconds - dt).max(0.0);
+        self.exceed_seconds = (self.exceed_seconds - dt).max(0.0);
+        self.exceed_cooldown_seconds = (self.exceed_cooldown_seconds - dt).max(0.0);
         self.elapsed_seconds += dt;
     }
 }
@@ -426,5 +439,18 @@ mod tests {
         steering_only.advance(16, input);
         drifting.advance(16, PreviewInput { drift: true, ..input });
         assert!(drifting.yaw_rate.abs() > steering_only.yaw_rate.abs());
+    }
+
+    #[test]
+    fn exceed_uses_separate_input_and_cooldown() {
+        let mut state = PreviewState::default();
+        state.advance(16, PreviewInput { exceed: true, ..PreviewInput::default() });
+        assert!(state.exceed_seconds > 0.6);
+        assert!(state.exceed_cooldown_seconds > 5.9);
+        state.advance(500, PreviewInput::default());
+        state.advance(300, PreviewInput::default());
+        assert_eq!(state.exceed_seconds, 0.0);
+        state.advance(16, PreviewInput { exceed: true, ..PreviewInput::default() });
+        assert_eq!(state.exceed_seconds, 0.0);
     }
 }

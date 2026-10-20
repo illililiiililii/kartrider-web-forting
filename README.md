@@ -13,7 +13,7 @@ The local server is currently available at [http://127.0.0.1:4173/](http://127.0
 python -m http.server 4173 --bind 127.0.0.1 --directory web-preview
 ```
 
-Use W/↑ to accelerate, S/↓ to brake/reverse, A/D or ←/→ to steer, Shift to drift, Space for boost, and R to reset. To test reverse drifting, hold S until moving backward, then press Shift and a steering key. Touch buttons and chase/overhead camera views are provided. Three.js renders the selected **actual P5136 `.1s` kart geometry** when locally converted files exist; materials, textures, driver, and square test arena remain provisional. Position, heading, driving forces, drift, boost, and wall collision remain in Rust/Wasm. The 1–2 ms substep schedule, steering expressions, and speed-squared drift-release scalar are recovered from the client; **how that scalar affects tire forces remains unknown**. Its use as a persistence timer, reverse-drift handling, steering settings, wall restitution, drive force, grip, gauge, and boost are provisional. This prototype is intentionally separate from the required original-client time-series comparison.
+Use arrows or numpad 8/2/4/6 to drive, Shift to drift, Ctrl for boost, Space for a **provisional** Exceed pulse, and R to reset. W/A/S/D also work. To test reverse drifting, hold Down until moving backward, then press Shift and a steering key. Touch buttons and chase/overhead camera views are provided. Three.js renders the selected **actual P5136 `.1s` kart geometry** when locally converted files exist; materials, textures, driver, and square test arena remain provisional. Position, heading, driving forces, drift, boost, and wall collision remain in Rust/Wasm. The 1–2 ms substep schedule, steering expressions, and speed-squared drift-release scalar are recovered from the client; **how that scalar affects tire forces remains unknown**. Its use as a persistence timer, reverse-drift handling, steering settings, wall restitution, drive force, grip, gauge, boost and Exceed are provisional. This prototype is intentionally separate from the required original-client time-series comparison.
 
 To recreate local kart geometry (Python 3.12, no third-party package required), run:
 
@@ -53,7 +53,7 @@ The verified release artifact is:
 
 `..\..\work\kart-web-target\wasm32-unknown-unknown\release\p5136_wasm_core.wasm`
 
-The current preview Wasm SHA-256 is `67986D9CE023B8F3E0A083E95802739B5A064A04AB6AA36301ABE680A60E7AE5` (38,995 bytes). It exports WebAssembly memory plus:
+The current preview Wasm SHA-256 is `54167483247C6F6F35700234D6CDDF3498CDA9AC26262B5B915748939C4313D8` (39,340 bytes). It exports WebAssembly memory plus:
 
 - `p5136_abi_version`
 - `p5136_plan_substeps` and `p5136_substep_count`
@@ -73,9 +73,9 @@ The current preview Wasm SHA-256 is `67986D9CE023B8F3E0A083E95802739B5A064A04AB6
 - `p5136_upward_contact_velocity`
 - `p5136_uses_upward_contact_velocity_branch`
 - `p5136_wall_contact_reported_speed`
-- `p5136_preview_new`, `p5136_preview_step`, `p5136_preview_reset`
+- `p5136_preview_new`, `p5136_preview_step`, `p5136_preview_step_v2`, `p5136_preview_reset`
 
-Forty-seven Rust unit tests pass, including reverse drift from rest, after drift-key release, wall-contact episode counting, and relative boosted/reverse drift yaw. After user feedback, the broad high-speed physics/camera/ramp changes of `5745a8f` were reverted. The previous 3D camera and force model are restored; ordinary steering is reduced 14% from the earlier preview, boosted drift yaw is lower, and reverse-drift yaw is stronger. The page, local Three.js modules, and Wasm load in the browser. Browser driving feel still needs user testing.
+Forty-eight Rust unit tests pass, including reverse drift from rest, after drift-key release, wall-contact episode counting, relative boosted/reverse drift yaw, and a separate Exceed cooldown. After user feedback, the broad high-speed physics/camera/ramp changes of `5745a8f` were reverted. The previous 3D camera and force model are restored; ordinary steering is reduced 14% from the earlier preview, boosted drift yaw is lower, and reverse-drift yaw is stronger. The page, local Three.js modules, and Wasm load in the browser. Browser driving feel still needs user testing.
 
 ## Native original-client instrumentation
 
