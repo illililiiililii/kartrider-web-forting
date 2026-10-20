@@ -13,7 +13,9 @@ The local server is currently available at [http://127.0.0.1:4173/](http://127.0
 python -m http.server 4173 --bind 127.0.0.1 --directory web-preview
 ```
 
-Use W/↑ to accelerate, S/↓ to brake/reverse, A/D or ←/→ to steer, Shift to drift, Space for boost, and R to reset. To test reverse drifting, hold S until moving backward, then press Shift and a steering key. Touch buttons and chase/overhead camera views are provided. Three.js renders a temporary geometric kart, driver, and square test arena; position, heading, driving forces, drift, boost, and wall collision remain in Rust/Wasm. The preview turns more slowly, rebounds from square walls, and keeps sliding after drift-key release until countersteer or lower speed ends it. Slip angle and drift time are displayed. The 1–2 ms substep schedule, steering expressions, and speed-squared drift-release scalar are recovered from the client; **how that scalar affects tire forces remains unknown**. Its use as a persistence timer, reverse-drift handling, steering settings, wall restitution, drive force, grip, gauge, and boost are provisional. The geometric visuals are **not** converted original `.1s` assets. This prototype is intentionally separate from the required original-client time-series comparison.
+Use arrow keys or numpad 8/2/4/6 to drive, Shift to drift, Ctrl to use a booster, Space for provisional Exceed, and R to reset. W/A/S/D also work. To test reverse drifting, hold Down until moving backward, then press Shift and a steering key. Touch buttons and chase/overhead camera views are provided. Three.js renders a temporary geometric kart, driver, 400 m square arena, hill and jump ramp; position, heading, driving forces, drift, booster, wall response, and ballistic vertical state remain in Rust/Wasm. The camera widens its field of view with speed. The 1–2 ms substep schedule, steering expressions, speed-squared drift-release scalar, `ChargeBoostBySpeed × dt` term, and gauge-cap branch are recovered from the client; **the complete tire, gauge, slope, and jump formulas remain unknown**. Preview steering factors, wall restitution, jump/slope geometry and forces, reverse-drift behavior, Exceed, and gauge eligibility are provisional. The geometric visuals are **not** converted original `.1s` assets. This prototype is intentionally separate from the required full original-client time-series comparison.
+
+The saved original controlled run 04 reports 51.977 m/s and 460.603 gauge units after about 4 seconds of straight input. The current preview run from rest with 250 × 16 ms steps reports 52.821 m/s and 460.208 units. The gauge multiplier `0.615` was fitted to that one trace; this close pair of endpoints **does not** validate trajectories or the native charging conditions.
 
 ## Implemented now
 
@@ -24,6 +26,7 @@ Use W/↑ to accelerate, S/↓ to brake/reverse, A/D or ←/→ to steer, Shift 
 - Version-pinned 32-bit native telemetry, injector, and scan-code input driver for controlled original-client captures.
 - Checked-in controlled-run evidence and a deterministic PowerShell slicer/summary generator.
 - Static and runtime evidence ledger in [`docs/physics-evidence.md`](docs/physics-evidence.md).
+- A narrow native gauge arithmetic helper in `src/gauge.rs`, with the unfinished charging gates kept separate from preview calibration.
 
 Unresolved work is listed without euphemism in [`reader.md`](reader.md).
 
@@ -44,7 +47,7 @@ The verified release artifact is:
 
 `..\..\work\kart-web-target\wasm32-unknown-unknown\release\p5136_wasm_core.wasm`
 
-The current preview Wasm SHA-256 is `C0A0CED9311E0357634F7236BB1E5170BA7F8B2C881DED6C5FED2895E21D2D68` (38,725 bytes). It exports WebAssembly memory plus:
+The current preview Wasm SHA-256 is `C755D81026BB57877018E431BED36B746719B57FAED8B236EC56FDC547C27168` (39,810 bytes). It exports WebAssembly memory plus:
 
 - `p5136_abi_version`
 - `p5136_plan_substeps` and `p5136_substep_count`
@@ -65,8 +68,9 @@ The current preview Wasm SHA-256 is `C0A0CED9311E0357634F7236BB1E5170BA7F8B2C881
 - `p5136_uses_upward_contact_velocity_branch`
 - `p5136_wall_contact_reported_speed`
 - `p5136_preview_new`, `p5136_preview_step`, `p5136_preview_reset`
+- `p5136_preview_step_v2` (separate Ctrl booster and Space Exceed inputs)
 
-Forty-three Rust unit tests pass, including reverse drift from rest and after drift-key release. The page, local Three.js modules, and Wasm load in the browser; the 3D kart and both camera views were visually checked. Browser driving feel still needs user testing.
+Forty-eight Rust unit tests pass, including reverse drift, speed-dependent steering, boost/drift steering, wall episode counting, and jump landing. The page, local Three.js modules, and Wasm load in the browser; the 3D kart and ramp were visually checked. Browser driving feel still needs user testing.
 
 ## Native original-client instrumentation
 

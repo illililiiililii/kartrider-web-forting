@@ -18,11 +18,14 @@
     <div class="layout">
       <section class="arena" aria-label="3D 테스트 주행장">
         <canvas id="track" width="900" height="600"></canvas>
+        <div id="speed-veil" aria-hidden="true"></div>
         <div class="scene-label">3D TEST CIRCUIT <span>임시 카트 · 임시 주행장</span></div>
+        <div class="speed-track" aria-hidden="true"><div id="speed-bar"></div></div>
         <div class="touch-controls" aria-label="터치 조작">
           <button data-key="left">◀</button><button data-key="right">▶</button>
           <button data-key="throttle">가속</button><button data-key="brake">브레이크</button>
           <button data-key="drift">드리프트</button><button data-key="boost">부스터</button>
+          <button data-key="exceed">익시드</button>
         </div>
       </section>
       <aside>
@@ -37,12 +40,15 @@
           <dt>드리프트 잔여</dt><dd id="linger">0.0초</dd>
           <dt>게이지</dt><dd id="gauge">0%</dd>
           <dt>부스터</dt><dd id="boost">0.0초</dd>
-          <dt>벽 접촉</dt><dd id="hits">0</dd>
+          <dt>익시드</dt><dd id="exceed">0.0초</dd>
+          <dt>높이</dt><dd id="height">0.0 m</dd>
+          <dt>접지</dt><dd id="grounded">접지</dd>
+          <dt>벽 충돌 횟수</dt><dd id="hits">0</dd>
         </dl>
         <button id="reset">시작 위치로 재설정 (R)</button>
         <button id="camera">카메라: 추적 시점</button>
-        <p class="help">W/↑ 가속 · S/↓ 브레이크/후진 · A/D 또는 ←/→ 조향 · Shift 드리프트 · Space 부스터. 후진하며 방향키+Shift로 역방향 드리프트를 시험할 수 있습니다.</p>
-        <p class="warning">원본 근거: 1–2ms 서브스텝, 기본 조향각, 속도 감쇠식, 드리프트 해제 시 속도 제곱 기반 잔여 스칼라. 임시 실험식: 가속·브레이크·횡그립·차체 회전·전후진 드리프트 효과·게이지·부스터·사각 벽 반발. 3D 카트·캐릭터·주행장은 임시 도형이며 원본 .1s 에셋이 아닙니다.</p>
+        <p class="help">방향키/넘버패드 방향키 주행 · Shift 드리프트 · Ctrl 부스터 · Space 익시드 · R 위치 재설정. W/A/S/D도 사용 가능. 후진 중 Shift+방향키로 역방향 드리프트를 시험하세요. 전방의 경사·점프 구간도 통과해 보세요.</p>
+        <p class="warning">원본 근거: 1–2ms 서브스텝, 조향 속도 감쇠식, 부스터 게이지의 속도 충전 항·상한 분기. 아직 임시: 나머지 게이지 조건과 충전량, 조향 계수, 드리프트·벽 반발·점프/경사, 익시드. 원본 트랙·.1s 모델은 아직 연결하지 않았습니다.</p>
       </aside>
     </div>
   </main>
