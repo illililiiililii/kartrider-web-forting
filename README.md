@@ -1,21 +1,69 @@
 # P5136 WebAssembly port
 
-This repository is a clean-room, from-scratch browser port derived from the supplied Korean KartRider P5136 client data and newly acquired runtime observations. It does not reuse the previously existing web project.
+This is a new, from-scratch browser port based on the supplied Korean KartRider P5136 client, its expanded data, and measurements taken from that client. No code or tuning values from the rejected earlier web project are used.
 
-## Current gate
+The repository is currently at the physics-evidence gate. It is not yet a playable browser game: presenting a lobby before the original time step, state layout, force order, and controlled replay comparison are complete would violate the required implementation order.
 
-The project is intentionally held at the physics-analysis gate. UI and gameplay presentation are not considered started until the original client time step, call order, state transitions, and kart-specific parameters have been captured and replayed in the Rust/WebAssembly core.
+## Implemented now
 
-Evidence and confidence labels are recorded in [`docs/physics-evidence.md`](docs/physics-evidence.md). Known gaps are recorded in [`reader.md`](reader.md).
+- Rust core with the original tick scheduler: elapsed time is clamped to 500 ms and split into 2 ms substeps plus a possible 1 ms tail.
+- Exact decoder and all 70 named fields for the 235-byte effective `KartSpec` race-start block.
+- Dependency-free raw WebAssembly ABI for querying and writing substep plans.
+- Version-pinned 32-bit native telemetry, injector, and scan-code input driver for controlled original-client captures.
+- Checked-in controlled-run evidence and a deterministic PowerShell slicer/summary generator.
+- Static and runtime evidence ledger in [`docs/physics-evidence.md`](docs/physics-evidence.md).
+
+Unresolved work is listed without euphemism in [`reader.md`](reader.md).
+
+## Rust tests and WebAssembly build
+
+The commands below keep downloaded toolchains and build artifacts outside the repository. They assume Rust with the `wasm32-unknown-unknown` target is available.
+
+```powershell
+$env:CARGO_HOME = 'C:\Users\user\Documents\Codex\2026-10-20\p5136-webassembly-windows-url-c-rust-2\work\.toolchains\cargo'
+$env:RUSTUP_HOME = 'C:\Users\user\Documents\Codex\2026-10-20\p5136-webassembly-windows-url-c-rust-2\work\.toolchains\rustup'
+$env:PATH = "$env:CARGO_HOME\bin;$env:PATH"
+
+cargo test --target-dir '..\..\work\kart-web-target'
+cargo build --target wasm32-unknown-unknown --release --target-dir '..\..\work\kart-web-target'
+```
+
+The verified release artifact is:
+
+`..\..\work\kart-web-target\wasm32-unknown-unknown\release\p5136_wasm_core.wasm`
+
+Its current SHA-256 is `48E4BC5B9C7C54D125B8BA7D1F8D6104F5A72C78F7F3ED1601CE91826DDBCA62` and its size is 15,705 bytes. The exported functions are `p5136_abi_version`, `p5136_plan_substeps`, and `p5136_substep_count`, plus WebAssembly memory.
+
+## Native original-client instrumentation
+
+This requires 32-bit MSVC because the supplied client is 32-bit.
+
+```powershell
+cmake -S tools\native-telemetry -B '..\..\work\telemetry-build' -A Win32
+cmake --build '..\..\work\telemetry-build' --config Release --parallel
+```
+
+The telemetry DLL refuses to hook a client whose nine-byte physics-tick prologue differs from the pinned P5136 build. The callback only fills a preallocated ring buffer; CSV I/O runs on a separate below-normal-priority thread. Input uses keyboard scan codes because virtual-key events reached the old UI but not the game's DirectInput driving path.
+
+The extended telemetry DLL was rebuilt with `/W4 /WX`; its current SHA-256 is `78AC352DE469B4C5D242301B3708ADA8D6A7171A1BFC550463F34AAAC08DF540`.
+
+## Reproduce the checked-in controlled trace
+
+```powershell
+.\tools\trace-slice.ps1 `
+  -TelemetryPath '..\..\work\analysis\controlled-input-telemetry-04.csv' `
+  -EventsPath '..\..\work\analysis\controlled-input-events-04.csv' `
+  -OutputDirectory '.\evidence'
+```
+
+The committed outputs are:
+
+- `evidence/controlled-input-events-04.csv`: exact injected input events.
+- `evidence/original-controlled-04.csv`: 822 original-client tick samples aligned to the driven interval.
+- `evidence/original-controlled-04-summary.csv`: phase-level speed, gauge, and displacement measurements.
+
+There is no browser URL yet. The next completion gate is a Rust replay that produces the same comparison schema and quantifies its error against this original trace; browser rendering and UI remain behind that gate.
 
 ## Source boundary
 
-Allowed source inputs:
-
-- `C:\Users\user\Downloads\kart web\KartRider_5136`
-- `C:\Users\user\Downloads\kart web\KartRider_5136_01_UNPACK\KartRider_5136_01_UNPACK`
-- `C:\Users\user\Downloads\kart web\P5136_Rust-main`
-- newly generated REA/Ghidra reports and original-client telemetry
-
-The quarantined previous web project is not an input.
-
+Allowed inputs are the supplied original folders, the supplied `P5136_Rust-main` protocol/asset reference, and newly acquired REA/Ghidra and runtime evidence. The quarantined prior web project is explicitly not an input.
