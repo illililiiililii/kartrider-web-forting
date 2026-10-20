@@ -15,6 +15,20 @@ impl Vec3 {
     pub fn dot(self, other: Self) -> f32 {
         self.x * other.x + self.y * other.y + self.z * other.z
     }
+
+    #[must_use]
+    pub fn cross(self, other: Self) -> Self {
+        Self::new(
+            self.y * other.z - self.z * other.y,
+            self.z * other.x - self.x * other.z,
+            self.x * other.y - self.y * other.x,
+        )
+    }
+
+    #[must_use]
+    pub fn scaled(self, factor: f32) -> Self {
+        Self::new(self.x * factor, self.y * factor, self.z * factor)
+    }
 }
 
 /// Three body axes used by P5136 to project world velocity before force work.

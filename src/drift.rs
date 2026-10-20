@@ -97,6 +97,14 @@ pub fn scalar_after_release(
     }
 }
 
+/// Native `0x00A38665..0x00A38698` decays the same `+0x640` scalar by the
+/// physics substep and clamps it to zero through native max helper `0x00604140`.
+/// The caller's mode and force predicates are not encoded in this primitive.
+#[must_use]
+pub fn decay_release_scalar(current_scalar_at_640: f32, dt_seconds: f32) -> f32 {
+    (current_scalar_at_640 - dt_seconds).max(0.0)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -144,5 +152,11 @@ mod tests {
         assert_eq!(scalar_after_release(2, true, 0.0, 60.0), 0.0);
         assert_eq!(scalar_after_release(1, false, 0.0, 60.0), 0.0);
         assert_eq!(scalar_after_release(1, true, 3.0, 60.0), 3.0);
+    }
+
+    #[test]
+    fn release_scalar_decays_by_each_physics_substep() {
+        assert!((decay_release_scalar(0.003, 0.002) - 0.001).abs() < 1e-7);
+        assert_eq!(decay_release_scalar(0.001, 0.002), 0.0);
     }
 }

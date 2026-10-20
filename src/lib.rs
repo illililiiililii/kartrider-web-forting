@@ -2,8 +2,10 @@
 
 pub mod body_frame;
 pub mod drift;
+pub mod drive_input;
 pub mod encoded;
 pub mod kart_spec;
+pub mod longitudinal;
 pub mod native_layout;
 pub mod scheduler;
 pub mod steering;
@@ -14,6 +16,7 @@ pub use scheduler::{SubstepPlan, MAX_ELAPSED_MS, MAX_SUBSTEP_MS};
 
 use body_frame::{BodyAxes, Vec3};
 use drift::DriftInputState;
+use drive_input::DriveInputChannels;
 use suspension::SuspensionParameters;
 
 /// Version of the raw WebAssembly ABI exposed by this crate.
@@ -134,10 +137,80 @@ pub extern "C" fn p5136_drift_release_scalar(
     )
 }
 
+/// Native `+0x640` countdown operation within the applicable drift-force path.
+#[no_mangle]
+pub extern "C" fn p5136_decay_drift_release_scalar(
+    current_scalar_at_640: f32,
+    dt_seconds: f32,
+) -> f32 {
+    drift::decay_release_scalar(current_scalar_at_640, dt_seconds)
+}
+
 /// Magnitude calculation used by native `0x006612B0` and stored at `+0xA70`.
 #[no_mangle]
 pub extern "C" fn p5136_speed_magnitude(x: f32, y: f32, z: f32) -> f32 {
     (x * x + y * y + z * z).sqrt()
+}
+
+/// Forward channel selected by native `0x0067ECA0` from decoded inputs.
+#[no_mangle]
+pub extern "C" fn p5136_forward_drive_input(
+    protected_a04: f32,
+    protected_a10: f32,
+    channels_swapped_at_a1c: u32,
+) -> f32 {
+    DriveInputChannels {
+        protected_a04,
+        protected_a10,
+        channels_swapped: channels_swapped_at_a1c != 0,
+    }
+    .forward()
+}
+
+/// Complementary reverse/brake channel selected by native `0x00A41D80`.
+#[no_mangle]
+pub extern "C" fn p5136_reverse_brake_input(
+    protected_a04: f32,
+    protected_a10: f32,
+    channels_swapped_at_a1c: u32,
+) -> f32 {
+    DriveInputChannels {
+        protected_a04,
+        protected_a10,
+        channels_swapped: channels_swapped_at_a1c != 0,
+    }
+    .reverse_or_brake()
+}
+
+/// Forward force vector before it is added to the native force accumulator.
+/// Input and output pointers each address three consecutive `f32` values.
+#[no_mangle]
+pub unsafe extern "C" fn p5136_forward_force_vector(
+    body_lateral_axis: *const f32,
+    contact_vector_at_9c8: *const f32,
+    selected_base_force: f32,
+    forward_input: f32,
+    resolved_mode_multiplier: f32,
+    output_xyz: *mut f32,
+) -> u32 {
+    if body_lateral_axis.is_null() || contact_vector_at_9c8.is_null() || output_xyz.is_null() {
+        return 0;
+    }
+    let lateral = unsafe { core::slice::from_raw_parts(body_lateral_axis, 3) };
+    let contact = unsafe { core::slice::from_raw_parts(contact_vector_at_9c8, 3) };
+    let force = longitudinal::forward_force_vector(
+        Vec3::new(lateral[0], lateral[1], lateral[2]),
+        Vec3::new(contact[0], contact[1], contact[2]),
+        selected_base_force,
+        forward_input,
+        resolved_mode_multiplier,
+    );
+    unsafe {
+        output_xyz.write(force.x);
+        output_xyz.add(1).write(force.y);
+        output_xyz.add(2).write(force.z);
+    }
+    1
 }
 
 /// Native initial steer angle in radians, before speed attenuation and tire forces.

@@ -41,6 +41,11 @@ struct Sample {
     std::array<float, 3> linear_velocity{};
     std::array<float, 3> angular_velocity{};
     std::array<float, 3> local_velocity{};
+    std::array<float, 3> force_direction_contact_vector_9c8{};
+    float drive_a04 = 0.0F;
+    float drive_a10 = 0.0F;
+    std::uint8_t drive_swap_a1c = 0;
+    float drift_release_timer_640 = 0.0F;
     std::array<float, 5> control_state{};
     std::array<float, 23> protected_parameters{};
     std::array<float, 12> raw_physics_parameters{};
@@ -128,6 +133,10 @@ extern "C" void __cdecl observe_physics_tick(void* kart_pointer, std::uint32_t c
     sample.speed_gauge = read_protected_float(kart, 0x0AA0u);
     sample.gauge_total = read_protected_float(kart, 0x0AACu);
     sample.gauge_cap = read_protected_float(kart, 0x0734u);
+    sample.drive_a04 = read_protected_float(kart, 0x0A04u);
+    sample.drive_a10 = read_protected_float(kart, 0x0A10u);
+    sample.drive_swap_a1c = read_u8(kart, 0x0A1Cu);
+    sample.drift_release_timer_640 = read_float(kart, 0x0640u);
 
     constexpr std::array<std::size_t, 3> position_offsets = {0x0090u, 0x0094u, 0x0098u};
     constexpr std::array<std::size_t, 9> orientation_offsets = {
@@ -138,6 +147,7 @@ extern "C" void __cdecl observe_physics_tick(void* kart_pointer, std::uint32_t c
     constexpr std::array<std::size_t, 3> linear_velocity_offsets = {0x00C0u, 0x00C4u, 0x00C8u};
     constexpr std::array<std::size_t, 3> angular_velocity_offsets = {0x00CCu, 0x00D0u, 0x00D4u};
     constexpr std::array<std::size_t, 3> local_velocity_offsets = {0x0A5Cu, 0x0A6Cu, 0x0A70u};
+    constexpr std::array<std::size_t, 3> force_direction_offsets = {0x09C8u, 0x09CCu, 0x09D0u};
     constexpr std::array<std::size_t, 5> control_offsets = {
         0x0A20u, 0x0A24u, 0x0A28u, 0x0A78u, 0x0A8Cu,
     };
@@ -160,6 +170,7 @@ extern "C" void __cdecl observe_physics_tick(void* kart_pointer, std::uint32_t c
         sample.linear_velocity[index] = read_float(kart, linear_velocity_offsets[index]);
         sample.angular_velocity[index] = read_float(kart, angular_velocity_offsets[index]);
         sample.local_velocity[index] = read_float(kart, local_velocity_offsets[index]);
+        sample.force_direction_contact_vector_9c8[index] = read_float(kart, force_direction_offsets[index]);
     }
     for (std::size_t index = 0; index < orientation_offsets.size(); ++index) {
         sample.orientation[index] = read_float(kart, orientation_offsets[index]);
@@ -332,6 +343,8 @@ bool open_log() noexcept {
         "orientation_12,orientation_20,orientation_21,orientation_22,vel_x,vel_y,vel_z,"
         "angular_vel_x,angular_vel_y,angular_vel_z,local_forward_vel_a5c,local_vertical_vel_a6c,"
         "world_speed_magnitude_a70,"
+        "force_direction_vector_9c8_x,force_direction_vector_9c8_y,force_direction_vector_9c8_z,"
+        "drive_a04,drive_a10,drive_swap_a1c,drift_release_timer_640,"
         "control_a20,control_a24,control_a28,control_a78,control_a8c,"
         "mass_644,draft_mul_accel_658,drift_boost_mul_accel_670,forward_accel_force_6bc,"
         "backward_accel_force_6c8,drift_trigger_factor_6fc,drift_trigger_time_708,"
@@ -383,6 +396,14 @@ DWORD WINAPI writer_thread(void*) noexcept {
             for (float value : sample.local_velocity) {
                 count += sprintf_s(line + count, sizeof(line) - static_cast<std::size_t>(count), ",%.9g", value);
             }
+            for (float value : sample.force_direction_contact_vector_9c8) {
+                count += sprintf_s(line + count, sizeof(line) - static_cast<std::size_t>(count), ",%.9g", value);
+            }
+            count += sprintf_s(
+                line + count, sizeof(line) - static_cast<std::size_t>(count),
+                ",%.9g,%.9g,%u,%.9g",
+                sample.drive_a04, sample.drive_a10,
+                sample.drive_swap_a1c, sample.drift_release_timer_640);
             for (float value : sample.control_state) {
                 count += sprintf_s(line + count, sizeof(line) - static_cast<std::size_t>(count), ",%.9g", value);
             }
