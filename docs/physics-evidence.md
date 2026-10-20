@@ -61,6 +61,8 @@ Within the principal substep path, the currently recovered direct call order inc
 
 This is an address-level call-order result. Function roles beyond the already pinned gauge/collision sites remain under decompilation and runtime tracing, so semantic names are intentionally not invented yet.
 
+The full saved decompilation of `0x00A33420` (`work/analysis/main-tick-full.md`, SHA-256 `6143C692B7D77A2C999CCC5ECDA314F5A295C6A211E32FC6D95C855CB1E92068`) confirms that `0x00A3A7F0` updates velocity before collision/movement calls `0x00A3AB30` and `0x00A3B860` in the ordinary branch. A separate state branch calls `0x00A3A930`; its instruction sequence `0x00A3A93E..0x00A3A968` adds `world_velocity(+0xC0) * substep_seconds` to world position `+0x90`. That direct position update is proven for the separate branch only. Ordinary-branch position movement and wall collision still need tracing through the two collision functions. The position listing is `work/analysis/position-integrator-listing.md`, SHA-256 `2EDCB5519A1776D5281C1391F640ACE052D446B1BCAB4D741A6FCC65B466584C`.
+
 ## Targeted native decompilation
 
 A saved Ghidra project was built from the analysis-only PE and a deterministic exporter captured 30 physics functions, including all principal tick callees and the pinned collision/gauge functions. The resulting 129,254-byte report has SHA-256 `39F40949F66076561B6E57D0D10CA771487B8D5466088F3C895EDC46BFAECE30`. The REA evidence record for the initial decompilation is `ev_7d6ac7d98fb177ac98c72766d417c44fd8c006cfe793da633584234729174ec7`.
