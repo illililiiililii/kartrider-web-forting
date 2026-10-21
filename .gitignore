@@ -5,3 +5,6 @@
 /web-preview/assets/*.mesh.json
 /web-preview/demo_physics.wasm
 /web-preview/assets/tracks/
+/web-preview/assets/usd/
+/web-preview/assets/ui/
+/web-preview/assets/audio/

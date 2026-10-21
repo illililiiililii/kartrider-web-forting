@@ -31,12 +31,19 @@ user's unpacked original files (the script default points at the supplied
 
 ```powershell
 .\tools\prepare-local-tracks.ps1
+.\tools\prepare-local-ui.ps1
+.\tools\prepare-local-audio.ps1
+python -m pip install usd-core==25.5.1
+.\tools\prepare-local-usd.ps1
 ```
 
 The locally copied artwork is Git-ignored. The three choices currently show
-the original `beach_I01`, `beach_I02`, and `village_R01` artwork, **not** their
-playable 3D courses. The active physics still collides with a temporary square
-test world and its ring-shaped four-gate course.
+the original `beach_I01`, `beach_I02`, and `village_R01` artwork and have a
+separate 3D track viewer. These are **not yet playable original courses**.
+The active physics still collides with a temporary square test world and its
+ring-shaped four-gate course. The provided converted model files are USDA, not
+FBX. See [`DEVELOPMENT_PROGRESS.md`](DEVELOPMENT_PROGRESS.md) for the inventory,
+verification, and prioritized next work.
 
 Open [http://127.0.0.1:4173/](http://127.0.0.1:4173/). The generated
 `web-preview/demo_physics.wasm` is ignored by Git and must be built locally.
@@ -66,8 +73,9 @@ python .\tools\convert-1s-preview.py '..\..\work\original-assets\cotton11-model.
 
 If those ignored local meshes are absent, the 3D renderer shows a temporary
 geometric kart. Converted kart wheels now steer/spin from the C physics state,
-and timed boost shows a basic exhaust effect. Character and track asset
-conversion remains incomplete.
+and timed boost shows a basic exhaust effect. The newer USD path additionally
+loads original kart/character textures and renders three original track scenes
+in a non-playable viewer. Skeletal animation and track collision remain missing.
 
 ## Verification
 

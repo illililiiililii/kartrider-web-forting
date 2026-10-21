@@ -1,4 +1,4 @@
-import { createPreviewRenderer } from './render3d.js?v=2';
+import { createPreviewRenderer } from './render3d.js?v=7';
 import { interpolatePreviewState } from './frame-interpolation.mjs';
 
 const canvas = document.querySelector('#track');
@@ -6,18 +6,61 @@ const view = createPreviewRenderer(canvas);
 const status = document.querySelector('#status');
 const modelLabel = document.querySelector('#model-label');
 const kartChoice = document.querySelector('#kart-choice');
+const characterChoice = document.querySelector('#character-choice');
 const physicsPreset = document.querySelector('#physics-preset');
 const trackChoice = document.querySelector('#track-choice');
 const trackCard = document.querySelector('#track-card');
 const trackMinimap = document.querySelector('#track-minimap');
 const trackMapStatus = document.querySelector('#track-map-status');
+const audioToggle = document.querySelector('#audio-toggle');
+const audio = {
+  beach: new Audio('./assets/audio/beach.ogg'),
+  village: new Audio('./assets/audio/village.ogg'),
+  drift: new Audio('./assets/audio/drift.ogg'),
+  boost: new Audio('./assets/audio/boost.ogg'),
+};
+audio.beach.loop = audio.village.loop = true;
+audio.beach.volume = audio.village.volume = 0.28;
+audio.drift.volume = 0.45;
+audio.boost.volume = 0.5;
+let audioEnabled = false;
+let lastDrifting = false;
+let lastBoosting = false;
+function currentBgm() { return trackChoice.value.startsWith('village') ? audio.village : audio.beach; }
+function playCurrentBgm() {
+  audio.beach.pause();
+  audio.village.pause();
+  if (audioEnabled) currentBgm().play().catch(() => {});
+}
+audioToggle.addEventListener('click', () => {
+  audioEnabled = !audioEnabled;
+  audioToggle.textContent = audioEnabled ? '원본 음악·효과음 끄기' : '원본 음악·효과음 켜기';
+  playCurrentBgm();
+});
 function selectTrackArtwork() {
   const name = trackChoice.value;
   trackCard.src = `./assets/tracks/${name}/xt_trackCard.png`;
   trackMinimap.src = `./assets/tracks/${name}/xt_minimap.png`;
   trackMapStatus.textContent = name;
+  if (audioEnabled) playCurrentBgm();
 }
 trackChoice.addEventListener('change', selectTrackArtwork);
+document.querySelector('#track-preview').addEventListener('click', async (event) => {
+  const button = event.currentTarget;
+  button.disabled = true;
+  try {
+    const viewing = await view.toggleTrackPreview(trackChoice.value);
+    button.textContent = viewing ? '임시 주행장으로 돌아가기' : '선택한 원본 3D 트랙 보기';
+    document.querySelector('.minimap').style.display = viewing ? 'none' : '';
+    document.querySelector('.hud-tacho').style.display = viewing ? 'none' : '';
+    document.querySelector('.hud-gauge').style.display = viewing ? 'none' : '';
+    document.querySelector('.scene-label').firstChild.textContent = viewing ? 'ORIGINAL TRACK 3D ' : '3D TEST CIRCUIT ';
+  } catch (error) {
+    trackMapStatus.textContent = `3D 트랙 로딩 실패: ${error.message}`;
+  } finally {
+    button.disabled = false;
+  }
+});
 for (const image of [trackCard, trackMinimap]) {
   image.addEventListener('error', () => { trackMapStatus.textContent = '원본 트랙 이미지 없음 · prepare-local-tracks.ps1 실행'; });
 }
@@ -54,6 +97,13 @@ async function selectKart() {
 }
 kartChoice.addEventListener('change', selectKart);
 selectKart();
+function selectCharacter() {
+  view.setCharacter(characterChoice.value).catch((error) => {
+    modelLabel.textContent = `캐릭터 변환 파일 없음: ${error.message}`;
+  });
+}
+characterChoice.addEventListener('change', selectCharacter);
+selectCharacter();
 physicsPreset.addEventListener('change', () => {
   if (!wasm) return;
   wasm.demo_set_preset(Number(physicsPreset.value));
@@ -121,12 +171,16 @@ function resetVisualState() {
   view.resetCamera();
 }
 const telemetry = Object.fromEntries(['speed', 'gear', 'heading', 'yaw', 'drift', 'slip', 'linger', 'gauge', 'boost', 'instant', 'hits'].map((id) => [id, document.getElementById(id)]));
+const hudSpeed = document.querySelector('#hud-speed');
+const hudGaugeFill = document.querySelector('#hud-gauge-fill');
 
 function draw(state, visual, frameDeltaMs) {
   const [, , heading, vx, vy, yawRate, speed, gauge, boost, drifting, , hits, linger, , , slip] = state;
   view.render(visual, frameDeltaMs);
   const signedSpeed = vx * Math.cos(heading) + vy * Math.sin(heading);
   telemetry.speed.textContent = Math.round(speed * 3.6);
+  hudSpeed.textContent = String(Math.round(speed * 3.6));
+  hudGaugeFill.style.width = `${Math.max(0, Math.min(100, gauge))}%`;
   telemetry.gear.textContent = signedSpeed < -0.5 ? 'R · 후진' : 'D · 전진';
   telemetry.heading.textContent = `${Math.round(heading * 180 / Math.PI)}°`;
   telemetry.yaw.textContent = `${Math.round(yawRate * 180 / Math.PI)}°/s`;
@@ -134,6 +188,16 @@ function draw(state, visual, frameDeltaMs) {
   telemetry.slip.textContent = `${Math.round(slip)}°`;
   telemetry.linger.textContent = `${linger.toFixed(1)}초`;
   telemetry.gauge.textContent = `${Math.round(gauge)}%`;
+  if (audioEnabled && drifting && !lastDrifting) {
+    audio.drift.currentTime = 0;
+    audio.drift.play().catch(() => {});
+  }
+  if (audioEnabled && boost > 0 && !lastBoosting) {
+    audio.boost.currentTime = 0;
+    audio.boost.play().catch(() => {});
+  }
+  lastDrifting = Boolean(drifting);
+  lastBoosting = boost > 0;
   telemetry.boost.textContent = `${boost.toFixed(1)}초`;
   telemetry.instant.textContent = `${state[17].toFixed(1)}초`;
   telemetry.hits.textContent = Math.round(hits);

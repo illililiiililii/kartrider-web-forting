@@ -18,27 +18,28 @@
 - The camera pose and FOV come from `kart_camera.c`; the renderer maps them into
   Three.js coordinates and clamps the camera inside the temporary walls. This
   is not proven to be P5136's camera. Overhead view remains a renderer option.
-- Original White Knight/Cotton kart geometry can be locally converted and
-  displayed; their wheel parts rotate and the front pivots read the C demo's
-  steering-angle state. UVs/textures and 3D driver characters are missing. The provided
-  `character/dao/model.1s`, `character/bazzi/model.1s`, and
-  `track/beach_I01/track.1s` use different node layouts than the current kart
-  converter. Next: extend the 1S parser for their mesh hierarchy, then map
-  materials, animation and track collision surfaces. Do not commit unlicensed
-  original models or textures.
+- Local USD conversion now supplies actual White Knight V1/Saber V1 karts,
+  Dao/Bazzi characters, three textured track scenes, and a dashboard sprite.
+  The USD hierarchy was exported to browser JSON with UVs; skeleton weights,
+  animation, seat attachment alignment, track drive surfaces, and material
+  nuances are not integrated. Kart front-wheel steering for USD meshes still
+  needs visual verification. Do not commit extracted models or textures.
 - Original `track/beach_I01`, `track/beach_I02`, and `track/village_R01`
   `xt_trackCard.png`/`xt_minimap.png` are now locally copied and shown by
   `tools/prepare-local-tracks.ps1`. This is artwork selection only. Attempting
   `tools/convert-1s-preview.py` on `track/beach_I01/track.1s` fails at offset
   `0x86`: its `AA 47 F8 03 FC 14` geometry nodes differ from the kart mesh
   parser's `AA 47 F6 04 2A 19` nodes. Next: implement the track-specific 1S
-  geometry/triangle parser, then feed its drive and collision surfaces to both
-  Three.js and the C world query. Do not represent card selection as a loaded
-  track.
+  geometry/triangle parser if USD is unavailable. The separate provided USDA
+  files now render as 3D previews, but their drive/collision surfaces must
+  still be classified and fed to the C world query. Do not represent card
+  selection or the 3D viewer as a playable original track.
 - The ring race has a countdown, ordered gates, lap timer, and finish state in
   the C bridge; it is a test course, not a finished game. A complete manually
-  driven 3-lap race has not yet been verified. Lobby, character/track selection,
-  original HUD, audio, room multiplayer, and results remain missing.
+  driven 3-lap race has not yet been verified. Kart/character and 3D track
+  viewers exist, with one original tachometer sprite tied to Wasm speed; lobby,
+  playable original track selection, complete HUD, audio, room multiplayer,
+  and results remain missing.
 - The demo repository snapshot has no visible `LICENSE`/`COPYING` file. This
   repository does not distribute its source or generated Wasm. Local users must
   supply it and run `tools/build-demo-physics.ps1`. Publishing a compiled build

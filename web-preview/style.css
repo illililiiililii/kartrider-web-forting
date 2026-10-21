@@ -15,14 +15,19 @@ canvas { display: block; width: 100%; height: min(72vh, 650px); min-height: 420p
 .scene-label span { display: block; margin-top: 2px; color: #d6e7ef; font-weight: 500; letter-spacing: 0; }
 .minimap { position: absolute; right: 14px; bottom: 15px; width: 150px; padding: 8px; border-radius: 9px; background: #10263ad9; font-size: 11px; text-align: center; }
 .minimap img { display: block; width: 100%; max-height: 145px; object-fit: contain; }
+.hud-tacho { position: absolute; left: 14px; bottom: 30px; width: 149px; height: 128px; background: url('./assets/ui/tachometer.png') -37px 0 / 240px 198px no-repeat; pointer-events: none; }
+.hud-tacho span { position: absolute; left: 36px; top: 92px; min-width: 75px; color: #fff; font-size: 25px; font-weight: 900; text-align: center; text-shadow: 0 2px 5px #001; font-variant-numeric: tabular-nums; }
+.hud-gauge { position: absolute; left: 16px; bottom: 12px; width: 168px; height: 9px; border: 1px solid #d3f6ff; border-radius: 5px; background: #113240; overflow: hidden; pointer-events: none; }
+.hud-gauge span { display: block; width: 0; height: 100%; background: linear-gradient(90deg,#2acbff,#ffe459); }
 .track-card { display: block; width: 100%; max-height: 140px; margin-bottom: 7px; object-fit: contain; border-radius: 8px; background: #121b2a; }
+.track-card + button { width: 100%; margin-bottom: 8px; }
 .asset-note { font-size: 12px; color: #e9b87b; margin-bottom: 15px; }
 aside { padding: 18px; }
 dl { display: grid; grid-template-columns: 1fr auto; gap: 11px; margin: 20px 0; }
 dt { color: #afbdd1; } dd { margin: 0; font-variant-numeric: tabular-nums; }
 button { border: 1px solid #758bb2; border-radius: 9px; background: #32496c; color: white; padding: 10px 14px; font: inherit; cursor: pointer; touch-action: none; }
 button:hover, button.active { background: #426da5; }
-#reset, #camera, #start-race { width: 100%; margin-bottom: 8px; }
+#reset, #camera, #start-race, #audio-toggle { width: 100%; margin-bottom: 8px; }
 #race-status { margin: 2px 0 14px; color: #ffe39b; font-weight: 700; font-variant-numeric: tabular-nums; }
 .help, .warning { margin-top: 18px; font-size: 13px; }
 .warning { color: #f5c683; }
@@ -33,6 +38,8 @@ button:hover, button.active { background: #426da5; }
   .arena { min-height: 0; padding-bottom: 132px; }
   canvas { height: min(60vh, 520px); min-height: 330px; }
   .touch-controls { display: grid; position: absolute; bottom: 8px; left: 8px; right: 8px; grid-template-columns: repeat(3, 1fr); gap: 5px; }
+  .hud-tacho { bottom: 138px; transform: scale(.75); transform-origin: bottom left; }
+  .hud-gauge { bottom: 141px; transform: scale(.75); transform-origin: bottom left; }
   .touch-controls button { min-height: 54px; padding: 6px; }
 }
 select { width: 100%; margin: 0.5rem 0 1rem; padding: 0.7rem; border: 1px solid #59718a; border-radius: 0.55rem; background: #24344b; color: #fff; }
