@@ -12,7 +12,12 @@ $required = @('include\kart_simulation.h', 'include\kart_dynamics.h', 'include\k
     'include\kart_demo_data.h', 'src\kart_demo_data.c',
     'include\kart_track_scene.h', 'src\kart_track_scene.c',
     'include\kart_track_collision.h', 'src\kart_track_collision.c',
-    'src\kart_inflate.c')
+    'src\kart_inflate.c',
+    'include\kart_countdown.h', 'src\kart_countdown.c',
+    'include\kart_course.h', 'src\kart_course.c', 'src\kart_course_data.c',
+    'include\kart_engine_sound.h', 'src\kart_engine_sound.c',
+    'include\kart_input.h', 'src\kart_input.c',
+    'demo\kart_gauge.h')
 foreach ($part in $required) {
     if (-not (Test-Path -LiteralPath (Join-Path $DemoSource $part))) {
         throw "Missing demo source: $part in $DemoSource"
@@ -28,7 +33,7 @@ if (Test-Path -LiteralPath (Join-Path $DemoSource '.git')) {
 }
 $output = Join-Path $root 'web-preview\demo_physics.wasm'
 & $ZigExe cc -target wasm32-wasi -O2 '-Wl,--no-entry' '-Wl,--export-memory' `
-    '-Wl,-z,stack-size=1048576' -I (Join-Path $DemoSource 'include') `
+    '-Wl,-z,stack-size=1048576' -I (Join-Path $DemoSource 'include') -I (Join-Path $DemoSource 'demo') `
     (Join-Path $DemoSource 'src\kart_dynamics.c') `
     (Join-Path $DemoSource 'src\kart_simulation.c') `
     (Join-Path $DemoSource 'src\kart_camera.c') `
@@ -36,6 +41,11 @@ $output = Join-Path $root 'web-preview\demo_physics.wasm'
     (Join-Path $DemoSource 'src\kart_track_scene.c') `
     (Join-Path $DemoSource 'src\kart_track_collision.c') `
     (Join-Path $DemoSource 'src\kart_inflate.c') `
+    (Join-Path $DemoSource 'src\kart_countdown.c') `
+    (Join-Path $DemoSource 'src\kart_course.c') `
+    (Join-Path $DemoSource 'src\kart_course_data.c') `
+    (Join-Path $DemoSource 'src\kart_engine_sound.c') `
+    (Join-Path $DemoSource 'src\kart_input.c') `
     (Join-Path $root 'src-demo\demo_bridge.c') -lm -o $output
 if ($LASTEXITCODE -ne 0) { throw 'Demo physics Wasm build failed' }
 Write-Output "Local-only demo Wasm built: $output"

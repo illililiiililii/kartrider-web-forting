@@ -14,24 +14,38 @@ from pathlib import Path
 from pxr import Gf, Usd, UsdGeom, UsdShade
 
 
-def texture_for(prim, source, output_dir):
+def texture_for(prim, source, output_dir, rho_root=None):
+    # USD bindings can be inherited from a parent Xform. Resolve the bound
+    # material rather than assuming every mesh owns material:binding itself.
     binding = prim.GetRelationship("material:binding")
-    if not binding:
-        return None
-    targets = binding.GetTargets()
-    if not targets:
-        return None
-    material = prim.GetStage().GetPrimAtPath(targets[0])
+    targets = binding.GetTargets() if binding else []
+    if targets:
+        material = prim.GetStage().GetPrimAtPath(targets[0])
+    else:
+        bound = UsdShade.MaterialBindingAPI(prim).ComputeBoundMaterial()[0]
+        if not bound:
+            return None
+        material = bound.GetPrim()
     for child in Usd.PrimRange(material):
         if not child.IsA(UsdShade.Shader):
             continue
         value = child.GetAttribute("inputs:file").Get()
         if value is None:
             continue
-        file = source.parent / str(value).strip("@")
-        if not file.is_file() or file.suffix.lower() not in (".png", ".jpg", ".jpeg"):
+        name = Path(str(value).strip("@")).name
+        if Path(name).suffix.lower() not in (".png", ".jpg", ".jpeg"):
             continue
-        name = file.name
+        file = source.parent / name
+        if not file.is_file() and rho_root is not None:
+            # Only the exact source category/name may satisfy a missing USDA
+            # reference. A same-named image from another track is not evidence.
+            category = source.parent.parent.name
+            asset = source.stem.split("_demo")[0]
+            candidate = rho_root / category / asset / name
+            if candidate.is_file():
+                file = candidate
+        if not file.is_file():
+            continue
         shutil.copy2(file, output_dir / name)
         return name
     return None
@@ -84,7 +98,7 @@ def write_ktrk(path, parts):
     print(f"KTRK collision candidates: {len(selected)} meshes / {triangles} triangles -> {path}")
 
 
-def export(source, output, scale, ktrk=None):
+def export(source, output, scale, ktrk=None, rho_root=None):
     stage = Usd.Stage.Open(str(source))
     if stage is None:
         raise ValueError(f"Cannot open USDA: {source}")
@@ -135,7 +149,7 @@ def export(source, output, scale, ktrk=None):
             continue
         parts.append({
             "name": str(prim.GetPath()), "positions": positions, "uvs": uvs,
-            "indices": triangles, "texture": texture_for(prim, source, output.parent),
+            "indices": triangles, "texture": texture_for(prim, source, output.parent, rho_root),
         })
     if not parts:
         raise ValueError(f"No meshes in {source}")
@@ -152,5 +166,6 @@ if __name__ == "__main__":
     parser.add_argument("output", type=Path)
     parser.add_argument("--scale", type=float, default=0.01)
     parser.add_argument("--ktrk", type=Path)
+    parser.add_argument("--rho-root", type=Path)
     args = parser.parse_args()
-    export(args.source, args.output, args.scale, args.ktrk)
+    export(args.source, args.output, args.scale, args.ktrk, args.rho_root)

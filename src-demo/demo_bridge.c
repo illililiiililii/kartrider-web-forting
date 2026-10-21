@@ -6,6 +6,11 @@
 #include "kart_demo_data.h"
 #include "kart_track_scene.h"
 #include "kart_track_collision.h"
+#include "kart_countdown.h"
+#include "kart_course.h"
+#include "kart_engine_sound.h"
+#include "kart_gauge.h"
+#include "kart_input.h"
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
@@ -13,8 +18,19 @@
 static KartSimulationState kart;
 static KartChaseCameraFollow chase;
 static KartSimulationWorld world;
-static float telemetry[32];
-static float gauge;
+static float telemetry[40];
+static KartGaugeState gauge;
+static KartGaugeConfig gauge_config;
+static KartCountdown race_countdown;
+static KartSoundDriver sound_driver;
+static KartSoundState sound_state;
+static KartSteeringInputState steering_keys;
+static KartCourse course;
+static KartCourseProgress course_progress;
+static bool course_enabled;
+static unsigned int clock_ms;
+static unsigned int respawn_arm_ms;
+static bool previous_throttle, previous_boost;
 static float race_phase, countdown, lap, next_gate, race_time, finish_time;
 static float wall_hits;
 static bool wall_contact;
@@ -75,37 +91,65 @@ static void reset_at(float x, float y, float heading) {
     kart_chase_camera_follow_reset(&chase);
     world = (KartSimulationWorld){ground_query, body_query, NULL};
     memset(telemetry, 0, sizeof telemetry);
-    gauge = wall_hits = 0.0f;
+    gauge = (KartGaugeState){.model = KART_GAUGE_SLIP};
+    gauge_config = kart_gauge_default_config();
+    race_countdown = (KartCountdown){0};
+    kart_sound_driver_reset(&sound_driver);
+    sound_state = (KartSoundState){0};
+    kart_steering_input_reset(&steering_keys);
+    clock_ms = 0;
+    respawn_arm_ms = 0;
+    previous_throttle = previous_boost = false;
+    wall_hits = 0.0f;
     wall_contact = false;
     race_phase = countdown = next_gate = race_time = finish_time = 0.0f;
     lap = 1.0f;
     previous_x = x;
     previous_y = y;
+    if (course_enabled)
+        kart_course_progress_init(&course, &course_progress, kart.position);
 }
 
 static void update_race(float dt) {
-    static const float gates[4][2] = {{0,42},{-42,0},{0,-42},{42,0}};
     if (race_phase == 1.0f) {
-        countdown = fmaxf(0.0f, countdown - dt);
-        if (countdown == 0.0f) race_phase = 2.0f;
+        const KartCountdownCues cues = kart_countdown_update(&race_countdown, clock_ms);
+        countdown = (float)cues.remaining_ms * 0.001f;
+        if (cues.released) race_phase = 2.0f;
         return;
     }
     if (race_phase != 2.0f) return;
     race_time += dt;
-    /* No verified P5136 route/checkpoint data is available for imported USD
-       tracks yet. Keep the timer, but never award a synthetic square lap. */
-    if (track_enabled) return;
-    unsigned int index = (unsigned int)next_gate;
-    float dx = kart.position.x - gates[index][0];
-    float dy = kart.position.y - gates[index][1];
-    float old_dx = previous_x - gates[index][0];
-    float old_dy = previous_y - gates[index][1];
-    if (dx*dx + dy*dy <= 169.0f && old_dx*old_dx + old_dy*old_dy > 169.0f) {
-        next_gate += 1.0f;
-        if (next_gate == 4.0f) {
-            next_gate = 0.0f;
-            lap += 1.0f;
-            if (lap > 3.0f) { race_phase = 3.0f; finish_time = race_time; }
+    if (course_enabled) {
+        const KartVec3 previous = {previous_x, previous_y, kart.position.z};
+        KartVec3 destination;
+        float yaw;
+        if (kart_course_warp_next(&course, previous, kart.position,
+                                  &destination, &yaw)) {
+            const float c = cosf(yaw), s = sinf(yaw);
+            const KartVec3 v = kart.linear_velocity;
+            const KartVec3 w = kart.angular_velocity;
+            const KartQuat q = kart.orientation;
+            const KartQuat rotation = {cosf(yaw * 0.5f), 0, 0, sinf(yaw * 0.5f)};
+            kart.position = destination;
+            kart.linear_velocity = (KartVec3){c*v.x-s*v.y, s*v.x+c*v.y, v.z};
+            kart.angular_velocity = (KartVec3){c*w.x-s*w.y, s*w.x+c*w.y, w.z};
+            kart.orientation = (KartQuat){
+                rotation.w*q.w-rotation.z*q.z,
+                rotation.w*q.x-rotation.z*q.y,
+                rotation.w*q.y+rotation.z*q.x,
+                rotation.w*q.z+rotation.z*q.w};
+            previous_x = destination.x;
+            previous_y = destination.y;
+        } else {
+            kart_course_progress_step(&course, &course_progress, previous,
+                kart.position, kart.orientation, kart.linear_velocity,
+                (unsigned int)(race_time * 1000.0f));
+        }
+        lap = (float)(course_progress.lap + 1u);
+        next_gate = (float)course_progress.node_id;
+        if (course_progress.lap >= course.lap_count) {
+            race_phase = 3.0f;
+            finish_time = race_time;
         }
     }
 }
@@ -124,10 +168,12 @@ static void publish(unsigned int elapsed_ms, KartSimulationStepResult step) {
     const bool drifting = kart.drift.input_active || kart.drift.slip_detected ||
                           kart.drift.trigger_active || kart.drift.linger_timer > 0.0f;
     const float dt = (float)elapsed_ms * 0.001f;
-    if (drifting && kart.grounded && speed > 5.0f) {
-        const float slip = (-lateral + 0.5f*kart.angular_velocity.z)/fmaxf(speed,5.0f);
-        gauge = fminf(100.0f, gauge + 4.0f * speed * fabsf(slip) * dt);
-    }
+    kart_gauge_update(&gauge, &gauge_config, &kart, forward, lateral,
+                      drifting, dt);
+    sound_state = kart_sound_driver_update(&sound_driver, speed, drifting,
+        kart.timed_boost.active || kart.instant_boost.active,
+        kart.instant_boost.active, step.wall_impact_speed,
+        step.ground_impact_speed, clock_ms);
     KartChaseCameraPose cam = kart_chase_camera_update(
         &chase, kart.position, kart.orientation, speed,
         kart.timed_boost.active || kart.instant_boost.active, elapsed_ms,
@@ -139,7 +185,7 @@ static void publish(unsigned int elapsed_ms, KartSimulationStepResult step) {
     telemetry[4] = kart.linear_velocity.y;
     telemetry[5] = kart.angular_velocity.z;
     telemetry[6] = speed;
-    telemetry[7] = gauge;
+    telemetry[7] = gauge.value / gauge_config.full_value * 100.0f;
     telemetry[8] = kart.timed_boost.remaining_ms * 0.001f;
     telemetry[9] = drifting ? 1.0f : 0.0f;
     telemetry[10] += dt;
@@ -170,6 +216,14 @@ static void publish(unsigned int elapsed_ms, KartSimulationStepResult step) {
     telemetry[29] = cam.forward.y;
     telemetry[30] = cam.forward.z;
     telemetry[31] = cam.field_of_view_degrees;
+    telemetry[32] = (float)gauge.boosters;
+    telemetry[33] = gauge.rate;
+    telemetry[34] = gauge.contact_weight;
+    telemetry[35] = (float)race_countdown.stage;
+    telemetry[36] = sound_state.motor_pitch;
+    telemetry[37] = sound_state.motor_volume;
+    telemetry[38] = sound_state.start_crash ? sound_state.crash_volume : 0.0f;
+    telemetry[39] = course_enabled ? (float)course_progress.node : -1.0f;
 }
 
 __attribute__((export_name("demo_new"))) float *demo_new(void) {
@@ -190,7 +244,8 @@ __attribute__((export_name("demo_start_race"))) void demo_start_race(void) {
              track_enabled ? spawn_y : 0.0f,
              track_enabled ? spawn_heading : 1.5707963267948966f);
     race_phase = 1.0f;
-    countdown = 3.0f;
+    kart_countdown_start(&race_countdown, clock_ms);
+    countdown = (float)KART_COUNTDOWN_TOTAL_MS * 0.001f;
     publish(0, (KartSimulationStepResult){0});
 }
 
@@ -206,6 +261,49 @@ __attribute__((export_name("demo_set_preset"))) void demo_set_preset(unsigned in
              track_enabled ? spawn_y : 0.0f,
              track_enabled ? spawn_heading : 0.0f);
     publish(0, (KartSimulationStepResult){0});
+}
+
+__attribute__((export_name("demo_set_gauge_factor"))) void demo_set_gauge_factor(float factor) {
+    if (isfinite(factor) && factor >= 0.0f && factor <= 100.0f)
+        gauge_config.charge_factor = factor;
+}
+
+__attribute__((export_name("demo_set_course"))) unsigned int demo_set_course(unsigned int index) {
+    const KartCourseAsset *asset = kart_course_asset_at(index);
+    kart_course_free(&course);
+    course_enabled = false;
+    if (!asset || !kart_course_build(&course, asset)) return 0u;
+    kart_course_set_lap_count(&course, 3u);
+    course_enabled = true;
+    kart_course_progress_init(&course, &course_progress, kart.position);
+    return 1u;
+}
+
+__attribute__((export_name("demo_clear_course"))) void demo_clear_course(void) {
+    kart_course_free(&course);
+    course_enabled = false;
+}
+
+__attribute__((export_name("demo_request_reset"))) void demo_request_reset(void) {
+    if (course_enabled) {
+        if (respawn_arm_ms == 0) respawn_arm_ms = clock_ms ? clock_ms : 1u;
+    } else {
+        demo_reset();
+    }
+}
+
+__attribute__((export_name("demo_steering_event"))) void demo_steering_event(
+    int key, unsigned int pressed) {
+    if (key != -1 && key != 1) return;
+    kart_steering_key_event(&steering_keys, (KartSteeringKey)key, pressed != 0);
+}
+
+__attribute__((export_name("demo_steering_value"))) float demo_steering_value(void) {
+    return steering_keys.value;
+}
+
+__attribute__((export_name("demo_steering_clear"))) void demo_steering_clear(void) {
+    kart_steering_input_reset(&steering_keys);
 }
 
 __attribute__((export_name("demo_track_alloc"))) void *demo_track_alloc(unsigned int size) {
@@ -255,8 +353,17 @@ __attribute__((export_name("demo_track_disable"))) void demo_track_disable(void)
 __attribute__((export_name("demo_step"))) void demo_step(
     unsigned int elapsed_ms, unsigned int throttle, unsigned int brake,
     float steer, unsigned int drift, unsigned int boost) {
-    if (elapsed_ms > 100) elapsed_ms = 100;
+    if (elapsed_ms > 50) elapsed_ms = 50;
+    clock_ms += elapsed_ms;
+    const bool throttle_pressed = throttle != 0;
+    const bool boost_pressed = boost != 0;
     if (race_phase == 1.0f || race_phase == 3.0f) {
+        if (race_phase == 1.0f && throttle_pressed && !previous_throttle &&
+            kart_countdown_start_boost_granted(&race_countdown, clock_ms))
+            kart_timed_boost_start(&kart.timed_boost, 1.0f,
+                                   KART_START_BOOST_DURATION_MS);
+        previous_throttle = throttle_pressed;
+        previous_boost = boost_pressed;
         update_race(elapsed_ms * 0.001f);
         publish(0, (KartSimulationStepResult){0});
         return;
@@ -266,18 +373,36 @@ __attribute__((export_name("demo_step"))) void demo_step(
     controls.reverse_input = brake ? 1.0f : 0.0f;
     controls.steering_input = fmaxf(-1.0f, fminf(1.0f, steer));
     controls.drift_input = drift != 0;
-    controls.boost_active = boost != 0 && gauge >= 100.0f;
-    if (controls.boost_active && !kart.timed_boost.active) gauge = 0.0f;
+    controls.boost_active = boost_pressed && !previous_boost && throttle_pressed &&
+        !kart.timed_boost.active && kart_gauge_take_booster(&gauge);
+    previous_throttle = throttle_pressed;
+    previous_boost = boost_pressed;
     KartSimulationStepResult step = kart_simulate_milliseconds(&kart, &controls, &world, elapsed_ms);
     /* The demo collision callback resolves velocity, while this temporary
        square test world's positional boundary keeps the body inside it. */
     if (!track_enabled) {
         kart.position.x = fmaxf(-78.0f, fminf(78.0f, kart.position.x));
         kart.position.y = fmaxf(-78.0f, fminf(78.0f, kart.position.y));
-    } else if (kart.position.z < spawn_z - 20.0f) {
-        reset_at(spawn_x, spawn_y, spawn_heading);
+    } else if (kart.position.z < spawn_z - 20.0f && respawn_arm_ms == 0) {
+        if (course_enabled) respawn_arm_ms = clock_ms ? clock_ms : 1u;
+        else reset_at(spawn_x, spawn_y, spawn_heading);
     }
     update_race(elapsed_ms * 0.001f);
+    if (respawn_arm_ms != 0 && clock_ms - respawn_arm_ms >= 500u) {
+        KartVec3 position;
+        KartQuat orientation;
+        if (kart_course_respawn_pose(&course, &course_progress,
+                                     &position, &orientation)) {
+            kart.position = position;
+            kart.orientation = orientation;
+            kart.linear_velocity = (KartVec3){0};
+            kart.angular_velocity = (KartVec3){0};
+            previous_x = position.x;
+            previous_y = position.y;
+            kart_chase_camera_follow_reset(&chase);
+        }
+        respawn_arm_ms = 0;
+    }
     publish(elapsed_ms, step);
     previous_x = kart.position.x;
     previous_y = kart.position.y;

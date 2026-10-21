@@ -89,6 +89,10 @@ export function createPreviewRenderer(canvas) {
   let trackRadius = 100;
   let trackMeshes = [];
   let originalWheels = [];
+  // The supplied kart USDA and track USDA were authored in different units.
+  // Keep the demo's physical dimensions untouched; calibrate only presentation
+  // against the 6.5-unit original road mesh while P5136 BodyParam is pending.
+  const kartVisualScale = 0.72;
   const shell = material(0x33b6e4, 0.32, 0.32);
   const dark = material(0x192936, 0.18, 0.6);
   const rubber = material(0x161a21);
@@ -141,6 +145,10 @@ export function createPreviewRenderer(canvas) {
     const nextWheels = [];
     const textures = new Map();
     for (const part of data.parts) {
+      // The converted USD includes dynamic advertisement materials whose PNGs
+      // are absent from this P5136 extract. Do not render them as opaque grey
+      // geometry; their original artwork must be resolved before displaying.
+      if (type === 'track' && !part.texture) continue;
       const partName = part.name.split('/').at(-2) || part.name;
       // Detachable/animated "mod" nodes have no verified bind transform in
       // this static export. White Knight's attached mod1b side panels are the
@@ -196,6 +204,7 @@ export function createPreviewRenderer(canvas) {
       });
     }
     original = group;
+    group.scale.setScalar(kartVisualScale);
     originalWheels = nextWheels;
     kart.add(group);
     proxy.visible = false;
@@ -210,8 +219,8 @@ export function createPreviewRenderer(canvas) {
         if (node.isMesh) { node.geometry.dispose(); node.material.dispose(); }
       });
     }
-    group.scale.setScalar(0.42);
-    group.position.set(-0.25, 0.5, 0);
+    group.scale.setScalar(0.42 * kartVisualScale);
+    group.position.set(-0.25 * kartVisualScale, 0.5 * kartVisualScale, 0);
     originalCharacter = group;
     kart.add(group);
     if (lobbyMode) setLobbyMode(true);
@@ -338,7 +347,8 @@ export function createPreviewRenderer(canvas) {
     const localSpeed = vx * Math.cos(heading) + vy * Math.sin(heading);
     for (const wheel of wheels) wheel.rotation.z -= localSpeed * Math.min(frameDeltaMs, 50) / 1000 / 0.43;
     for (const wheel of originalWheels) {
-      wheel.mesh.rotation.z -= localSpeed * Math.min(frameDeltaMs, 50) / 1000 / 0.2;
+      wheel.mesh.rotation.z -= localSpeed * Math.min(frameDeltaMs, 50) / 1000 /
+        (0.2 * kartVisualScale);
       wheel.pivot.rotation.y = wheel.front ? state[13] : 0;
     }
 

@@ -31,7 +31,7 @@ const keyMap = {
 };
 
 function syncState() {
-  current.set(new Float32Array(wasm.memory.buffer, statePointer, 32));
+  current.set(new Float32Array(wasm.memory.buffer, statePointer, 40));
   previous.set(current);
   visual.set(current);
   view.resetCamera();
@@ -102,6 +102,7 @@ function startRace() {
 function goLobby() {
   active = 'lobby';
   Object.keys(controls).forEach((key) => { controls[key] = false; });
+  wasm.demo_steering_clear();
   wasm.demo_reset();
   syncState();
   view.setLobbyMode(true);
@@ -122,9 +123,9 @@ function draw(state, frameMs) {
   $('#speed').textContent = String(speed).padStart(3, '0');
   $('#needle').style.transform = `rotate(${-90 + Math.min(270, speed / 360 * 270)}deg)`;
   $('#gauge').style.width = `${Math.min(100, Math.max(0, state[7]))}%`;
-  $('#nitro-count').textContent = state[7] >= 100 ? '1' : '0';
+  $('#nitro-count').textContent = String(state[32]);
   $('#timer').textContent = formatTime(state[23]);
-  const countdown = state[19] === 1 ? Math.ceil(state[20]) : 0;
+  const countdown = state[19] === 1 && state[20] <= 3 ? Math.ceil(state[20]) : 0;
   $('#countdown').textContent = countdown ? String(countdown) : '';
   $('#lap').textContent = state[19] === 1 ? '출발 준비' : '연습 주행';
 }
@@ -137,9 +138,11 @@ function frame(time) {
     accumulator = Math.min(accumulator + elapsed, 100);
     while (accumulator >= 16) {
       previous.set(current);
+      const steer = Math.max(-1, Math.min(1,
+        -wasm.demo_steering_value() + (+controls.left) - (+controls.right)));
       wasm.demo_step(16, +controls.throttle, +controls.brake,
-        (+controls.left) - (+controls.right), +controls.drift, +controls.boost);
-      current.set(new Float32Array(wasm.memory.buffer, statePointer, 32));
+        steer, +controls.drift, +controls.boost);
+      current.set(new Float32Array(wasm.memory.buffer, statePointer, 40));
       accumulator -= 16;
     }
     interpolatePreviewState(previous, current, accumulator / 16, visual);
@@ -151,14 +154,23 @@ function frame(time) {
 for (const type of ['keydown', 'keyup']) {
   window.addEventListener(type, (event) => {
     if (active !== 'race') return;
-    if (type === 'keydown' && event.code === 'KeyR') { wasm.demo_reset(); syncState(); return; }
+    if (type === 'keydown' && event.code === 'KeyR') {
+      wasm.demo_request_reset();
+      syncState();
+      return;
+    }
     const control = keyMap[event.code];
     if (!control) return;
     event.preventDefault();
-    controls[control] = type === 'keydown';
+    if (control === 'left' || control === 'right') {
+      wasm.demo_steering_event(control === 'left' ? -1 : 1, +(type === 'keydown'));
+    } else controls[control] = type === 'keydown';
   });
 }
-window.addEventListener('blur', () => Object.keys(controls).forEach((key) => { controls[key] = false; }));
+window.addEventListener('blur', () => {
+  Object.keys(controls).forEach((key) => { controls[key] = false; });
+  wasm?.demo_steering_clear();
+});
 for (const button of document.querySelectorAll('[data-control]')) {
   const control = button.dataset.control;
   const press = (value) => { controls[control] = value; button.classList.toggle('active', value); };
@@ -182,7 +194,7 @@ for (const item of document.querySelectorAll('[data-lobby-action]')) {
   });
 }
 $('#back-lobby').addEventListener('click', goLobby);
-$('#reset').addEventListener('click', () => { wasm.demo_reset(); syncState(); });
+$('#reset').addEventListener('click', () => { wasm.demo_request_reset(); syncState(); });
 
 try {
   const response = await fetch('./demo_physics.wasm', { cache: 'no-store' });
@@ -193,9 +205,9 @@ try {
   wasm = module.instance.exports;
   statePointer = wasm.demo_new();
   if (!statePointer) throw new Error('Wasm 초기화 실패');
-  current = new Float32Array(32);
-  previous = new Float32Array(32);
-  visual = new Float32Array(32);
+  current = new Float32Array(40);
+  previous = new Float32Array(40);
+  visual = new Float32Array(40);
   syncState();
   await Promise.all([view.setKart(kartChoice.value), view.setCharacter(characterChoice.value)]);
   await loadSelectedTrack();

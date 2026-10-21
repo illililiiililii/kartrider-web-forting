@@ -8,7 +8,7 @@ function create() {
     wasi_snapshot_preview1: { proc_exit: () => {}, random_get: () => 0 },
   }).exports;
   const pointer = api.demo_new();
-  return { api, state: new Float32Array(api.memory.buffer, pointer, 32) };
+  return { api, state: new Float32Array(api.memory.buffer, pointer, 40) };
 }
 
 test('demo C physics accelerates with its 5ms substeps and stays finite', () => {
@@ -71,25 +71,57 @@ test('drift changes C state and rear-slip gauge, walls remain bounded', () => {
   assert.ok(state[11] <= 3);
 });
 
-test('full drift gauge starts the demo timed booster on Ctrl press', () => {
+test('upstream gauge banks a booster only after drift ends, then Ctrl spends it', () => {
   const { api, state } = create();
   for (let i = 0; i < 30; i++) api.demo_step(16, 1, 0, 0, 0, 0);
   for (let i = 0; i < 500 && state[7] < 100; i++) api.demo_step(16, 1, 0, 1, 1, 0);
   assert.equal(state[7], 100);
+  assert.equal(state[32], 0);
+  for (let i = 0; i < 100 && state[32] === 0; i++) api.demo_step(16, 1, 0, 0, 0, 0);
+  assert.equal(state[32], 1);
+  assert.equal(state[7], 0);
   api.demo_step(16, 1, 0, 0, 0, 1);
   assert.ok(state[8] > 2.9);
-  assert.ok(state[7] < 10);
+  assert.equal(state[32], 0);
 });
 
-test('race countdown blocks driving and transitions to timed lap', () => {
+test('recovered 7-second countdown blocks driving and grants precisely timed start boost', () => {
   const { api, state } = create();
   api.demo_start_race();
   const x = state[0];
-  for (let i = 0; i < 190; i++) api.demo_step(16, 1, 0, 0, 0, 0);
+  for (let i = 0; i < 432; i++) api.demo_step(16, 0, 0, 0, 0, 0);
   assert.equal(state[0], x);
+  assert.equal(state[19], 1);
+  api.demo_step(16, 1, 0, 0, 0, 0);
+  assert.ok(state[8] > 0.99);
+  for (let i = 0; i < 14; i++) api.demo_step(16, 1, 0, 0, 0, 0);
   assert.equal(state[19], 2);
   api.demo_step(16, 1, 0, 0, 0, 0);
   assert.ok(state[23] > 0);
+});
+
+test('original demo course tables build their gate graph in Wasm', () => {
+  const { api, state } = create();
+  const pointer = state.byteOffset;
+  assert.equal(api.demo_set_course(11), 1); // village_R01 in source data
+  const refreshed = new Float32Array(api.memory.buffer, pointer, 40);
+  api.demo_step(16, 0, 0, 0, 0, 0);
+  assert.ok(refreshed[39] >= 0);
+  api.demo_clear_course();
+  api.demo_step(16, 0, 0, 0, 0, 0);
+  assert.equal(refreshed[39], -1);
+});
+
+test('recovered steering input gives the last pressed direction ownership', () => {
+  const { api } = create();
+  api.demo_steering_event(-1, 1);
+  assert.equal(api.demo_steering_value(), -1);
+  api.demo_steering_event(1, 1);
+  assert.equal(api.demo_steering_value(), 1);
+  api.demo_steering_event(-1, 0);
+  assert.equal(api.demo_steering_value(), 1);
+  api.demo_steering_event(1, 0);
+  assert.equal(api.demo_steering_value(), 0);
 });
 
 const localTrack = new URL('../web-preview/assets/usd/beach_I01/collision.ktrk', import.meta.url);
@@ -103,12 +135,12 @@ test('local original track collision loads and keeps the practice timer separate
     new Uint8Array(api.memory.buffer, pointer, bytes.length).set(bytes);
     assert.ok(api.demo_track_load(pointer, bytes.length) > 1000);
     api.demo_track_free_buffer(pointer);
-    const trackState = new Float32Array(api.memory.buffer, statePointer, 32);
+    const trackState = new Float32Array(api.memory.buffer, statePointer, 40);
     const height = api.demo_track_ground_height(-120, 98, 80);
     assert.ok(height > 30 && height < 40);
     assert.equal(api.demo_track_enable(-120, 98, height, 0), 1);
     api.demo_start_race();
-    for (let i = 0; i < 240; i++) api.demo_step(16, 1, 0, 0, 0, 0);
+    for (let i = 0; i < 440; i++) api.demo_step(16, 1, 0, 0, 0, 0);
     assert.equal(trackState[19], 2);
     assert.ok(trackState[23] > 0);
     assert.equal(trackState[21], 1);

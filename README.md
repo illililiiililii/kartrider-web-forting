@@ -7,16 +7,21 @@ kart/character/track meshes, menu button, track cards, minimap, and tachometer.
 All three converted original tracks can be driven with experimental collision
 triangles; original checkpoints/laps and multiplayer are **not implemented**.
 
-The active browser game now links the **unmodified** `kart_dynamics.c`,
-`kart_simulation.c`, and `kart_camera.c` from
+The browser game now links the **unmodified** `kart_dynamics.c`,
+`kart_simulation.c`, `kart_camera.c`, `kart_countdown.c`, `kart_course.c`,
+`kart_course_data.c`, `kart_engine_sound.c`, `kart_input.c`, and track C modules from
 [KartriderDemoPhysics](https://github.com/overjoy1008/KartriderDemoPhysics)
-plus `kart_demo_data.c` into WebAssembly. Its simulation uses the demo's 5ms maximum substep, four
+plus `kart_demo_data.c` and `demo/kart_gauge.h` into WebAssembly. Its simulation uses the demo's 5ms maximum substep, four
 wheel contacts, suspension, longitudinal and lateral/drift force pipeline,
 drag, pose integration, collision response, and chase-camera update. Our
 `src-demo/demo_bridge.c` supplies a temporary flat debug test world, square walls,
-drift-gauge hypothesis, three-lap debug race, and an adapter for heuristic
-original-track triangle collision. This is **2004 demo physics**, not verified
-P5136 physics or every feature from the demo project. The former Rust physics investigation
+and an adapter for heuristic original-track triangle collision. The demo's
+7-second countdown, start-boost window, steering-key ownership, gauge's
+200-unit/two-slot hypothesis, course-gate graph, warp, recovery, and sound
+driving laws are linked. This is **2004 demo physics**, not verified P5136
+physics. Its Windows renderer/playback and experimental multi-gear sound are
+not part of the physics Wasm. The demo's course tables are not silently applied
+to later P5136 track versions without coordinate validation. The former Rust physics investigation
 is preserved in [`OLD_PYS`](OLD_PYS/README.md) and is not loaded in the browser.
 
 ## Build and play locally (Windows)
@@ -30,7 +35,7 @@ is preserved in [`OLD_PYS`](OLD_PYS/README.md) and is not loaded in the browser.
 
 ```powershell
 .\tools\build-demo-physics.ps1 -DemoSource 'C:\path\to\KartriderDemoPhysics' -ZigExe 'C:\path\to\zig.exe'
-python -m http.server 4173 --bind 127.0.0.1 --directory web-preview
+node server.mjs
 ```
 
 Before starting the server, prepare the track cards and minimaps from the
@@ -60,15 +65,24 @@ The bridge and build recipe alone cannot make a fresh public checkout playable
 until the user provides a locally obtained demo source and builds its Wasm.
 
 Controls: arrows or numpad 8/2/4/6 (W/A/S/D also work), Shift drift, Ctrl
-booster after gauge fills, R reset. On `/debug.html`, use the slider to set the demo's
+booster after a full gauge is banked at drift end, R reset. On `/debug.html`, use the slider to set the demo's
 `max_steer_angle_deg` from 1° to 30° in 0.1° increments; the adjacent number
 box accepts an exact value and the setting is saved locally. The source
 default is 10°. `Space`/Exceed is disabled until later P5136 integration.
 The separate demo physics selector loads the source's `cotten5`, `practice1`,
 `saber5`, or `solid5` dynamics and body geometry; the P5136 V1 mesh selection
-is visual only and does not pretend to be that demo kart. Click “3랩 테스트 레이스
-시작” for a 3-second countdown and four ordered test
-checkpoints per lap. The course and gauge storage rules are not original data.
+is visual only and does not pretend to be that demo kart. The start has the
+demo's 7-second countdown and ±100 ms acceleration-press boost window. The
+square debug test course is not an original P5136 race. The demo gauge rule is
+explicitly a hypothesis, not a recovered original charging formula.
+
+`server.mjs` provides independent web-game accounts (not Nexon/P5136 accounts):
+`POST /api/auth/register`, `POST /api/auth/login`, `GET /api/auth/me`, and
+`POST /api/auth/logout`. Passwords are scrypt-hashed; hashed session tokens
+are stored in ignored `local-data/accounts.sqlite`; cookies are HttpOnly and
+SameSite=Strict. Set `KART_COOKIE_SECURE=1` behind HTTPS. The login screen is
+not wired: original `stage/authenStage` is a separate challenge screen, not
+evidence for a P5136 account-login layout.
 
 The local original `.1s` kart geometry can be converted without committing
 copyrighted assets:
@@ -96,11 +110,12 @@ so this evidence applies to non-drift steering only.
 
 ```powershell
 .\tools\build-demo-physics.ps1
-node --test tools\test-demo-physics.mjs tools\test-frame-interpolation.mjs
+node --test tools\test-auth-server.mjs tools\test-demo-physics.mjs tools\test-frame-interpolation.mjs
 ```
 
-The current local build is about 755 KB. The current local test run passed
-10 checks, including imported track collision and speed-dependent steering.
+The current local test run passed 13 checks, including imported track
+collision, speed-dependent steering, demo gauge/countdown/input/course
+behavior, and register/login/logout.
 In direct Wasm tests, the default
 demo kart accelerated to about 156 km/h after 1.6 seconds on the flat test world; with
 identical short inputs, 5°/10°/20° steering produced increasing heading

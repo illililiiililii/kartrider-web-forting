@@ -1,5 +1,35 @@
 # P5136 web port — development progress
 
+## 2026-10-21 demo C integration, model calibration, and account server
+
+- Kept the upstream demo C dynamics/simulation/camera/track code unmodified and
+  additionally linked its countdown, input, course graph/data, engine-sound
+  laws, and `demo/kart_gauge.h` into the locally built Wasm. Restored the
+  demo's 7-second start sequence, ±100 ms start boost, last-pressed steering
+  ownership, gauge handoff at drift exit (200 units / two slots), and course
+  gate/warp/500 ms recovery functions. Upstream gauge charging is explicitly
+  a simulator hypothesis, not original-client recovery.
+- The demo's 13 course tables build in Wasm, but P5136 Beach track selection
+  still does not attach them: they refer to different track versions. The new
+  game remains practice mode until P5136 gate geometry is established.
+- Browser screenshot showed an oversized kart on the Beach I01 road. Scaled
+  only the displayed original kart and driver model to 0.72; physical demo
+  body dimensions are unchanged pending P5136 BodyParam mapping. Missing
+  dynamic advertisement textures no longer appear as opaque grey planes.
+  The USD converter now checks inherited material bindings and an exact
+  same-category `_rhoOut` fallback; it does not substitute other-track art.
+- Added local Node/SQLite account endpoints with scrypt password hashes,
+  hashed sessions, HttpOnly SameSite=Strict cookies, origin check, and request
+  throttling. This is not Nexon login. No invented account UI was added.
+- Browser QA: new Wasm loads and race screen shows the smaller original kart.
+  `node --test` reports 13 passing checks. Separate auth server was served at
+  `http://127.0.0.1:4174/` during QA.
+
+Next: validate P5136 source collision/route metadata, original GUI layout and
+missing material references, then wire account forms using verified original
+assets. Native REA decompilation was unavailable because no Ghidra/IDA provider
+was configured; source XML and PNG assets were inspected directly instead.
+
 ## 2026-10-21 new game page and rendering fixes
 
 - Replaced the public-facing prototype page with a new lobby and race HUD at
