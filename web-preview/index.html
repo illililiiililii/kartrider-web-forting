@@ -62,7 +62,7 @@
     <section id="race-ui" class="race-ui hidden" aria-label="레이스 화면">
       <div class="nitro-inventory"><span id="nitro-count" aria-label="보유 부스터 0개"></span></div>
       <div class="race-standing"><div class="rankboard"><span id="rank-digit" class="big-digit"></span><span class="ordinal"></span><span class="rank-divider"></span><span id="rider-count" class="small-digit"></span></div><div class="rider-row"><span>1</span><strong id="race-rider-name"></strong></div></div>
-      <div class="time-panel"><div class="lap-readout"><strong id="lap-number">1</strong><span>/2</span></div><div class="time-line"><span>TIME</span><strong id="race-time">00:00:00</strong></div><div class="time-line"><span>BEST</span><strong id="best-time">00:00:00</strong></div><span id="lap" class="visually-hidden">연습 주행</span><div id="timer" class="visually-hidden" aria-label="주행 시간 00:00:00"></div></div>
+      <div class="time-panel"><div class="lap-readout"><strong id="lap-number">1</strong><span>/</span><span id="lap-total">3</span></div><div class="time-line"><span>TIME</span><strong id="race-time">00:00:00</strong></div><div class="time-line"><span>BEST</span><strong id="best-time">00:00:00</strong></div><span id="lap" class="visually-hidden">연습 주행</span><div id="timer" class="visually-hidden" aria-label="주행 시간 00:00:00"></div></div>
       <div id="countdown" class="countdown" aria-live="polite"></div>
       <div class="race-actions"><button id="back-lobby" class="race-icon home" aria-label="로비로 돌아가기" title="로비로 돌아가기"></button><button id="reset" class="race-icon previous" aria-label="체크포인트 리셋 (R)" title="체크포인트 리셋 (R)"></button></div>
       <div class="map-panel"><span class="map-marker">M</span><img id="minimap" alt="선택한 원본 트랙 미니맵"><span id="map-label" class="visually-hidden">비치 I01</span><div class="map-footer">충돌　<span id="collision-count">0</span>회 | 부스터　<span id="boost-use-count">0</span>회</div></div>
@@ -71,6 +71,6 @@
     </section>
     <div id="error" class="error hidden" role="alert"></div>
   </main>
-  <script type="module" src="game.js?v=11"></script>
+  <script type="module" src="game.js?v=12"></script>
 </body>
 </html>

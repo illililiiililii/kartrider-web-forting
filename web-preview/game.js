@@ -12,6 +12,8 @@ const kartChoice = $('#kart-choice');
 const characterChoice = $('#character-choice');
 const trackChoice = $('#track-choice');
 const trackNames = { beach_I01: '비치 I01', beach_I02: '비치 I02', village_R01: '빌리지 R01' };
+// _rhoOut/track/common/track@zz.xml: item tracks have three laps; R01 has two.
+const trackLaps = { beach_I01: 3, beach_I02: 3, village_R01: 2 };
 const spawns = {
   beach_I01: [120, 98, Math.PI],
   beach_I02: [70, 64, Math.PI],
@@ -85,6 +87,7 @@ async function loadSelectedTrack() {
   $('#track-name').textContent = $('#map-label').textContent = trackNames[name];
   $('#setup-track-name').textContent = trackNames[name];
   $('#setup-track-image').src = `./assets/tracks/${name}/xt_trackCard.png`;
+  $('#lap-total').textContent = trackLaps[name];
   status.textContent = `${trackNames[name]} 메시 로딩 중…`;
   await view.setTrackDrive(name);
   const response = await fetch(`./assets/usd/${name}/collision.ktrk`);
@@ -256,7 +259,8 @@ function draw(state, frameMs) {
   const countdown = state[19] === 1 && state[20] <= 3 ? Math.ceil(state[20]) : 0;
   $('#countdown').classList.toggle('visible', Boolean(countdown));
   if (countdown) $('#countdown').style.backgroundPosition = `${-countdown * 64}px 0`;
-  $('#lap').textContent = state[19] === 1 ? '출발 준비' : '연습 주행';
+  $('#lap').textContent = state[19] === 1 ? '출발 준비' :
+    state[19] === 3 ? '완주' : '연습 주행 · 원본 체크포인트 미연결';
 }
 
 function frame(time) {
@@ -374,6 +378,9 @@ try {
   wasm = module.instance.exports;
   statePointer = wasm.demo_new();
   if (!statePointer) throw new Error('Wasm 초기화 실패');
+  // Both currently supported kart bodies are V1. These provisional charger
+  // parameters are isolated from the recovered demo's drift gauge formula.
+  wasm.demo_configure_v1_charger(1, 25, 2);
   current = new Float32Array(40);
   previous = new Float32Array(40);
   visual = new Float32Array(40);

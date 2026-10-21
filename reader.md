@@ -59,9 +59,10 @@ not permanent removal. Other opaque/transparent material mismatches may remain.
   in `track/beach_I01/track.1s` or runtime and restore correctly.
 - The main-page three-track spawn poses are locally validated for an initial
   1.6-second straight drive, not a complete route. P5136 V1 automatic N₂O
-  charge above a speed threshold is reported but not implemented: neither
-  threshold nor rate was established. Next: extract V1 KartSpec/BodyParam or
-  record exact speed/gauge samples before adding a separate V1-only charger.
+  charging is now isolated in `src-demo/demo_bridge.c`, enabled for the two
+  currently selectable V1 models. The 25 m/s threshold and 2 gauge units/s
+  are **estimates** rather than source-derived constants. Next: extract V1
+  KartSpec/BodyParam or record exact speed/gauge samples to replace them.
 - Original `track/beach_I01`, `track/beach_I02`, and `track/village_R01`
   `xt_trackCard.png`/`xt_minimap.png` are now locally copied and shown by
   `tools/prepare-local-tracks.ps1`. The new game also loads converted USDA
@@ -88,6 +89,25 @@ not permanent removal. Other opaque/transparent material mismatches may remain.
   `stage/authenStage/stage_window@zz.xml` describes a matrix/OTP challenge,
   not an account login. The extracted `stage/mainMenu/mq_window@kr.xml`
   establishes original lobby panel and mode coordinates.
+- `_rhoOut/track/common/track@zz.xml` establishes 3 laps for `beach_I01`
+  and `beach_I02`, and 2 for `village_R01`; those totals appear in the HUD.
+  Their actual checkpoints are still missing. `_rhoOut/track/common/aiPath/`
+  contains track-specific `.kap` files, but `beach_I01_1.kap` starts with a
+  length word followed by encoded bytes; it is not a directly readable gate
+  table. The demo's `src/kart_course_data.c` has `village_R01` gates, but its
+  first course position is approximately `(457.7,-219)` while the converted
+  5136 road starts near `(14.5,49)`; there is no verified transform. Next:
+  decode the original KAP/ToRoad 5136 route or establish the scene transform,
+  then bind those gates to C/Wasm and validate a complete lap by driving.
+  Until then, `R`/deep-fall recovery uses a rolling grounded safety pose in
+  `src-demo/demo_bridge.c`, preserving the race clock. It is **not** an
+  original checkpoint and cannot prove a legal lap.
+- The Dao/Bazzi body atlases (`character/dao/1.png`, `character/bazzi/1.png`)
+  are neutral and now tinted on the imported mesh; face atlas `f00.png` is
+  separate. The tint is a visual approximation. The supplied `.1s` files
+  contain additional animation frames, but the USD export has not preserved
+  the skeleton/bind sequence. Next: decode/import original armature actions
+  and replace the rigid steering/slip pose.
 - Missing USDA track art includes `ad_board_a.png`, `ad_board_b.png`,
   `ad_fence_a/b/c.png`, `ad_start.png` on Beach I01; these are referenced by
   the supplied USDA but absent from its sibling texture folder, exact

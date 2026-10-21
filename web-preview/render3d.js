@@ -179,8 +179,14 @@ export function createPreviewRenderer(canvas) {
         }
         alphaMap = textures.get(part.alphaTexture);
       }
+      // The supplied Dao/Bazzi body atlas is intentionally neutral greyscale;
+      // the face is a separate original texture. Apply the body colour at the
+      // material stage without altering or replacing either source image.
+      const characterTint = type === 'character' && partName === 'body'
+        ? name === 'dao' ? 0x42b8ff : name === 'bazzi' ? 0xffbb52 : 0xffffff
+        : null;
       const mesh = new THREE.Mesh(geometry, new THREE.MeshStandardMaterial({
-        color: texture ? 0xffffff : color, map: texture, alphaMap,
+        color: characterTint ?? (texture ? 0xffffff : color), map: texture, alphaMap,
         side: THREE.DoubleSide, transparent: Boolean(part.alphaBlend && !part.alphaTest),
         depthWrite: !part.alphaBlend,
         roughness: 0.8, metalness: 0.08,
@@ -426,6 +432,12 @@ export function createPreviewRenderer(canvas) {
     // by originalBase, so wheels no longer clip below a sloped road.
     kart.position.set(x, (state[14] || 0) - 0.5, -y);
     kart.rotation.y = heading + (lobbyMode ? Math.PI / 2 : 0);
+    if (originalCharacter && !lobbyMode) {
+      // Pose the imported original mesh as a single rigid rider until its
+      // 1s skeleton/bind animation can be recovered from the local archive.
+      originalCharacter.rotation.z = THREE.MathUtils.clamp(-state[13] * 0.25, -0.12, 0.12);
+      originalCharacter.rotation.x = THREE.MathUtils.clamp(state[15] * 0.002, -0.08, 0.08);
+    }
     shell.color.setHex(boost > 0 ? 0xffcd4f : drifting ? 0xf779a8 : 0x33b6e4);
     boostFlames.visible = boost > 0;
     const localSpeed = vx * Math.cos(heading) + vy * Math.sin(heading);

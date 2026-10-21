@@ -84,7 +84,14 @@ The separate demo physics selector loads the source's `cotten5`, `practice1`,
 is visual only and does not pretend to be that demo kart. The start has the
 demo's 7-second countdown and ±100 ms acceleration-press boost window. The
 square debug test course is not an original P5136 race. The demo gauge rule is
-explicitly a hypothesis, not a recovered original charging formula.
+explicitly a hypothesis, not a recovered original charging formula. The two
+selectable V1 karts additionally use a configurable passive charger in the
+C/Wasm bridge: grounded forward speed above 25 m/s adds 2 gauge units/s.
+These values are provisional, not recovered P5136 constants. The visible lap
+totals come from original `track@zz.xml`; original checkpoint/finish gates
+remain unconnected, so these tracks are still practice runs.
+On imported tracks, `R` and deep-fall recovery use a temporary grounded
+safety position without clearing the timer; this is not an original checkpoint.
 
 `server.mjs` provides independent web-game accounts (not Nexon/P5136 accounts):
 `POST /api/auth/register`, `POST /api/auth/login`, `GET /api/auth/me`, and
@@ -124,7 +131,8 @@ so this evidence applies to non-drift steering only.
 node --test tools\test-auth-server.mjs tools\test-demo-physics.mjs tools\test-frame-interpolation.mjs tools\test-local-ui-assets.mjs
 ```
 
-The current local test run passed 17 checks, including original GUI asset
+The current local test run passed 19 checks, including V1 speed-threshold
+charging, original GUI asset
 hash verification, imported track
 collision, clear launch directions on all three tracks, speed-dependent steering, demo gauge/countdown/input/course
 behavior, and register/login/logout.

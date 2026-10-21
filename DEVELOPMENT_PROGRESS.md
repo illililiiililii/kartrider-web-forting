@@ -230,3 +230,23 @@ it is currently public. A future privacy change does not itself grant
 redistribution rights, so do not push these extracted assets or the demo C
 source/compiled derivative without clear permission. Source conversion scripts
 and local build instructions are tracked.
+
+## 2026-10-22: V1 passive charging and rider material pass
+
+- The C/Wasm bridge now supports a separate V1 passive N₂O charger. Above a
+  configurable forward-speed threshold, a grounded kart gains gauge even
+  without drifting. The initial 25 m/s threshold and 2 gauge units/s rate are
+  **provisional**, not recovered P5136 constants. The demo's original drift
+  calculation and charge formula remain unchanged.
+- Dao and Bazzi's supplied neutral body atlas now receives a material tint;
+  their separately textured original face is unchanged. A small rigid-body
+  steering/slip pose is applied to the original imported character mesh. This
+  is not the original skeletal animation, which remains unconverted.
+- The HUD's total-lap denominator now follows `_rhoOut/track/common/track@zz.xml`:
+  Beach I01/I02 have 3, Village R01 has 2. The numerator/finish still require
+  5136-compatible checkpoint gates; the practice UI explicitly says so.
+- On imported tracks, `R` or a deep fall now returns to the most recently
+  verified grounded pose after 500 ms without resetting the race clock. This
+  rolling safety point is a temporary fallback, not an original checkpoint.
+- New-browser visual QA confirmed the blue Dao lobby model, original race
+  scenery/HUD, and Beach I01 `/3` readout. Automated tests: 19/19 passed.

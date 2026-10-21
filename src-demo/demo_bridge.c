@@ -21,6 +21,11 @@ static KartSimulationWorld world;
 static float telemetry[40];
 static KartGaugeState gauge;
 static KartGaugeConfig gauge_config;
+/* V1's passive charger is a 5136-era feature absent from the 2004 demo.
+   The threshold/rate are provisional and deliberately kept outside upstream C. */
+static bool v1_charger_enabled;
+static float v1_charger_threshold = 25.0f; /* metres / second */
+static float v1_charger_rate = 2.0f;       /* gauge units / second */
 static KartCountdown race_countdown;
 static KartSoundDriver sound_driver;
 static KartSoundState sound_state;
@@ -36,6 +41,9 @@ static float wall_hits;
 static bool wall_contact;
 static unsigned int last_wall_hit_ms;
 static KartVec3 stable_ground_position;
+static KartVec3 fallback_respawn_position;
+static KartQuat fallback_respawn_orientation;
+static unsigned int last_fallback_mark_ms;
 static float previous_x, previous_y;
 static unsigned int preset_index = 10; /* cotten5, demo simulator default */
 static KartTrackScene track_scene;
@@ -85,7 +93,7 @@ static unsigned int body_query(void *unused, const KartSimulationState *state,
 static void reset_at(float x, float y, float heading) {
     const KartDemoKartSpec *spec = kart_demo_kart_at(preset_index);
     KartSimulationGeometry web_geometry = spec ? spec->geometry : (KartSimulationGeometry){0};
-    /* Converted P5136 kart mesh is rendered at 0.65 USDA units. Keep wheel
+    /* Converted P5136 kart mesh is rendered at 0.50 USDA units. Keep wheel
        and wall probes near that visual footprint instead of the demo's
        full-size 1.75 x 2.28 m preset. Dynamics remain upstream demo code. */
     if (track_enabled) {
@@ -99,6 +107,9 @@ static void reset_at(float x, float y, float heading) {
     /* Identity faces world -Y; +pi/2 rotates the forward axis to +X. */
     const float angle = heading + 1.5707963267948966f;
     kart.orientation = (KartQuat){cosf(angle * 0.5f), 0.0f, 0.0f, sinf(angle * 0.5f)};
+    fallback_respawn_position = kart.position;
+    fallback_respawn_orientation = kart.orientation;
+    last_fallback_mark_ms = 0u;
     kart_chase_camera_follow_reset(&chase);
     world = (KartSimulationWorld){ground_query, body_query, NULL};
     memset(telemetry, 0, sizeof telemetry);
@@ -182,6 +193,16 @@ static void publish(unsigned int elapsed_ms, KartSimulationStepResult step) {
     const float dt = (float)elapsed_ms * 0.001f;
     kart_gauge_update(&gauge, &gauge_config, &kart, forward, lateral,
                       drifting, dt);
+    if (v1_charger_enabled && kart.grounded && !drifting &&
+        fabsf(forward) >= v1_charger_threshold && dt > 0.0f &&
+        gauge.boosters < KART_GAUGE_MAX_BOOSTERS) {
+        gauge.value += v1_charger_rate * dt;
+        gauge.rate += v1_charger_rate;
+        if (gauge.value >= gauge_config.full_value) {
+            gauge.value -= gauge_config.full_value;
+            gauge.boosters += 1u;
+        }
+    }
     sound_state = kart_sound_driver_update(&sound_driver, speed, drifting,
         kart.timed_boost.active || kart.instant_boost.active,
         kart.instant_boost.active, step.wall_impact_speed,
@@ -284,6 +305,16 @@ __attribute__((export_name("demo_set_gauge_factor"))) void demo_set_gauge_factor
         gauge_config.charge_factor = factor;
 }
 
+__attribute__((export_name("demo_configure_v1_charger"))) void demo_configure_v1_charger(
+    unsigned int enabled, float threshold_mps, float gauge_per_second) {
+    if (!isfinite(threshold_mps) || !isfinite(gauge_per_second) ||
+        threshold_mps < 0.0f || threshold_mps > 200.0f ||
+        gauge_per_second < 0.0f || gauge_per_second > 200.0f) return;
+    v1_charger_enabled = enabled != 0u;
+    v1_charger_threshold = threshold_mps;
+    v1_charger_rate = gauge_per_second;
+}
+
 __attribute__((export_name("demo_set_course"))) unsigned int demo_set_course(unsigned int index) {
     const KartCourseAsset *asset = kart_course_asset_at(index);
     kart_course_free(&course);
@@ -301,7 +332,7 @@ __attribute__((export_name("demo_clear_course"))) void demo_clear_course(void) {
 }
 
 __attribute__((export_name("demo_request_reset"))) void demo_request_reset(void) {
-    if (course_enabled) {
+    if (course_enabled || track_enabled) {
         if (respawn_arm_ms == 0) respawn_arm_ms = clock_ms ? clock_ms : 1u;
     } else {
         demo_reset();
@@ -435,8 +466,17 @@ __attribute__((export_name("demo_step"))) void demo_step(
             kart.linear_velocity.z = fmaxf(0.0f, kart.linear_velocity.z);
         }
         if (center_supported && kart.grounded &&
-            kart.position.z >= ahead.point.z + 0.35f)
+            kart.position.z >= ahead.point.z + 0.35f) {
             stable_ground_position = kart.position;
+            const float dx = kart.position.x - fallback_respawn_position.x;
+            const float dy = kart.position.y - fallback_respawn_position.y;
+            if (race_phase == 2.0f && clock_ms - last_fallback_mark_ms >= 2000u &&
+                dx*dx + dy*dy >= 100.0f) {
+                fallback_respawn_position = kart.position;
+                fallback_respawn_orientation = kart.orientation;
+                last_fallback_mark_ms = clock_ms;
+            }
+        }
     }
     /* The imported P5136 collision proxy contains nearly-flat triangles
        with small normal errors. The demo has no static-friction branch, so an
@@ -455,15 +495,19 @@ __attribute__((export_name("demo_step"))) void demo_step(
         kart.position.x = fmaxf(-78.0f, fminf(78.0f, kart.position.x));
         kart.position.y = fmaxf(-78.0f, fminf(78.0f, kart.position.y));
     } else if (kart.position.z < spawn_z - 20.0f && respawn_arm_ms == 0) {
-        if (course_enabled) respawn_arm_ms = clock_ms ? clock_ms : 1u;
-        else reset_at(spawn_x, spawn_y, spawn_heading);
+        respawn_arm_ms = clock_ms ? clock_ms : 1u;
     }
     update_race(elapsed_ms * 0.001f);
     if (respawn_arm_ms != 0 && clock_ms - respawn_arm_ms >= 500u) {
         KartVec3 position;
         KartQuat orientation;
-        if (kart_course_respawn_pose(&course, &course_progress,
-                                     &position, &orientation)) {
+        const bool have_course_pose = course_enabled &&
+            kart_course_respawn_pose(&course, &course_progress, &position, &orientation);
+        if (have_course_pose || track_enabled) {
+            if (!have_course_pose) {
+                position = fallback_respawn_position;
+                orientation = fallback_respawn_orientation;
+            }
             kart.position = position;
             kart.orientation = orientation;
             kart.linear_velocity = (KartVec3){0};
@@ -471,6 +515,7 @@ __attribute__((export_name("demo_step"))) void demo_step(
             previous_x = position.x;
             previous_y = position.y;
             kart_chase_camera_follow_reset(&chase);
+            stable_ground_position = position;
         }
         respawn_arm_ms = 0;
     }

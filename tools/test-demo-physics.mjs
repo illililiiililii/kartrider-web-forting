@@ -31,6 +31,23 @@ test('max steer angle slider changes the C dynamics config', () => {
   assert.ok(heading(10) < heading(20));
 });
 
+test('V1 passive charger only adds gauge above its configured speed threshold', () => {
+  function run(enabled, threshold) {
+    const { api, state } = create();
+    api.demo_configure_v1_charger(enabled, threshold, 2);
+    for (let i = 0; i < 85; i++) api.demo_step(16, 1, 0, 0, 0, 0);
+    return { gauge: state[7], rate: state[33], speed: state[6] };
+  }
+  const off = run(0, 25);
+  const on = run(1, 25);
+  const tooFast = run(1, 100);
+  assert.ok(on.speed > 25);
+  assert.equal(off.gauge, 0);
+  assert.ok(on.gauge > 0.4);
+  assert.equal(on.rate, 2);
+  assert.equal(tooFast.gauge, 0);
+});
+
 test('upstream speed attenuation reduces steering angle without changing the slider', () => {
   function steerAfterAcceleration(steps) {
     const { api, state } = create();
@@ -144,6 +161,29 @@ test('local original track collision loads and keeps the practice timer separate
     assert.equal(trackState[19], 2);
     assert.ok(trackState[23] > 0);
     assert.equal(trackState[21], 1);
+  });
+
+test('R on a local original track returns to a safe pose without clearing the race clock',
+  { skip: !existsSync(localTrack) }, () => {
+    const { api, state } = create();
+    const statePointer = state.byteOffset;
+    const bytes = readFileSync(localTrack);
+    const pointer = api.demo_track_alloc(bytes.length);
+    new Uint8Array(api.memory.buffer, pointer, bytes.length).set(bytes);
+    assert.ok(api.demo_track_load(pointer, bytes.length) > 0);
+    api.demo_track_free_buffer(pointer);
+    const trackState = new Float32Array(api.memory.buffer, statePointer, 40);
+    const height = api.demo_track_ground_height(120, 98, 80);
+    assert.equal(api.demo_track_enable(120, 98, height, Math.PI), 1);
+    api.demo_start_race();
+    for (let i = 0; i < 460; i++) api.demo_step(16, 1, 0, 0, 0, 0);
+    const elapsed = trackState[23];
+    assert.equal(trackState[19], 2);
+    api.demo_request_reset();
+    for (let i = 0; i < 34; i++) api.demo_step(16, 0, 0, 0, 0, 0);
+    assert.equal(trackState[19], 2);
+    assert.ok(trackState[23] > elapsed);
+    assert.ok(Number.isFinite(trackState[14]));
   });
 
 test('idle kart does not creep across an imported near-flat original track',
