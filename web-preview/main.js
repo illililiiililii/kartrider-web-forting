@@ -1,4 +1,4 @@
-import { createPreviewRenderer } from './render3d.js';
+import { createPreviewRenderer } from './render3d.js?v=2';
 import { interpolatePreviewState } from './frame-interpolation.mjs';
 
 const canvas = document.querySelector('#track');
@@ -6,7 +6,44 @@ const view = createPreviewRenderer(canvas);
 const status = document.querySelector('#status');
 const modelLabel = document.querySelector('#model-label');
 const kartChoice = document.querySelector('#kart-choice');
+const physicsPreset = document.querySelector('#physics-preset');
+const trackChoice = document.querySelector('#track-choice');
+const trackCard = document.querySelector('#track-card');
+const trackMinimap = document.querySelector('#track-minimap');
+const trackMapStatus = document.querySelector('#track-map-status');
+function selectTrackArtwork() {
+  const name = trackChoice.value;
+  trackCard.src = `./assets/tracks/${name}/xt_trackCard.png`;
+  trackMinimap.src = `./assets/tracks/${name}/xt_minimap.png`;
+  trackMapStatus.textContent = name;
+}
+trackChoice.addEventListener('change', selectTrackArtwork);
+for (const image of [trackCard, trackMinimap]) {
+  image.addEventListener('error', () => { trackMapStatus.textContent = '원본 트랙 이미지 없음 · prepare-local-tracks.ps1 실행'; });
+}
+selectTrackArtwork();
 const raceReadout = document.querySelector('#race-status');
+const steerAngle = document.querySelector('#steer-angle');
+const steerAngleNumber = document.querySelector('#steer-angle-number');
+const steerValue = document.querySelector('#steer-value');
+function applySteerAngle(syncNumber = true) {
+  const value = Number(steerAngle.value);
+  steerValue.textContent = `${value.toFixed(1)}°`;
+  if (syncNumber) steerAngleNumber.value = value.toFixed(1);
+  if (wasm) wasm.demo_set_steer_angle(value);
+  localStorage.setItem('demo-steer-angle', String(value));
+}
+steerAngle.value = localStorage.getItem('demo-steer-angle') || '10';
+steerAngle.addEventListener('input', applySteerAngle);
+steerAngleNumber.value = Number(steerAngle.value).toFixed(1);
+steerAngleNumber.addEventListener('input', () => {
+  const value = Number(steerAngleNumber.value);
+  if (!Number.isFinite(value) || value < 1 || value > 30) return;
+  steerAngle.value = String(Math.max(1, Math.min(30, value)));
+  applySteerAngle(false);
+});
+steerAngleNumber.addEventListener('blur', () => { steerAngleNumber.value = Number(steerAngle.value).toFixed(1); });
+steerValue.textContent = `${Number(steerAngle.value).toFixed(1)}°`;
 async function selectKart() {
   modelLabel.textContent = '원본 카트 메시 로딩 중';
   try {
@@ -17,13 +54,19 @@ async function selectKart() {
 }
 kartChoice.addEventListener('change', selectKart);
 selectKart();
-const controls = { throttle: false, brake: false, left: false, right: false, drift: false, boost: false, exceed: false };
+physicsPreset.addEventListener('change', () => {
+  if (!wasm) return;
+  wasm.demo_set_preset(Number(physicsPreset.value));
+  resetVisualState();
+  wasm.demo_set_steer_angle(Number(steerAngle.value));
+});
+const controls = { throttle: false, brake: false, left: false, right: false, drift: false, boost: false };
 const keyMap = {
   KeyW: 'throttle', ArrowUp: 'throttle', Numpad8: 'throttle',
   KeyS: 'brake', ArrowDown: 'brake', Numpad2: 'brake',
   KeyA: 'left', ArrowLeft: 'left', Numpad4: 'left',
   KeyD: 'right', ArrowRight: 'right', Numpad6: 'right',
-  ShiftLeft: 'drift', ShiftRight: 'drift', ControlLeft: 'boost', ControlRight: 'boost', Space: 'exceed',
+  ShiftLeft: 'drift', ShiftRight: 'drift', ControlLeft: 'boost', ControlRight: 'boost',
 };
 for (const type of ['keydown', 'keyup']) {
   window.addEventListener(type, (event) => {
@@ -41,8 +84,9 @@ window.addEventListener('blur', () => Object.keys(controls).forEach((key) => { c
 document.querySelector('#reset').addEventListener('click', resetPreview);
 document.querySelector('#start-race').addEventListener('click', () => {
   if (!wasm || !statePointer) return;
-  wasm.p5136_preview_start_race(statePointer);
-  currentState.set(new Float32Array(wasm.memory.buffer, statePointer, 25));
+  wasm.demo_start_race();
+  wasm.demo_set_steer_angle(Number(steerAngle.value));
+  currentState.set(new Float32Array(wasm.memory.buffer, statePointer, 32));
   previousState.set(currentState);
   visualState.set(currentState);
   view.resetCamera();
@@ -66,13 +110,17 @@ let currentState;
 let visualState;
 function resetPreview() {
   if (!wasm || !statePointer) return;
-  wasm.p5136_preview_reset(statePointer);
-  currentState.set(new Float32Array(wasm.memory.buffer, statePointer, 25));
+  wasm.demo_reset();
+  wasm.demo_set_steer_angle(Number(steerAngle.value));
+  resetVisualState();
+}
+function resetVisualState() {
+  currentState.set(new Float32Array(wasm.memory.buffer, statePointer, 32));
   previousState.set(currentState);
   visualState.set(currentState);
   view.resetCamera();
 }
-const telemetry = Object.fromEntries(['speed', 'gear', 'heading', 'yaw', 'drift', 'slip', 'linger', 'gauge', 'boost', 'exceed', 'hits'].map((id) => [id, document.getElementById(id)]));
+const telemetry = Object.fromEntries(['speed', 'gear', 'heading', 'yaw', 'drift', 'slip', 'linger', 'gauge', 'boost', 'instant', 'hits'].map((id) => [id, document.getElementById(id)]));
 
 function draw(state, visual, frameDeltaMs) {
   const [, , heading, vx, vy, yawRate, speed, gauge, boost, drifting, , hits, linger, , , slip] = state;
@@ -87,7 +135,7 @@ function draw(state, visual, frameDeltaMs) {
   telemetry.linger.textContent = `${linger.toFixed(1)}초`;
   telemetry.gauge.textContent = `${Math.round(gauge)}%`;
   telemetry.boost.textContent = `${boost.toFixed(1)}초`;
-  telemetry.exceed.textContent = `${state[17].toFixed(1)}초`;
+  telemetry.instant.textContent = `${state[17].toFixed(1)}초`;
   telemetry.hits.textContent = Math.round(hits);
   const [phase, countdown, lap, gate, raceTime, finishTime] = state.slice(19, 25);
   raceReadout.textContent = phase === 1 ? `출발 ${Math.ceil(countdown)}`
@@ -102,9 +150,9 @@ function frame(time) {
   previousTime = time;
   while (accumulator >= 16) {
     previousState.set(currentState);
-    wasm.p5136_preview_step_v2(statePointer, 16, +controls.throttle, +controls.brake,
-      (+controls.left) - (+controls.right), +controls.drift, +controls.boost, +controls.exceed);
-    currentState.set(new Float32Array(wasm.memory.buffer, statePointer, 25));
+    wasm.demo_step(16, +controls.throttle, +controls.brake,
+      (+controls.left) - (+controls.right), +controls.drift, +controls.boost);
+    currentState.set(new Float32Array(wasm.memory.buffer, statePointer, 32));
     accumulator -= 16;
   }
   interpolatePreviewState(previousState, currentState, accumulator / 16, visualState);
@@ -113,16 +161,19 @@ function frame(time) {
 }
 
 try {
-  const response = await fetch('./p5136_wasm_core.wasm?v=2');
+  const response = await fetch('./demo_physics.wasm?v=1', {cache: 'no-store'});
   if (!response.ok) throw new Error(`Wasm 다운로드 실패: ${response.status}`);
-  const result = await WebAssembly.instantiate(await response.arrayBuffer());
+  const result = await WebAssembly.instantiate(await response.arrayBuffer(), {
+    wasi_snapshot_preview1: { proc_exit: () => {}, random_get: () => 0 },
+  });
   wasm = result.instance.exports;
-  statePointer = wasm.p5136_preview_new();
+  statePointer = wasm.demo_new();
   if (!statePointer) throw new Error('Wasm 상태 생성 실패');
-  currentState = new Float32Array(new Float32Array(wasm.memory.buffer, statePointer, 25));
+  wasm.demo_set_steer_angle(Number(steerAngle.value));
+  currentState = new Float32Array(new Float32Array(wasm.memory.buffer, statePointer, 32));
   previousState = new Float32Array(currentState);
   visualState = new Float32Array(currentState);
-  status.textContent = '3D / Wasm 실행 중';
+  status.textContent = '데모 C 물리 / Wasm 실행 중';
   requestAnimationFrame(frame);
 } catch (error) {
   status.textContent = `실행 실패: ${error.message}`;

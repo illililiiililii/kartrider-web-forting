@@ -70,6 +70,7 @@ export function createPreviewRenderer(canvas) {
   const proxy = new THREE.Group();
   kart.add(proxy);
   let original = null;
+  let originalWheels = [];
   const shell = material(0x33b6e4, 0.32, 0.32);
   const dark = material(0x192936, 0.18, 0.6);
   const rubber = material(0x161a21);
@@ -99,6 +100,15 @@ export function createPreviewRenderer(canvas) {
   proxy.add(helmet);
   box(proxy, 0.6, 0.43, 0.6, -0.38, 0.99, 0, material(0x4562b5));
   box(proxy, 0.09, 0.16, 0.55, -0.03, 1.12, 0, dark);
+  const boostFlames = new THREE.Group();
+  for (const side of [-0.43, 0.43]) {
+    const flame = new THREE.Mesh(new THREE.ConeGeometry(0.22, 1.2, 12),
+      new THREE.MeshBasicMaterial({ color: 0xffd54f, transparent: true, opacity: 0.8 }));
+    flame.rotation.z = Math.PI / 2;
+    flame.position.set(-1.55, 0.45, side);
+    boostFlames.add(flame);
+  }
+  kart.add(boostFlames);
 
   async function setKart(name) {
     const response = await fetch(`./assets/${name}.mesh.json`);
@@ -108,6 +118,7 @@ export function createPreviewRenderer(canvas) {
       throw new Error('알 수 없는 카트 메시 형식');
     }
     const group = new THREE.Group();
+    const nextWheels = [];
     for (const part of data.parts) {
       const geometry = new THREE.BufferGeometry();
       geometry.setAttribute('position', new THREE.Float32BufferAttribute(part.positions, 3));
@@ -116,7 +127,18 @@ export function createPreviewRenderer(canvas) {
       const color = part.name.startsWith('wheel') ? 0x262a31
         : part.name.startsWith('lamp') ? 0xe4f0f2
         : part.name === 'seat' ? 0xcbd4da : 0x556b79;
-      group.add(new THREE.Mesh(geometry, new THREE.MeshStandardMaterial({ color, side: THREE.DoubleSide })));
+      const mesh = new THREE.Mesh(geometry, new THREE.MeshStandardMaterial({ color, side: THREE.DoubleSide }));
+      if (part.name.startsWith('wheel')) {
+        geometry.computeBoundingBox();
+        const center = new THREE.Vector3();
+        geometry.boundingBox.getCenter(center);
+        geometry.translate(-center.x, -center.y, -center.z);
+        const pivot = new THREE.Group();
+        pivot.position.copy(center);
+        pivot.add(mesh);
+        group.add(pivot);
+        nextWheels.push({ pivot, mesh, front: center.x > 0 });
+      } else group.add(mesh);
     }
     if (original) {
       kart.remove(original);
@@ -125,6 +147,7 @@ export function createPreviewRenderer(canvas) {
       });
     }
     original = group;
+    originalWheels = nextWheels;
     kart.add(group);
     proxy.visible = false;
     return `${data.source}: ${data.parts.length}개 부품`;
@@ -148,22 +171,34 @@ export function createPreviewRenderer(canvas) {
       camera.aspect = width / height;
       camera.updateProjectionMatrix();
     }
-    kart.position.set(x, 0, -y);
+    kart.position.set(x, state[14] || 0, -y);
     kart.rotation.y = heading;
     shell.color.setHex(boost > 0 ? 0xffcd4f : drifting ? 0xf779a8 : 0x33b6e4);
+    boostFlames.visible = boost > 0;
     const localSpeed = vx * Math.cos(heading) + vy * Math.sin(heading);
     for (const wheel of wheels) wheel.rotation.z -= localSpeed * Math.min(frameDeltaMs, 50) / 1000 / 0.43;
+    for (const wheel of originalWheels) {
+      wheel.mesh.rotation.z -= localSpeed * Math.min(frameDeltaMs, 50) / 1000 / 0.2;
+      wheel.pivot.rotation.y = wheel.front ? state[13] : 0;
+    }
 
-    if (overhead) desired.set(x, 28, -y + 0.01);
-    else desired.set(x - Math.cos(heading) * 8.8, 5.3, -y + Math.sin(heading) * 8.8);
-    targetLook.set(x + Math.cos(heading) * (overhead ? 0 : 3.2), 0.8,
-      -y - Math.sin(heading) * (overhead ? 0 : 3.2));
+    if (overhead) {
+      desired.set(x, 28, -y + 0.01);
+      targetLook.set(x, 0, -y);
+    } else {
+      desired.set(Math.max(-78.5, Math.min(78.5, state[25])), state[27],
+        Math.max(-78.5, Math.min(78.5, -state[26])));
+      targetLook.set(state[25] + state[28] * 10, state[27] + state[30] * 10,
+        -state[26] - state[29] * 10);
+      camera.fov = state[31] || 75;
+      camera.updateProjectionMatrix();
+    }
     if (firstFrame) {
       camera.position.copy(desired);
       look.copy(targetLook);
       firstFrame = false;
     } else {
-      const follow = 1 - Math.exp(-Math.min(frameDeltaMs, 50) / (overhead ? 90 : 115));
+      const follow = 1 - Math.exp(-Math.min(frameDeltaMs, 50) / (overhead ? 90 : 40));
       camera.position.lerp(desired, follow);
       look.lerp(targetLook, follow);
     }

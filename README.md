@@ -1,117 +1,85 @@
-# P5136 WebAssembly port
+# KartRider demo C physics — local WebAssembly prototype
 
-This is a new, from-scratch browser port based on the supplied Korean KartRider P5136 client, its expanded data, and measurements taken from that client. No code or tuning values from the rejected earlier web project are used.
+The active browser game now links the **unmodified** `kart_dynamics.c`,
+`kart_simulation.c`, and `kart_camera.c` from
+[KartriderDemoPhysics](https://github.com/overjoy1008/KartriderDemoPhysics)
+plus `kart_demo_data.c` into WebAssembly. Its simulation uses the demo's 5ms maximum substep, four
+wheel contacts, suspension, longitudinal and lateral/drift force pipeline,
+drag, pose integration, collision response, and chase-camera update. Our
+`src-demo/demo_bridge.c` supplies a temporary flat test world, square walls,
+drift-gauge hypothesis, and three-lap test race. This is a **2004 demo physics
+prototype**, not a verified P5136 game. The former Rust physics investigation
+is preserved in [`OLD_PYS`](OLD_PYS/README.md) and is not loaded in the browser.
 
-The repository is still at the physics-evidence gate. The temporary 3D browser prototype below is for input, rendering, and Wasm smoke testing, **not** a playable P5136 port or original-physics validation.
+## Build and play locally (Windows)
 
-The [2004 demo C physics implementation](https://github.com/overjoy1008/KartriderDemoPhysics) was inspected as requested. Its 5 ms scheduler and recovered force pipeline are useful reference evidence, but its source has no visible redistribution license and it is not yet integrated. See [`docs/demo-physics-integration.md`](docs/demo-physics-integration.md). The preview now interpolates fixed-step Wasm states for rendering and smooths camera position and aim together; this only changes presentation, not driving physics.
-
-## Try the temporary 3D prototype
-
-The local server is currently available at [http://127.0.0.1:4173/](http://127.0.0.1:4173/) on this computer. To rebuild and restart later, run these commands in this repository:
+1. Obtain the demo source in a separate directory. This project was tested
+   against commit `a9eade1f343764b10fb6dce5fec3828756fad2e6`.
+2. Obtain Zig 0.13.0 from the [official downloads](https://ziglang.org/download/0.13.0/)
+   and extract it outside this repository.
+3. Run the local-only builder, passing the actual paths if they differ from
+   the sibling `work` defaults:
 
 ```powershell
-.\tools\build-preview.ps1
+.\tools\build-demo-physics.ps1 -DemoSource 'C:\path\to\KartriderDemoPhysics' -ZigExe 'C:\path\to\zig.exe'
 python -m http.server 4173 --bind 127.0.0.1 --directory web-preview
 ```
 
-Use arrows or numpad 8/2/4/6 to drive, Shift to drift, Ctrl for boost, Space for a **provisional** Exceed pulse, and R to reset. W/A/S/D also work. To test reverse drifting, hold Down until moving backward, then press Shift and a steering key. Touch buttons and chase/overhead camera views are provided. Three.js renders the selected **actual P5136 `.1s` kart geometry** when locally converted files exist; materials, textures, driver, and square test arena remain provisional. Position, heading, driving forces, drift, boost, and wall collision remain in Rust/Wasm. The 1–2 ms substep schedule, steering expressions, and speed-squared drift-release scalar are recovered from the client; **how that scalar affects tire forces remains unknown**. Its use as a persistence timer, reverse-drift handling, steering settings, wall restitution, drive force, grip, gauge, boost and Exceed are provisional. This prototype is intentionally separate from the required original-client time-series comparison.
+Before starting the server, prepare the track cards and minimaps from the
+user's unpacked original files (the script default points at the supplied
+`C:\Users\user\Downloads\kart web` folder):
 
-To recreate local kart geometry (Python 3.12, no third-party package required), run:
+```powershell
+.\tools\prepare-local-tracks.ps1
+```
+
+The locally copied artwork is Git-ignored. The three choices currently show
+the original `beach_I01`, `beach_I02`, and `village_R01` artwork, **not** their
+playable 3D courses. The active physics still collides with a temporary square
+test world and its ring-shaped four-gate course.
+
+Open [http://127.0.0.1:4173/](http://127.0.0.1:4173/). The generated
+`web-preview/demo_physics.wasm` is ignored by Git and must be built locally.
+The demo repository snapshot inspected here has no visible redistribution
+license. Neither its C source nor a compiled derivative is committed here.
+The bridge and build recipe alone cannot make a fresh public checkout playable
+until the user provides a locally obtained demo source and builds its Wasm.
+
+Controls: arrows or numpad 8/2/4/6 (W/A/S/D also work), Shift drift, Ctrl
+booster after gauge fills, R reset. Use the slider to set the demo's
+`max_steer_angle_deg` from 1° to 30° in 0.1° increments; the adjacent number
+box accepts an exact value and the setting is saved locally. The source
+default is 10°. `Space`/Exceed is disabled until later P5136 integration.
+The separate demo physics selector loads the source's `cotten5`, `practice1`,
+`saber5`, or `solid5` dynamics and body geometry; the P5136 V1 mesh selection
+is visual only and does not pretend to be that demo kart. Click “3랩 테스트 레이스
+시작” for a 3-second countdown and four ordered test
+checkpoints per lap. The course and gauge storage rules are not original data.
+
+The local original `.1s` kart geometry can be converted without committing
+copyrighted assets:
 
 ```powershell
 python .\tools\convert-1s-preview.py '..\..\work\original-assets\whiteKnight1-model.1s' '.\web-preview\assets\whiteKnight1.mesh.json'
 python .\tools\convert-1s-preview.py '..\..\work\original-assets\cotton11-model.1s' '.\web-preview\assets\cotton11.mesh.json'
 ```
 
-Those two local copies were extracted from the supplied original data. Generated model JSON is ignored by Git and is **not published to the public remote**; a fresh checkout without those files displays the fallback geometric kart. The mesh parser adapts the [MIT-licensed 1S converter](https://github.com/VT-Tuzki/kartrider_model_1s_to_obj); its required notice is in `tools/THIRD_PARTY_1S_LICENSE.txt`. The two converted files total about 168 KB, but texture size and loading time are not yet measured.
+If those ignored local meshes are absent, the 3D renderer shows a temporary
+geometric kart. Converted kart wheels now steer/spin from the C physics state,
+and timed boost shows a basic exhaust effect. Character and track asset
+conversion remains incomplete.
 
-## Implemented now
-
-- Rust core with the original tick scheduler: elapsed time is clamped to 500 ms and split into 2 ms substeps plus a possible 1 ms tail.
-- Exact decoder and all 70 named fields for the 235-byte effective `KartSpec` race-start block.
-- Version-pinned native layout constants, exact body-axis velocity projection and speed magnitude, recovered scalar suspension, input-channel selection, drift-input transitions and release countdown, the initial plus speed-attenuated steering target, the forward force-vector path, the normal linear-velocity substep, one upward-surface contact velocity branch, and the post-collision position substep.
-- Dependency-free raw WebAssembly ABI for querying and writing substep plans.
-- Version-pinned 32-bit native telemetry, injector, and scan-code input driver for controlled original-client captures.
-- Checked-in controlled-run evidence and a deterministic PowerShell slicer/summary generator.
-- Static and runtime evidence ledger in [`docs/physics-evidence.md`](docs/physics-evidence.md).
-
-Unresolved work is listed without euphemism in [`reader.md`](reader.md).
-
-## Rust tests and WebAssembly build
-
-The commands below keep downloaded toolchains and build artifacts outside the repository. They assume Rust with the `wasm32-unknown-unknown` target is available.
+## Verification
 
 ```powershell
-$env:CARGO_HOME = 'C:\Users\user\Documents\Codex\2026-10-20\p5136-webassembly-windows-url-c-rust-2\work\.toolchains\cargo'
-$env:RUSTUP_HOME = 'C:\Users\user\Documents\Codex\2026-10-20\p5136-webassembly-windows-url-c-rust-2\work\.toolchains\rustup'
-$env:PATH = "$env:CARGO_HOME\bin;$env:PATH"
-
-cargo test --target-dir '..\..\work\kart-web-target'
-cargo build --target wasm32-unknown-unknown --release --target-dir '..\..\work\kart-web-target'
-node --test tools/test-frame-interpolation.mjs
+.\tools\build-demo-physics.ps1
+node --test tools\test-demo-physics.mjs tools\test-frame-interpolation.mjs
 ```
 
-The verified release artifact is:
-
-`..\..\work\kart-web-target\wasm32-unknown-unknown\release\p5136_wasm_core.wasm`
-
-The current preview Wasm SHA-256 is `FD19A3137121F81986ECE6B2097CB8E9FFADBB07A79727C992DF79C658533694` (39,340 bytes). It exports WebAssembly memory plus:
-
-- `p5136_abi_version`
-- `p5136_plan_substeps` and `p5136_substep_count`
-- `p5136_validate_kart_spec`
-- `p5136_project_world_velocity`
-- `p5136_speed_magnitude`
-- `p5136_suspension_scalar_force`
-- `p5136_apply_drift_input`
-- `p5136_drift_release_scalar`
-- `p5136_decay_drift_release_scalar`
-- `p5136_base_steer_radians`
-- `p5136_speed_attenuated_steer_radians`
-- `p5136_forward_drive_input` and `p5136_reverse_brake_input`
-- `p5136_forward_force_vector`
-- `p5136_integrate_linear_velocity`
-- `p5136_integrate_position_after_collision`
-- `p5136_upward_contact_velocity`
-- `p5136_uses_upward_contact_velocity_branch`
-- `p5136_wall_contact_reported_speed`
-- `p5136_preview_new`, `p5136_preview_step`, `p5136_preview_step_v2`, `p5136_preview_reset`, `p5136_preview_start_race`
-
-Fifty-three Rust unit tests pass, including rear-slip gauge integration and ordered three-lap checkpoint progression. The preview now charges its 0–100 gauge from rear lateral velocity and yaw rate only while drifting. `PREVIEW_GAUGE_COEFFICIENT` in `src/preview.rs` is adjustable; this is the [demo project's explicitly provisional gauge hypothesis](https://github.com/overjoy1008/KartriderDemoPhysics/blob/main/demo/kart_gauge.h), not a recovered P5136 charging formula. The browser includes a temporary ring test circuit with a Wasm-owned three-second countdown, four ordered checkpoints, three laps, clock, and finish state. This is not an original track. Browser QA confirmed the start button, countdown, and transition to lap 1; a complete human-driven three-lap finish remains unverified.
-
-Run the current local preview with `python -m http.server 4173 --directory web-preview` and open `http://127.0.0.1:4173/`. Build the browser Wasm with `.\tools\build-preview.ps1` after changing Rust code. The preview contains only locally converted assets when the user has generated them; a fresh checkout shows a placeholder kart. The original-client C demo has no reuse license in the inspected repository snapshot, so its source or binary has not been copied into this public project. The P5136-equivalent 3D force model, original character/track conversion, and original camera remain incomplete.
-
-## Native original-client instrumentation
-
-This requires 32-bit MSVC because the supplied client is 32-bit.
-
-```powershell
-cmake -S tools\native-telemetry -B '..\..\work\telemetry-build' -A Win32
-cmake --build '..\..\work\telemetry-build' --config Release --parallel
-```
-
-The telemetry DLL refuses to hook a client whose nine-byte physics-tick prologue differs from the pinned P5136 build. The callback only fills a preallocated ring buffer; CSV I/O runs on a separate below-normal-priority thread. Input uses keyboard scan codes because virtual-key events reached the old UI but not the game's DirectInput driving path.
-
-The extended telemetry DLL was rebuilt with `/W4 /WX`; its current SHA-256 is `1F7E43DFE5B0F16FC5B85575A188FDFC962726895F8AE8438CE8789D3467B01E`.
-
-## Reproduce the checked-in controlled trace
-
-```powershell
-.\tools\trace-slice.ps1 `
-  -TelemetryPath '..\..\work\analysis\controlled-input-telemetry-04.csv' `
-  -EventsPath '..\..\work\analysis\controlled-input-events-04.csv' `
-  -OutputDirectory '.\evidence'
-```
-
-The committed outputs are:
-
-- `evidence/controlled-input-events-04.csv`: exact injected input events.
-- `evidence/original-controlled-04.csv`: 822 original-client tick samples aligned to the driven interval.
-- `evidence/original-controlled-04-summary.csv`: phase-level speed, gauge, and displacement measurements.
-
-The browser preview URL is `http://127.0.0.1:4173/`, but it is not an original-equivalent game. A Rust replay producing the same comparison schema and quantified error against this original trace is still missing.
-
-## Source boundary
-
-Allowed inputs are the supplied original folders, the supplied `P5136_Rust-main` protocol/asset reference, and newly acquired REA/Ghidra and runtime evidence. The quarantined prior web project is explicitly not an input.
+The current local build is about 755 KB. In direct Wasm tests, the default
+demo kart accelerated to about 156 km/h after 1.6 seconds on the flat test world; with
+identical short inputs, 5°/10°/20° steering produced increasing heading
+changes. Browser QA confirmed Wasm loading, the actual `.1s` kart, the slider,
+and the race countdown. Full human-driven lap completion and original-client
+trajectory equivalence are **not** verified. See [`reader.md`](reader.md) for
+remaining work and limitations.

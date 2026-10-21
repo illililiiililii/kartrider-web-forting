@@ -1,69 +1,45 @@
-# 분석 및 구현 과제
+# Remaining work and exact boundaries
 
-본 문서는 매우 솔직하게 작성되었습니다. 정적 분석이나 런타임 데이터로 뒷받침되지 않는 한, 특정 값을 '원본 클라이언트의 동작'으로 간주하지 않습니다.
-
-현재 `web-preview/`의 3D 시험장은 사용자가 조작과 Wasm 연결을 빠르게 확인하기 위한 임시 화면입니다. 첫 피드백에서 일반 조향이 지나치게 빠르고, 벽 반발이 약하며, 드리프트가 키 해제 직후 끝난다고 지적됐습니다. 이에 `src/preview.rs`의 임시 조향 수치를 낮추고 사각 벽 반발을 강화했으며 드리프트 해제 후 미끄러짐을 유지했습니다. 원본 근거가 있는 것은 서브스텝 스케줄, 기본/속도 감쇠 조향식의 형태, 드리프트 해제 시 속도 제곱 기반 `+0x640` 스칼라와 그 감소식입니다. 이 스칼라를 지속 드리프트 시간으로 직접 사용하고 속도를 `×3.6`으로 변환한 것은 시험용 추정이며, 실제 전/후륜 힘에 연결되는 원본 식은 아직 복원되지 않았습니다. 가속·브레이크·횡그립·차체 회전·벽 반발·부스터·게이지 수치도 원본 검증을 마치지 않았습니다. 따라서 이 시험장의 주행감으로 원본 대비 물리 검증 완료를 주장하지 않습니다.
-
-후진 드리프트는 `src/preview.rs`에서 전진 전용 진입 조건을 종방향 속도의 절댓값 기준으로 수정했습니다. 원본 P5136의 후진 드리프트 허용 조건·회전력은 확인하지 못했습니다. 최신 사용자 피드백에 따라 부스터 중 드리프트 회전을 낮추고 후진 드리프트 회전을 높였지만 이는 여전히 시험용 수치이며 원본 비교 검증은 아닙니다. `tools/convert-1s-preview.py`로 백기사 V1·코튼 V1의 실제 `.1s` 카트 기하를 로컬에서 변환해 브라우저에 연결했습니다. 다만 재질·원본 텍스처, 바퀴/핸들 애니메이션, 캐릭터, 주행장 및 원본 물리/충돌은 아직 연결되지 않았습니다. 변환 JSON은 공개 Git에 포함되지 않아 새 체크아웃에서는 임시 도형으로 대체됩니다.
-
-## 확인 완료된 항목
-
-- 메인 틱(tick) 타이밍을 복구했습니다. 경과 시간을 최대 500ms로 제한(clamp)한 뒤, 2ms 단위로 누적(integrate)하며, 마지막에 1ms를 추가할 수 있도록 구성했습니다.
-- 주요 네이티브 호출 순서를 메모리 주소 수준에서 복구했습니다.
-- `GoPlayKart + 0x90` 및 `+0xC0`은 런타임 분석을 통해 월드 위치(world position)와 선속도(linear velocity)임을 확인했습니다.
-- `+0x188`은 드리프트 상태가 아니라, 바퀴 접지 상태를 종합적으로 나타내는 값입니다. 각 바퀴의 접지 여부를 나타내는 바이트는 `+0x9C4`부터 시작됩니다.
-- 서스펜션 루프와 그 압축/감쇠(compression/damping) 로직을 디컴파일했습니다.
-- 시리얼라이저(serializer) `0x00A3DCD0`을 분석하여 네이티브 `KartSpec` 객체의 루트와 핵심 필드 오프셋을 복구했습니다.
-- 235바이트 규모의 `KartSpec` 레이아웃과 기존 스칼라(scalar) 데이터 디코딩 방식을 Rust로 구현하고, 이를 WebAssembly로 컴파일했습니다.
-- 제어된 환경에서의 스캔 코드(scan-code) 실행 결과와 결정론적 단계 요약을 `evidence/` 디렉토리에 포함했습니다.
-
-## 물리 엔진 관련 미해결 과제
-
-- 종방향 힘(longitudinal force)의 누적, 공기 저항(drag) 적용, 그리고 종단 속도(terminal speed) 계산식과 관련된 '보호된 게터(protected getter)' 호출을 `KartSpec` 필드 이름으로 매핑해야 합니다.
-- 전진 힘 벡터의 외적·3단계 배율·누적 순서는 복구했지만, `+0x9C8` 벡터의 주행 중 값과 모든 모드의 기본 힘·부스터 배율 선택 조건은 원본 런타임에서 다시 확인해야 합니다. 다음 분석 지점은 `0x00A370A0`의 `0x00A37135..0x00A37474` 구간과 확장 텔레메트리의 `+0x9C8`, `+0xB44` 열입니다.
-- 정상 입력의 선속도 적분 `(힘 + 보조 힘) / 질량 × dt`는 `0x00A3A7F0`에서 복원했습니다. 힘 유효성 검사 `0x009C96E0`에 따른 속도 초기화와 회전·토크 적분은 아직 연결되지 않았습니다. 다음 분석 지점은 `0x00A3A7F0`의 `0x00A3A810..0x00A3A920` 및 메인 틱의 해당 호출 전후 상태입니다.
-- 일반 주행의 `0x00A3CB90`에서 충돌 응답 뒤 `위치 += 충돌 보정된 속도 × dt`가 수행됨을 확인해 Rust/Wasm에 독립 계산으로 구현했습니다. `0x00A3AB30`의 위를 향한 면 접촉 분기에 대해 접촉 조회 결과·반복 한계·진입 속도·법선 Z 성분 `>0.65`·`+0xDB0` 우회 조건, 그리고 원본 `0.7`을 사용한 속도 반사 산술을 구현했습니다. 앞서 이를 벽 충돌 분기와 독립된 접촉 스칼라로 기록한 것은 잘못되어 수정했습니다. 실제 벽면 응답의 다른 분기, 접촉 조회 자체, 각속도 반응, `0x00A3B860`의 별도 응답, 원본 트랙 메시 질의와 복귀는 아직 구현되지 않았습니다. 따라서 벽 충돌 후 바닥을 뚫는 문제가 해결되었다고 주장할 수 없습니다. 다음 분석 지점은 `0x00A3AEBE..0x00A3B809`의 벽면 분기, `0x00A3B860`의 대응 분기 및 원본 트랙 메시 연결입니다.
-- `0x00A37920`에 정의된 전/후륜 슬립 각도 및 횡방향 힘(lateral-force) 곡선에 대해, 수식을 복구하고 충돌이 없는 제어된 환경에서 추적(trace) 분석을 수행해야 합니다.
-- 조향 목표의 기본 각도와 속도별 `exp` 감쇠식은 복구했지만 `GoPlayKart+0xB38` 보호 값의 실시간 값·역할, 조향 메모리 필드 `+0xA28`, 그 뒤의 타이어 토크 연결은 아직 확인해야 합니다. 다음 분석 지점은 `0x00A37A4F..0x00A37BBB`와 확장 텔레메트리의 `+0xB38` 열입니다.
-- 드리프트 해제 시 `+0x640 = 10 × (월드 속도/120)²`가 특정 조건에서 기록되고 `0x00A37920`에서 매 서브스텝 `max(값−dt, 0)`으로 감소하는 것은 확인했습니다. 이 값이 양수인 동안의 전·후륜 힘과 토크 변화는 미복원입니다. 다음 분석 지점은 `0x00A38218` 및 `0x00A38668` 전후의 분기와 확장 텔레메트리입니다.
-- 드리프트 진입, 유지, 연속 드리프트, 종료 조건(predicate)을 식별하고 상태 필드에 이름을 지정해야 합니다. `+0xA9C`는 드리프트 상태일 가능성이 있는 후보일 뿐, 완전한 드리프트 상태로 확정된 것은 아닙니다.
-- `src/gauge.rs`에는 원본 `0x00A349B0..0x00A34A03`의 속도 충전 항(`ChargeBoostBySpeed × dt`)과 `0x00A38E46..0x00A38ED2`의 상한 적용만 독립적으로 복원했습니다. 웹 시험장 `src/preview.rs`에는 별도로 KartriderDemoPhysics의 후륜 슬립 가설을 연결했지만, 이는 원본 P5136 공식이 아닙니다. 충전 계수는 `PREVIEW_GAUGE_COEFFICIENT`로 분리했습니다. 원본의 충전 자격 조건, 모드 배율, 슬롯 저장/소모와 지속 시간은 여전히 미복원입니다.
-- 출발 부스트(start boost) 및 드리프트 종료 직후의 순간 부스트(instant boost) 조건은 아직 복구되지 않았습니다.
-- 서스펜션 계산식의 형태는 파악했으나, 스프링/댐퍼 파라미터를 가져오는 '보호된 게터'와 접지 레이(ray) 기하 구조에 대한 명확한 명칭은 아직 확인되지 않았습니다.
-- 중력, 점프, 공중 자세, 바닥/벽면 충돌 반응, 그리고 복구(recovery) 로직에 대해서는 추가적인 정적 분석을 통한 명칭 부여와 독립적인 실행 테스트가 필요합니다. - 현재 제어 추적은 복구 중에 트랙 형상을 따라가거나 근접합니다. 이는 클라이언트 응답에 대한 유효한 증거이지만, 독립적인 직선 보정 실행은 아닙니다.
-
-- 아직 Rust에서 동등한 포스 적분기는 개발되지 않았습니다. Rust 코어는 현재 증거 기반 스케줄링, 프로토콜 디코딩, 조향 목표·드리프트 타이머·입력 채널·서스펜션의 검증된 부분 계산만 구현하고 있습니다.
-
-- 확장된 텔레메트리 DLL은 빌드되었지만, Windows에서 새로 권한이 상승된 클라이언트에 대한 원격 주입 도우미 실행을 거부했습니다. 이 제어는 우회되지 않았으며, 추가된 방향/매개변수 열에 대한 새로운 캡처가 아직 진행 중입니다.
-
-## 비교 기준
-
-- Rust 상태 행은 위치, 방향, 선형/각도/국부 속도, 접촉 마스크, 드리프트 상태 및 부스터 상태를 포함하도록 확장되어야 합니다.
-
-- 동일한 유효 카트 블록, 트랙 시작 변환 및 입력 타임스탬프가 네이티브 실행과 Rust 실행에서 재현되어야 합니다.
-
-- 시계열 비교는 속도, 3차원 위치, 래핑된 방향, 각속도, 접촉, 드리프트 상태 및 게이지 오차를 보고해야 합니다.
-
-- 큰 불일치는 브라우저 UI 작업 시작 전에 수정하고 다시 실행해야 합니다.
-
-## 에셋
-
-- 확장된 `_rhoOut` 트리에는 캐릭터 및 트랙 데이터가 포함되어 있으며, 제공된 `Data\kart.rho`에는 930개의 `model.1s` 항목이 있습니다.
-
-- White Knight 및 Cotton 카트 모델과 BML 파라미터에 대한 정확한 추출된 픽스처가 존재합니다.
-
-- 카트 `model.1s`의 정점/삼각형/계층 변환은 로컬 미리보기 변환기로 읽지만 UV·텍스처 참조·스켈레톤·애니메이션·충돌 시맨틱은 아직 읽지 않습니다. 다음 분석 지점은 카트의 UV 블록과 관련 BML/PNG 매핑입니다.
-
-- `C:\Users\user\Downloads\kart web\KartRider_5136_01_UNPACK\KartRider_5136_01_UNPACK\_rhoOut\character\dao\model.1s`와 `...\character\bazzi\model.1s`를 카트 변환기로 시험하면 얼굴 메시 하나만 나옵니다(각 25/38개 정점). 파일 헤더는 카트의 `AA 47 49 02 8C 07`이 아니라 `AA 47 44 04 6F 18`이며, `dao\f03.1s`는 메시를 찾지 못합니다. 이 형식의 `AA 47 23 05 33 23` 몸체/스켈레톤 노드와 `f*.1s` 프레임 참조를 별도로 복원해야 합니다. 얼굴 메시만 카트에 붙여 실제 캐릭터인 것처럼 표시하지 않습니다.
-
-- `...\_rhoOut\track\beach_I01\track.1s`는 3,390,794바이트이며 헤더 `AA 47 98 05 F9 28`, `rootRelement`/`Scene Root` 계층을 갖습니다. 카트 변환기는 오프셋 `0x86`의 자식 노드에서 헤더 불일치로 실패합니다. 다음 분석 지점은 트랙 전용 `Relement`, `ReTriList`/`ReTriStrip` 기하, 계층 변환과 원본 충돌 노드 선택입니다. 미니맵·체크포인트·랩 수의 원본 참조도 아직 연결되지 않았습니다.
-
-- 이전에 거부된 웹 프로젝트의 모델은 복사되지 않습니다.
-
-## 브라우저 시스템 미실행
-
-현재 `http://127.0.0.1:4173/`에서 Wasm 주행 시험장과 로컬 변환된 원본 카트 메시 두 종류가 동작합니다. 방향키/넘버패드, Shift 드리프트, Ctrl 부스터, Space 익시드, R 리셋 입력은 연결됐으나 익시드의 힘·지속시간/쿨다운 및 R의 체크포인트 리셋은 임시/미구현입니다. `src/race.rs`에 임시 링 코스용 카운트다운·순서 체크포인트·3랩·완주 판정을 추가했고 브라우저에서 출발/랩 타이머 전환을 확인했습니다. 원본 트랙의 체크포인트와 충돌 메시가 아닙니다. 원본 3D 캐릭터·트랙·로비/HUD·방 멀티플레이·오디오는 미완료입니다. 본 URL은 완성 게임이 아니며, 원본 물리 시계열 비교 게이트도 통과하지 못했습니다.
-
-## 거부된 증거
-
-제어된 실행 `01`부터 `03`까지는 가상 키 주입을 사용했습니다. 메뉴 UI는 작동했지만 게임의 DirectInput 주행 상태에 도달하지 못하여 카트가 정지된 상태로 유지되었습니다. 이러한 데이터는 실패한 방법에 대한 기록으로만 보관되며 물리적 피팅에서 제외됩니다. 실행 '04'는 스캔 코드 입력을 사용하며, 이는 최초로 유효한 제어 주행 추적입니다.
+- Active driving calls the unmodified C demo source (pinned commit in README),
+  but this is the **2004 demo**. KartRider P5136 `BodyParam`, `KartSpec`, S0–S8,
+  V1/XUN, Charger, Exceed, and boost timings are not integrated. The archived
+  investigation and fixtures are in `OLD_PYS/`. Future comparison should run
+  the same P5136 input trace against the demo Wasm before mixing formulas.
+- `src-demo/demo_bridge.c` supplies a flat ground ray query and square wall
+  callback. Its boundary clamp is test-world code, not part of the demo's
+  collision response. Original track meshes, slopes, jumps, checkpoints, and
+  recovery are not connected. Next: feed converted track collision triangles
+  into `KartSimulationWorld` ground/body callbacks.
+- The drift gauge uses the demo's **hypothesis** `4 * |speed| * |rearSlip| * dt`
+  while grounded/drifting. Its 100-unit capacity and direct Ctrl consumption
+  are bridge rules, not recovered original boost-slot logic. The coefficient
+  is currently in `src-demo/demo_bridge.c`; expose it in the UI if tuning is
+  needed later.
+- The camera pose and FOV come from `kart_camera.c`; the renderer maps them into
+  Three.js coordinates and clamps the camera inside the temporary walls. This
+  is not proven to be P5136's camera. Overhead view remains a renderer option.
+- Original White Knight/Cotton kart geometry can be locally converted and
+  displayed; their wheel parts rotate and the front pivots read the C demo's
+  steering-angle state. UVs/textures and 3D driver characters are missing. The provided
+  `character/dao/model.1s`, `character/bazzi/model.1s`, and
+  `track/beach_I01/track.1s` use different node layouts than the current kart
+  converter. Next: extend the 1S parser for their mesh hierarchy, then map
+  materials, animation and track collision surfaces. Do not commit unlicensed
+  original models or textures.
+- Original `track/beach_I01`, `track/beach_I02`, and `track/village_R01`
+  `xt_trackCard.png`/`xt_minimap.png` are now locally copied and shown by
+  `tools/prepare-local-tracks.ps1`. This is artwork selection only. Attempting
+  `tools/convert-1s-preview.py` on `track/beach_I01/track.1s` fails at offset
+  `0x86`: its `AA 47 F8 03 FC 14` geometry nodes differ from the kart mesh
+  parser's `AA 47 F6 04 2A 19` nodes. Next: implement the track-specific 1S
+  geometry/triangle parser, then feed its drive and collision surfaces to both
+  Three.js and the C world query. Do not represent card selection as a loaded
+  track.
+- The ring race has a countdown, ordered gates, lap timer, and finish state in
+  the C bridge; it is a test course, not a finished game. A complete manually
+  driven 3-lap race has not yet been verified. Lobby, character/track selection,
+  original HUD, audio, room multiplayer, and results remain missing.
+- The demo repository snapshot has no visible `LICENSE`/`COPYING` file. This
+  repository does not distribute its source or generated Wasm. Local users must
+  supply it and run `tools/build-demo-physics.ps1`. Publishing a compiled build
+  requires permission or a compatible license from the source author.

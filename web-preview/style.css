@@ -13,6 +13,10 @@ p { margin: 0; line-height: 1.5; color: #afbdd1; }
 canvas { display: block; width: 100%; height: min(72vh, 650px); min-height: 420px; background: #9bc8d4; }
 .scene-label { position: absolute; left: 18px; top: 16px; padding: 9px 12px; border: 1px solid #ffffff75; border-radius: 8px; color: white; background: #10263ab5; font-size: 12px; font-weight: 800; letter-spacing: .09em; pointer-events: none; }
 .scene-label span { display: block; margin-top: 2px; color: #d6e7ef; font-weight: 500; letter-spacing: 0; }
+.minimap { position: absolute; right: 14px; bottom: 15px; width: 150px; padding: 8px; border-radius: 9px; background: #10263ad9; font-size: 11px; text-align: center; }
+.minimap img { display: block; width: 100%; max-height: 145px; object-fit: contain; }
+.track-card { display: block; width: 100%; max-height: 140px; margin-bottom: 7px; object-fit: contain; border-radius: 8px; background: #121b2a; }
+.asset-note { font-size: 12px; color: #e9b87b; margin-bottom: 15px; }
 aside { padding: 18px; }
 dl { display: grid; grid-template-columns: 1fr auto; gap: 11px; margin: 20px 0; }
 dt { color: #afbdd1; } dd { margin: 0; font-variant-numeric: tabular-nums; }
@@ -32,3 +36,6 @@ button:hover, button.active { background: #426da5; }
   .touch-controls button { min-height: 54px; padding: 6px; }
 }
 select { width: 100%; margin: 0.5rem 0 1rem; padding: 0.7rem; border: 1px solid #59718a; border-radius: 0.55rem; background: #24344b; color: #fff; }
+.steer-controls { display: flex; align-items: center; gap: 8px; margin: 10px 0 18px; }
+#steer-angle { flex: 1; min-width: 0; accent-color: #ffb74f; cursor: pointer; }
+#steer-angle-number { width: 68px; padding: 7px; color: #fff; background: #24344b; border: 1px solid #59718a; border-radius: 7px; font: inherit; }

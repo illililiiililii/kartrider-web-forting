@@ -3,3 +3,5 @@
 *.suo
 /.vs/
 /web-preview/assets/*.mesh.json
+/web-preview/demo_physics.wasm
+/web-preview/assets/tracks/
