@@ -3,7 +3,16 @@
 //! acceleration, yaw response, drift, boost, and rectangular walls below are
 //! deliberately provisional until the original client is traced and compared.
 
-use crate::{drift, scheduler::SubstepPlan, steering};
+use crate::{drift, race::RaceState, scheduler::SubstepPlan, steering};
+
+/// Simulator hypothesis from KartriderDemoPhysics, not a recovered P5136 formula.
+/// Gauge units per metre of rear-axle lateral travel (preview capacity is 100).
+pub const PREVIEW_GAUGE_COEFFICIENT: f32 = 4.0;
+
+fn rear_slip_gauge_delta(speed: f32, lateral_velocity: f32, yaw_rate: f32, dt: f32) -> f32 {
+    let rear_slip = (-lateral_velocity + 0.5 * yaw_rate) / speed.abs().max(5.0);
+    PREVIEW_GAUGE_COEFFICIENT * speed.abs() * rear_slip.abs() * dt
+}
 
 #[repr(C)]
 #[derive(Debug, Clone, Copy)]
@@ -27,6 +36,7 @@ pub struct PreviewState {
     pub wall_contact_mask: f32,
     pub exceed_seconds: f32,
     pub exceed_cooldown_seconds: f32,
+    pub race: RaceState,
 }
 
 impl Default for PreviewState {
@@ -51,6 +61,7 @@ impl Default for PreviewState {
             wall_contact_mask: 0.0,
             exceed_seconds: 0.0,
             exceed_cooldown_seconds: 0.0,
+            race: RaceState::default(),
         }
     }
 }
@@ -66,7 +77,21 @@ pub struct PreviewInput {
 }
 
 impl PreviewState {
+    pub fn start_race(&mut self) {
+        *self = Self::default();
+        self.x = 42.0;
+        self.heading = core::f32::consts::FRAC_PI_2;
+        self.race.start();
+    }
+
     pub fn advance(&mut self, elapsed_ms: u32, input: PreviewInput) {
+        if self.race.phase == 1.0 {
+            for dt in SubstepPlan::new(elapsed_ms).seconds() {
+                self.race.advance(dt, self.x, self.y);
+            }
+            return;
+        }
+        if self.race.phase == 3.0 { return; }
         if input.boost && self.boost_seconds <= 0.0 && self.drift_gauge >= 100.0 {
             self.drift_gauge -= 100.0;
             self.boost_seconds = 2.0;
@@ -204,13 +229,17 @@ impl PreviewState {
         self.slip_degrees = (new_forward_x * self.velocity_y - new_forward_y * self.velocity_x)
             .atan2(new_forward_x * self.velocity_x + new_forward_y * self.velocity_y)
             .to_degrees();
-        if drifting {
-            self.drift_gauge = (self.drift_gauge + steer.abs() * self.speed * 0.7 * dt).min(100.0);
+        if drifting && self.speed > 5.0 {
+            let lateral_velocity = -new_forward_y * self.velocity_x + new_forward_x * self.velocity_y;
+            self.drift_gauge = (self.drift_gauge
+                + rear_slip_gauge_delta(self.speed, lateral_velocity, self.yaw_rate, dt))
+                .min(100.0);
         }
         self.boost_seconds = (self.boost_seconds - dt).max(0.0);
         self.exceed_seconds = (self.exceed_seconds - dt).max(0.0);
         self.exceed_cooldown_seconds = (self.exceed_cooldown_seconds - dt).max(0.0);
         self.elapsed_seconds += dt;
+        self.race.advance(dt, self.x, self.y);
     }
 }
 
@@ -249,6 +278,24 @@ mod tests {
         );
         assert_eq!(state.drift_gauge, 0.0);
         assert!(state.boost_seconds > 1.9);
+    }
+
+    #[test]
+    fn rear_slip_gauge_uses_lateral_velocity_and_yaw_not_steering_key() {
+        assert_eq!(rear_slip_gauge_delta(20.0, 0.0, 0.0, 0.1), 0.0);
+        let expected = PREVIEW_GAUGE_COEFFICIENT * (2.0_f32 - 0.5).abs() * 0.1;
+        assert!((rear_slip_gauge_delta(20.0, 2.0, 1.0, 0.1) - expected).abs() < 1e-6);
+    }
+
+    #[test]
+    fn preview_gauge_only_charges_while_actually_drifting() {
+        let base = PreviewState { velocity_x: 20.0, velocity_y: 3.0, speed: 20.0, ..PreviewState::default() };
+        let mut normal = base;
+        let mut drifting = base;
+        normal.advance(16, PreviewInput { steer: 1.0, ..PreviewInput::default() });
+        drifting.advance(16, PreviewInput { steer: 1.0, drift: true, ..PreviewInput::default() });
+        assert_eq!(normal.drift_gauge, 0.0);
+        assert!(drifting.drift_gauge > 0.0);
     }
 
     #[test]

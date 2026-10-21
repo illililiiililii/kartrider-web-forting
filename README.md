@@ -76,9 +76,11 @@ The current preview Wasm SHA-256 is `FD19A3137121F81986ECE6B2097CB8E9FFADBB07A79
 - `p5136_upward_contact_velocity`
 - `p5136_uses_upward_contact_velocity_branch`
 - `p5136_wall_contact_reported_speed`
-- `p5136_preview_new`, `p5136_preview_step`, `p5136_preview_step_v2`, `p5136_preview_reset`
+- `p5136_preview_new`, `p5136_preview_step`, `p5136_preview_step_v2`, `p5136_preview_reset`, `p5136_preview_start_race`
 
-Fifty Rust unit tests pass, including reverse drift from rest, after drift-key release, wall-contact episode counting, relative boosted/reverse drift yaw, a separate Exceed cooldown, and two narrow native gauge arithmetic branches. After user feedback, the broad high-speed physics/camera/ramp changes of `5745a8f` were reverted. The previous 3D camera and force model are restored; ordinary steering is reduced 14% from the earlier preview, boosted drift yaw is lower, and reverse-drift yaw is stronger. The page, local Three.js modules, and Wasm load in the browser. Browser driving feel still needs user testing.
+Fifty-three Rust unit tests pass, including rear-slip gauge integration and ordered three-lap checkpoint progression. The preview now charges its 0–100 gauge from rear lateral velocity and yaw rate only while drifting. `PREVIEW_GAUGE_COEFFICIENT` in `src/preview.rs` is adjustable; this is the [demo project's explicitly provisional gauge hypothesis](https://github.com/overjoy1008/KartriderDemoPhysics/blob/main/demo/kart_gauge.h), not a recovered P5136 charging formula. The browser includes a temporary ring test circuit with a Wasm-owned three-second countdown, four ordered checkpoints, three laps, clock, and finish state. This is not an original track. Browser QA confirmed the start button, countdown, and transition to lap 1; a complete human-driven three-lap finish remains unverified.
+
+Run the current local preview with `python -m http.server 4173 --directory web-preview` and open `http://127.0.0.1:4173/`. Build the browser Wasm with `.\tools\build-preview.ps1` after changing Rust code. The preview contains only locally converted assets when the user has generated them; a fresh checkout shows a placeholder kart. The original-client C demo has no reuse license in the inspected repository snapshot, so its source or binary has not been copied into this public project. The P5136-equivalent 3D force model, original character/track conversion, and original camera remain incomplete.
 
 ## Native original-client instrumentation
 
@@ -108,7 +110,7 @@ The committed outputs are:
 - `evidence/original-controlled-04.csv`: 822 original-client tick samples aligned to the driven interval.
 - `evidence/original-controlled-04-summary.csv`: phase-level speed, gauge, and displacement measurements.
 
-There is no browser URL yet. The next completion gate is a Rust replay that produces the same comparison schema and quantifies its error against this original trace; browser rendering and UI remain behind that gate.
+The browser preview URL is `http://127.0.0.1:4173/`, but it is not an original-equivalent game. A Rust replay producing the same comparison schema and quantified error against this original trace is still missing.
 
 ## Source boundary
 

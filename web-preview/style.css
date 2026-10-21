@@ -18,7 +18,8 @@ dl { display: grid; grid-template-columns: 1fr auto; gap: 11px; margin: 20px 0; 
 dt { color: #afbdd1; } dd { margin: 0; font-variant-numeric: tabular-nums; }
 button { border: 1px solid #758bb2; border-radius: 9px; background: #32496c; color: white; padding: 10px 14px; font: inherit; cursor: pointer; touch-action: none; }
 button:hover, button.active { background: #426da5; }
-#reset, #camera { width: 100%; margin-bottom: 8px; }
+#reset, #camera, #start-race { width: 100%; margin-bottom: 8px; }
+#race-status { margin: 2px 0 14px; color: #ffe39b; font-weight: 700; font-variant-numeric: tabular-nums; }
 .help, .warning { margin-top: 18px; font-size: 13px; }
 .warning { color: #f5c683; }
 .touch-controls { display: none; }

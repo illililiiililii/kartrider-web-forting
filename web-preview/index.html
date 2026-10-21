@@ -28,6 +28,8 @@
       <aside>
         <label for="kart-choice">원본 카트 메시 선택</label>
         <select id="kart-choice"><option value="whiteKnight1">백기사 V1</option><option value="cotton11">코튼 V1</option></select>
+        <button id="start-race">3랩 테스트 레이스 시작</button>
+        <p id="race-status" aria-live="polite">자유 주행</p>
         <h2>텔레메트리</h2>
         <dl>
           <dt>속도</dt><dd><strong id="speed">0</strong> km/h</dd>
@@ -45,10 +47,10 @@
         <button id="reset">시작 위치로 재설정 (R)</button>
         <button id="camera">카메라: 추적 시점</button>
         <p class="help">방향키 또는 넘버패드 8/2/4/6 주행 · Shift 드리프트 · Ctrl 부스터 · Space 익시드 · R 초기화. W/A/S/D도 사용 가능합니다. 익시드 지속·쿨다운은 아직 임시입니다.</p>
-        <p class="warning">카트는 로컬 원본 .1s에서 변환한 실제 메시입니다. 재질·텍스처, 캐릭터, 주행장과 물리 계수는 아직 임시입니다. 변환 파일이 없는 새 체크아웃에서는 임시 도형 카트가 표시됩니다.</p>
+        <p class="warning">3랩 코스와 게이지는 검증용 임시 구현입니다. 원작 트랙·캐릭터·텍스처·정확한 물리는 아직 미적용입니다. 변환 파일이 없는 새 체크아웃에서는 임시 도형 카트가 표시됩니다.</p>
       </aside>
     </div>
   </main>
-  <script type="module" src="main.js"></script>
+  <script type="module" src="main.js?v=2"></script>
 </body>
 </html>

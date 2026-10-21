@@ -11,6 +11,7 @@ pub mod kart_spec;
 pub mod longitudinal;
 pub mod native_layout;
 pub mod preview;
+pub mod race;
 pub mod scheduler;
 pub mod steering;
 pub mod suspension;
@@ -90,6 +91,13 @@ pub unsafe extern "C" fn p5136_preview_reset(state: *mut preview::PreviewState) 
         return 0;
     };
     *state = preview::PreviewState::default();
+    1
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn p5136_preview_start_race(state: *mut preview::PreviewState) -> u32 {
+    let Some(state) = (unsafe { state.as_mut() }) else { return 0; };
+    state.start_race();
     1
 }
 

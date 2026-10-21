@@ -27,6 +27,17 @@ export function createPreviewRenderer(canvas) {
   scene.add(grid);
 
   const road = material(0x394b55);
+  const circuit = new THREE.Mesh(new THREE.RingGeometry(31, 53, 96), road);
+  circuit.rotation.x = -Math.PI / 2;
+  circuit.position.y = 0.018;
+  scene.add(circuit);
+  const gateColors = [0x55dfff, 0xffca6b, 0xd889ff, 0xffffff];
+  [[0, 42], [-42, 0], [0, -42], [42, 0]].forEach(([gx, gy], index) => {
+    const gate = new THREE.Mesh(new THREE.BoxGeometry(18, 0.025, 1.2), material(gateColors[index]));
+    gate.position.set(gx, 0.045, -gy);
+    gate.rotation.y = -Math.atan2(gy, gx);
+    scene.add(gate);
+  });
   const barrier = material(0xea8055, 0.1, 0.55);
   const barrierTop = material(0xffe4b3);
   function box(parent, width, height, depth, x, y, z, mat) {

@@ -6,6 +6,7 @@ const view = createPreviewRenderer(canvas);
 const status = document.querySelector('#status');
 const modelLabel = document.querySelector('#model-label');
 const kartChoice = document.querySelector('#kart-choice');
+const raceReadout = document.querySelector('#race-status');
 async function selectKart() {
   modelLabel.textContent = '원본 카트 메시 로딩 중';
   try {
@@ -38,6 +39,14 @@ for (const type of ['keydown', 'keyup']) {
 }
 window.addEventListener('blur', () => Object.keys(controls).forEach((key) => { controls[key] = false; }));
 document.querySelector('#reset').addEventListener('click', resetPreview);
+document.querySelector('#start-race').addEventListener('click', () => {
+  if (!wasm || !statePointer) return;
+  wasm.p5136_preview_start_race(statePointer);
+  currentState.set(new Float32Array(wasm.memory.buffer, statePointer, 25));
+  previousState.set(currentState);
+  visualState.set(currentState);
+  view.resetCamera();
+});
 document.querySelector('#camera').addEventListener('click', (event) => {
   event.currentTarget.textContent = view.toggleCamera() ? '카메라: 위에서 보기' : '카메라: 추적 시점';
 });
@@ -58,7 +67,7 @@ let visualState;
 function resetPreview() {
   if (!wasm || !statePointer) return;
   wasm.p5136_preview_reset(statePointer);
-  currentState.set(new Float32Array(wasm.memory.buffer, statePointer, 19));
+  currentState.set(new Float32Array(wasm.memory.buffer, statePointer, 25));
   previousState.set(currentState);
   visualState.set(currentState);
   view.resetCamera();
@@ -80,6 +89,10 @@ function draw(state, visual, frameDeltaMs) {
   telemetry.boost.textContent = `${boost.toFixed(1)}초`;
   telemetry.exceed.textContent = `${state[17].toFixed(1)}초`;
   telemetry.hits.textContent = Math.round(hits);
+  const [phase, countdown, lap, gate, raceTime, finishTime] = state.slice(19, 25);
+  raceReadout.textContent = phase === 1 ? `출발 ${Math.ceil(countdown)}`
+    : phase === 2 ? `${Math.round(lap)}/3 LAP · ${raceTime.toFixed(2)}초 · 다음 체크포인트 ${Math.round(gate) + 1}/4`
+      : phase === 3 ? `완주! ${finishTime.toFixed(2)}초` : '자유 주행';
 }
 
 function frame(time) {
@@ -91,7 +104,7 @@ function frame(time) {
     previousState.set(currentState);
     wasm.p5136_preview_step_v2(statePointer, 16, +controls.throttle, +controls.brake,
       (+controls.left) - (+controls.right), +controls.drift, +controls.boost, +controls.exceed);
-    currentState.set(new Float32Array(wasm.memory.buffer, statePointer, 19));
+    currentState.set(new Float32Array(wasm.memory.buffer, statePointer, 25));
     accumulator -= 16;
   }
   interpolatePreviewState(previousState, currentState, accumulator / 16, visualState);
@@ -100,13 +113,13 @@ function frame(time) {
 }
 
 try {
-  const response = await fetch('./p5136_wasm_core.wasm');
+  const response = await fetch('./p5136_wasm_core.wasm?v=2');
   if (!response.ok) throw new Error(`Wasm 다운로드 실패: ${response.status}`);
   const result = await WebAssembly.instantiate(await response.arrayBuffer());
   wasm = result.instance.exports;
   statePointer = wasm.p5136_preview_new();
   if (!statePointer) throw new Error('Wasm 상태 생성 실패');
-  currentState = new Float32Array(new Float32Array(wasm.memory.buffer, statePointer, 19));
+  currentState = new Float32Array(new Float32Array(wasm.memory.buffer, statePointer, 25));
   previousState = new Float32Array(currentState);
   visualState = new Float32Array(currentState);
   status.textContent = '3D / Wasm 실행 중';
