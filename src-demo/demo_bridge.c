@@ -4,7 +4,10 @@
 #include "kart_simulation.h"
 #include "kart_camera.h"
 #include "kart_demo_data.h"
+#include "kart_track_scene.h"
+#include "kart_track_collision.h"
 #include <math.h>
+#include <stdlib.h>
 #include <string.h>
 
 static KartSimulationState kart;
@@ -17,12 +20,24 @@ static float wall_hits;
 static bool wall_contact;
 static float previous_x, previous_y;
 static unsigned int preset_index = 10; /* cotten5, demo simulator default */
+static KartTrackScene track_scene;
+static KartDemoTrackSpec track_spec = {
+    .asset_name = "p5136-local-usd", .display_name = "P5136 local USD",
+    .minimum = {-1000.0f, -1000.0f, -1000.0f},
+    .maximum = {1000.0f, 1000.0f, 1000.0f},
+    .has_scene = true, .start_kind = KART_TRACK_START_CONFIRMED,
+    .start_line = {0.0f, 0.0f, 0.0f},
+};
+static bool track_enabled;
+static float spawn_x, spawn_y, spawn_z, spawn_heading;
 
 /* Zig's WASI libc expects a main symbol even for a no-entry library. */
 int main(void) { return 0; }
 
 static bool ground_query(void *unused, KartVec3 start, KartVec3 delta, KartGroundHit *hit) {
     (void)unused;
+    if (track_enabled)
+        return kart_track_scene_query_ground(&track_scene, &track_spec, start, delta, hit);
     if (delta.z >= 0.0f || start.z < 0.0f || start.z + delta.z > 0.0f) return false;
     float fraction = -start.z / delta.z;
     hit->point = (KartVec3){ start.x + delta.x * fraction, start.y + delta.y * fraction, 0.0f };
@@ -35,6 +50,9 @@ static unsigned int body_query(void *unused, const KartSimulationState *state,
                                KartBodyContact *contacts, unsigned int capacity) {
     (void)unused;
     if (capacity == 0) return 0;
+    if (track_enabled)
+        return kart_track_scene_query_body_collisions(
+            &track_scene, &track_spec, state, contacts, capacity);
     const KartVec3 p = state->position;
     KartVec3 normal = {0};
     if (p.x > 78.0f) normal.x = -1.0f;
@@ -50,7 +68,7 @@ static void reset_at(float x, float y, float heading) {
     const KartDemoKartSpec *spec = kart_demo_kart_at(preset_index);
     kart_simulation_init(&kart, spec ? &spec->dynamics : NULL,
                          spec ? &spec->geometry : NULL);
-    kart.position = (KartVec3){x, y, 0.5f};
+    kart.position = (KartVec3){x, y, track_enabled ? spawn_z + 0.5f : 0.5f};
     /* Identity faces world -Y; +pi/2 rotates the forward axis to +X. */
     const float angle = heading + 1.5707963267948966f;
     kart.orientation = (KartQuat){cosf(angle * 0.5f), 0.0f, 0.0f, sinf(angle * 0.5f)};
@@ -74,6 +92,9 @@ static void update_race(float dt) {
     }
     if (race_phase != 2.0f) return;
     race_time += dt;
+    /* No verified P5136 route/checkpoint data is available for imported USD
+       tracks yet. Keep the timer, but never award a synthetic square lap. */
+    if (track_enabled) return;
     unsigned int index = (unsigned int)next_gate;
     float dx = kart.position.x - gates[index][0];
     float dy = kart.position.y - gates[index][1];
@@ -122,7 +143,8 @@ static void publish(unsigned int elapsed_ms, KartSimulationStepResult step) {
     telemetry[8] = kart.timed_boost.remaining_ms * 0.001f;
     telemetry[9] = drifting ? 1.0f : 0.0f;
     telemetry[10] += dt;
-    if (fabsf(kart.position.x) < 77.5f && fabsf(kart.position.y) < 77.5f)
+    if ((track_enabled && step.wall_impact_speed <= 0.0f) ||
+        (!track_enabled && fabsf(kart.position.x) < 77.5f && fabsf(kart.position.y) < 77.5f))
         wall_contact = false;
     if (step.wall_impact_speed > 0.0f && !wall_contact) {
         wall_hits += 1.0f;
@@ -157,12 +179,16 @@ __attribute__((export_name("demo_new"))) float *demo_new(void) {
 }
 
 __attribute__((export_name("demo_reset"))) void demo_reset(void) {
-    reset_at(0, 0, 0);
+    reset_at(track_enabled ? spawn_x : 0.0f,
+             track_enabled ? spawn_y : 0.0f,
+             track_enabled ? spawn_heading : 0.0f);
     publish(0, (KartSimulationStepResult){0});
 }
 
 __attribute__((export_name("demo_start_race"))) void demo_start_race(void) {
-    reset_at(42, 0, 1.5707963267948966f);
+    reset_at(track_enabled ? spawn_x : 42.0f,
+             track_enabled ? spawn_y : 0.0f,
+             track_enabled ? spawn_heading : 1.5707963267948966f);
     race_phase = 1.0f;
     countdown = 3.0f;
     publish(0, (KartSimulationStepResult){0});
@@ -176,6 +202,52 @@ __attribute__((export_name("demo_set_steer_angle"))) void demo_set_steer_angle(f
 __attribute__((export_name("demo_set_preset"))) void demo_set_preset(unsigned int index) {
     if (kart_demo_kart_at(index) == NULL) return;
     preset_index = index;
+    reset_at(track_enabled ? spawn_x : 0.0f,
+             track_enabled ? spawn_y : 0.0f,
+             track_enabled ? spawn_heading : 0.0f);
+    publish(0, (KartSimulationStepResult){0});
+}
+
+__attribute__((export_name("demo_track_alloc"))) void *demo_track_alloc(unsigned int size) {
+    if (size == 0 || size > 32u * 1024u * 1024u) return NULL;
+    return malloc(size);
+}
+
+__attribute__((export_name("demo_track_free_buffer"))) void demo_track_free_buffer(void *buffer) {
+    free(buffer);
+}
+
+__attribute__((export_name("demo_track_load"))) unsigned int demo_track_load(
+    const void *data, unsigned int size) {
+    track_enabled = false;
+    kart_track_scene_free(&track_scene);
+    return kart_track_scene_load_memory(&track_scene, data, size) ?
+        track_scene.total_triangle_count : 0u;
+}
+
+__attribute__((export_name("demo_track_ground_height"))) float demo_track_ground_height(
+    float x, float y, float top) {
+    if (track_scene.mesh_count == 0) return NAN;
+    KartGroundHit hit;
+    const KartVec3 start = {x, y, top};
+    const KartVec3 down = {0.0f, 0.0f, -100.0f};
+    return kart_track_scene_query_ground(&track_scene, &track_spec, start, down, &hit)
+        ? hit.point.z : NAN;
+}
+
+__attribute__((export_name("demo_track_enable"))) unsigned int demo_track_enable(
+    float x, float y, float z, float heading) {
+    if (track_scene.mesh_count == 0 || !isfinite(x) || !isfinite(y) ||
+        !isfinite(z) || !isfinite(heading)) return 0u;
+    spawn_x = x; spawn_y = y; spawn_z = z; spawn_heading = heading;
+    track_enabled = true;
+    reset_at(x, y, heading);
+    publish(0, (KartSimulationStepResult){0});
+    return 1u;
+}
+
+__attribute__((export_name("demo_track_disable"))) void demo_track_disable(void) {
+    track_enabled = false;
     reset_at(0, 0, 0);
     publish(0, (KartSimulationStepResult){0});
 }
@@ -199,8 +271,12 @@ __attribute__((export_name("demo_step"))) void demo_step(
     KartSimulationStepResult step = kart_simulate_milliseconds(&kart, &controls, &world, elapsed_ms);
     /* The demo collision callback resolves velocity, while this temporary
        square test world's positional boundary keeps the body inside it. */
-    kart.position.x = fmaxf(-78.0f, fminf(78.0f, kart.position.x));
-    kart.position.y = fmaxf(-78.0f, fminf(78.0f, kart.position.y));
+    if (!track_enabled) {
+        kart.position.x = fmaxf(-78.0f, fminf(78.0f, kart.position.x));
+        kart.position.y = fmaxf(-78.0f, fminf(78.0f, kart.position.y));
+    } else if (kart.position.z < spawn_z - 20.0f) {
+        reset_at(spawn_x, spawn_y, spawn_heading);
+    }
     update_race(elapsed_ms * 0.001f);
     publish(elapsed_ms, step);
     previous_x = kart.position.x;

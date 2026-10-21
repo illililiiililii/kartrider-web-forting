@@ -18,6 +18,12 @@ export function createPreviewRenderer(canvas) {
   scene.add(sun);
   const testWorld = new THREE.Group();
   scene.add(testWorld);
+  const showroom = new THREE.Group();
+  scene.add(showroom);
+  const showroomPad = new THREE.Mesh(new THREE.CylinderGeometry(6, 6, 0.25, 64),
+    new THREE.MeshStandardMaterial({ color: 0x13669b, metalness: 0.25, roughness: 0.5 }));
+  showroom.add(showroomPad);
+  showroom.visible = false;
 
   const material = (color, metalness = 0, roughness = 0.8) =>
     new THREE.MeshStandardMaterial({ color, metalness, roughness });
@@ -76,8 +82,12 @@ export function createPreviewRenderer(canvas) {
   let originalCharacter = null;
   let originalTrack = null;
   let trackPreview = false;
+  let trackDrive = false;
+  let lobbyMode = false;
+  let lobbyCharacter = null;
   const trackCenter = new THREE.Vector3();
   let trackRadius = 100;
+  let trackMeshes = [];
   let originalWheels = [];
   const shell = material(0x33b6e4, 0.32, 0.32);
   const dark = material(0x192936, 0.18, 0.6);
@@ -131,12 +141,16 @@ export function createPreviewRenderer(canvas) {
     const nextWheels = [];
     const textures = new Map();
     for (const part of data.parts) {
+      const partName = part.name.split('/').at(-2) || part.name;
+      // Detachable/animated "mod" nodes have no verified bind transform in
+      // this static export. White Knight's attached mod1b side panels are the
+      // only such nodes we can safely display without loose triangles.
+      if (type === 'kart' && /^mod/i.test(partName) && !/^mod1b/i.test(partName)) continue;
       const geometry = new THREE.BufferGeometry();
       geometry.setAttribute('position', new THREE.Float32BufferAttribute(part.positions, 3));
       if (part.uvs) geometry.setAttribute('uv', new THREE.Float32BufferAttribute(part.uvs, 2));
       geometry.setIndex(part.indices);
       geometry.computeVertexNormals();
-      const partName = part.name.split('/').at(-2) || part.name;
       const color = partName.startsWith('wheel') ? 0x262a31
         : partName.startsWith('lamp') ? 0xe4f0f2
         : partName === 'seat' ? 0xcbd4da : 0xeeeeee;
@@ -151,7 +165,12 @@ export function createPreviewRenderer(canvas) {
       const mesh = new THREE.Mesh(geometry, new THREE.MeshStandardMaterial({
         color: texture ? 0xffffff : color, map: texture, side: THREE.DoubleSide,
         roughness: 0.8, metalness: 0.08,
+        // Original foliage/fences use PNG alpha. Without alphaTest, their
+        // transparent pixels render as opaque square cards.
+        alphaTest: texture ? 0.35 : 0,
       }));
+      mesh.userData.sourceName = part.name;
+      mesh.userData.textureName = part.texture || '';
       if (type === 'kart' && partName.startsWith('wheel')) {
         geometry.computeBoundingBox();
         const center = new THREE.Vector3();
@@ -191,10 +210,82 @@ export function createPreviewRenderer(canvas) {
         if (node.isMesh) { node.geometry.dispose(); node.material.dispose(); }
       });
     }
-    group.scale.setScalar(0.6);
-    group.position.set(-0.25, 0.45, 0);
+    group.scale.setScalar(0.42);
+    group.position.set(-0.25, 0.5, 0);
     originalCharacter = group;
     kart.add(group);
+    if (lobbyMode) setLobbyMode(true);
+  }
+
+  async function loadTrack(name) {
+    if (originalTrack?.userData.trackName === name) return;
+    const { group } = await loadAsset(name, 'track');
+    if (originalTrack) {
+      scene.remove(originalTrack);
+      originalTrack.traverse((node) => {
+        if (node.isMesh) { node.geometry.dispose(); node.material.dispose(); }
+      });
+    }
+    originalTrack = group;
+    originalTrack.userData.trackName = name;
+    // kart_track_scene_world_vertex mirrors X for this demo track spec.
+    // Render the same world-space transform or the kart drives off the visible road.
+    originalTrack.scale.x = -1;
+    scene.add(group);
+    originalTrack.updateMatrixWorld(true);
+    trackMeshes = [];
+    const trackFocus = new THREE.Box3();
+    group.traverse((node) => {
+      if (!node.isMesh) return;
+      node.geometry.computeBoundingBox();
+      const box = node.geometry.boundingBox;
+      const size = box.getSize(new THREE.Vector3());
+      const tag = `${node.userData.sourceName} ${node.userData.textureName}`.toLowerCase();
+      if (Math.max(size.x, size.y, size.z) > 500 ||
+          /skydome|water|sea0|bird|transparency/.test(tag)) {
+        node.visible = false;
+      } else if (Math.max(size.x, size.z) < 70 && box.getCenter(new THREE.Vector3()).y > 10) {
+        trackFocus.union(box);
+      }
+      if (node.visible) trackMeshes.push(node);
+    });
+    const bounds = new THREE.Box3().setFromObject(group);
+    const focus = trackFocus.isEmpty() ? bounds : trackFocus;
+    focus.getCenter(trackCenter);
+    const size = focus.getSize(new THREE.Vector3());
+    trackRadius = Math.max(Math.max(size.x, size.z) * 0.55, 30);
+  }
+
+  async function setTrackDrive(name) {
+    await loadTrack(name);
+    trackPreview = false;
+    trackDrive = true;
+    originalTrack.visible = !lobbyMode;
+    testWorld.visible = false;
+    kart.visible = true;
+    scene.fog = null;
+    camera.far = 650;
+    firstFrame = true;
+  }
+
+  function setLobbyMode(enabled) {
+    lobbyMode = enabled;
+    showroom.visible = enabled;
+    if (originalTrack && trackDrive) originalTrack.visible = !enabled;
+    if (lobbyCharacter) {
+      kart.remove(lobbyCharacter);
+      lobbyCharacter = null;
+    }
+    if (originalCharacter) {
+      originalCharacter.visible = !enabled;
+      if (enabled) {
+        lobbyCharacter = originalCharacter.clone(true);
+        lobbyCharacter.visible = true;
+        lobbyCharacter.position.set(0, -0.15, -2.4);
+        kart.add(lobbyCharacter);
+      }
+    }
+    firstFrame = true;
   }
 
   async function toggleTrackPreview(name) {
@@ -207,36 +298,7 @@ export function createPreviewRenderer(canvas) {
       firstFrame = true;
       return false;
     }
-    if (!originalTrack || originalTrack.userData.trackName !== name) {
-      const { group } = await loadAsset(name, 'track');
-      if (originalTrack) {
-        scene.remove(originalTrack);
-        originalTrack.traverse((node) => {
-          if (node.isMesh) { node.geometry.dispose(); node.material.dispose(); }
-        });
-      }
-      originalTrack = group;
-      originalTrack.userData.trackName = name;
-      scene.add(originalTrack);
-      // The USDA scene contains an enormous skydome and under-sky shell.
-      // Exclude those from the overview framing so the road is visible.
-      const trackFocus = new THREE.Box3();
-      originalTrack.traverse((node) => {
-        if (!node.isMesh) return;
-        node.geometry.computeBoundingBox();
-        const box = node.geometry.boundingBox;
-        const size = box.getSize(new THREE.Vector3());
-        if (Math.max(size.x, size.y, size.z) > 500) node.visible = false;
-        else if (Math.max(size.x, size.z) < 70 && box.getCenter(new THREE.Vector3()).y > 10) {
-          trackFocus.union(box);
-        }
-      });
-      const bounds = new THREE.Box3().setFromObject(originalTrack);
-      const focus = trackFocus.isEmpty() ? bounds : trackFocus;
-      focus.getCenter(trackCenter);
-      const size = focus.getSize(new THREE.Vector3());
-      trackRadius = Math.max(Math.max(size.x, size.z) * 0.55, 30);
-    }
+    await loadTrack(name);
     trackPreview = true;
     scene.fog = null;
     originalTrack.visible = true;
@@ -253,6 +315,8 @@ export function createPreviewRenderer(canvas) {
   const desired = new THREE.Vector3();
   const look = new THREE.Vector3();
   const targetLook = new THREE.Vector3();
+  const cameraRay = new THREE.Raycaster();
+  const cameraDirection = new THREE.Vector3();
 
   function render(state, frameDeltaMs = 16) {
     const [x, y, heading, vx, vy, , speed, , boost, drifting] = state;
@@ -264,7 +328,10 @@ export function createPreviewRenderer(canvas) {
       camera.aspect = width / height;
       camera.updateProjectionMatrix();
     }
-    kart.position.set(x, state[14] || 0, -y);
+    // The demo pose is the body centre (~0.5 m above contact); USDA kart
+    // wheels are authored at local Y=0. Align their base to the road.
+    kart.position.set(x, (state[14] || 0) - 0.48, -y);
+    showroom.position.set(x, (state[14] || 0) - 0.75, -y);
     kart.rotation.y = heading;
     shell.color.setHex(boost > 0 ? 0xffcd4f : drifting ? 0xf779a8 : 0x33b6e4);
     boostFlames.visible = boost > 0;
@@ -284,14 +351,33 @@ export function createPreviewRenderer(canvas) {
       camera.far = Math.max(1000, trackRadius * 5);
       camera.fov = 62;
       camera.updateProjectionMatrix();
+    } else if (lobbyMode) {
+      desired.set(x - 8, (state[14] || 0) + 5, -y - 9);
+      targetLook.set(x, (state[14] || 0) + 1, -y - 1);
+      camera.fov = 55;
+      camera.updateProjectionMatrix();
     } else if (overhead) {
       desired.set(x, 28, -y + 0.01);
       targetLook.set(x, 0, -y);
     } else {
-      desired.set(Math.max(-78.5, Math.min(78.5, state[25])), state[27],
-        Math.max(-78.5, Math.min(78.5, -state[26])));
-      targetLook.set(state[25] + state[28] * 10, state[27] + state[30] * 10,
-        -state[26] - state[29] * 10);
+      desired.set(trackDrive ? state[25] : Math.max(-78.5, Math.min(78.5, state[25])), state[27],
+        trackDrive ? -state[26] : Math.max(-78.5, Math.min(78.5, -state[26])));
+      targetLook.set(x + Math.cos(heading) * 3, (state[14] || 0) + 1.4,
+        -y - Math.sin(heading) * 3);
+      if (trackDrive && originalTrack) {
+        const origin = new THREE.Vector3(x, (state[14] || 0) + 1.2, -y);
+        cameraDirection.subVectors(desired, origin);
+        const distance = cameraDirection.length();
+        if (distance > 0.01) {
+          cameraDirection.divideScalar(distance);
+          cameraRay.set(origin, cameraDirection);
+          cameraRay.far = distance;
+          const hit = cameraRay.intersectObjects(trackMeshes, false)[0];
+          if (hit && hit.distance < distance - 0.3) {
+            desired.copy(origin).addScaledVector(cameraDirection, Math.max(0.8, hit.distance - 0.3));
+          }
+        }
+      }
       camera.fov = state[31] || 75;
       camera.updateProjectionMatrix();
     }
@@ -312,6 +398,8 @@ export function createPreviewRenderer(canvas) {
     render,
     setKart,
     setCharacter,
+    setTrackDrive,
+    setLobbyMode,
     toggleTrackPreview,
     resetCamera: () => { firstFrame = true; },
     toggleCamera: () => { overhead = !overhead; firstFrame = true; return overhead; },

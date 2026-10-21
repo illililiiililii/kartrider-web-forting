@@ -11,3 +11,10 @@ if (-not (Test-Path -LiteralPath $source -PathType Leaf)) {
 New-Item -ItemType Directory -Force -Path $target | Out-Null
 Copy-Item -LiteralPath $source -Destination (Join-Path $target 'tachometer.png') -Force
 Write-Host "Prepared original P5136 tachometer sprite: $source"
+$menu = Join-Path $AssetRoot 'zeta\kr\stage\mainMenu'
+foreach ($name in @('btn_speedIndi_1.png', 'btn_speedTeam_1.png')) {
+  $sprite = Join-Path $menu $name
+  if (Test-Path -LiteralPath $sprite -PathType Leaf) {
+    Copy-Item -LiteralPath $sprite -Destination (Join-Path $target $name) -Force
+  }
+}

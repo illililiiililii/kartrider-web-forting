@@ -24,6 +24,11 @@ foreach ($item in $items) {
     throw "Missing supplied USD asset: $source"
   }
   $target = Join-Path (Join-Path $output $item[1]) 'model.mesh.json'
-  python (Join-Path $PSScriptRoot 'convert-usd-local.py') $source $target --scale $item[2]
+  if ($item[0].StartsWith('track\')) {
+    $collisionFile = Join-Path (Split-Path -Parent $target) 'collision.ktrk'
+    python (Join-Path $PSScriptRoot 'convert-usd-local.py') $source $target --scale $item[2] --ktrk $collisionFile
+  } else {
+    python (Join-Path $PSScriptRoot 'convert-usd-local.py') $source $target --scale $item[2]
+  }
   if ($LASTEXITCODE -ne 0) { throw "USD conversion failed: $source" }
 }

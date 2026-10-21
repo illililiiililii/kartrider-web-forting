@@ -1,4 +1,11 @@
-# KartRider demo C physics — local WebAssembly prototype
+# KartRider 5136 web port — local playable work in progress
+
+Main game: [http://127.0.0.1:4173/](http://127.0.0.1:4173/).
+Physics/telemetry test page: [http://127.0.0.1:4173/debug.html](http://127.0.0.1:4173/debug.html).
+The main page is a fresh original-inspired lobby and HUD with the supplied
+kart/character/track meshes, menu button, track cards, minimap, and tachometer.
+All three converted original tracks can be driven with experimental collision
+triangles; original checkpoints/laps and multiplayer are **not implemented**.
 
 The active browser game now links the **unmodified** `kart_dynamics.c`,
 `kart_simulation.c`, and `kart_camera.c` from
@@ -6,9 +13,10 @@ The active browser game now links the **unmodified** `kart_dynamics.c`,
 plus `kart_demo_data.c` into WebAssembly. Its simulation uses the demo's 5ms maximum substep, four
 wheel contacts, suspension, longitudinal and lateral/drift force pipeline,
 drag, pose integration, collision response, and chase-camera update. Our
-`src-demo/demo_bridge.c` supplies a temporary flat test world, square walls,
-drift-gauge hypothesis, and three-lap test race. This is a **2004 demo physics
-prototype**, not a verified P5136 game. The former Rust physics investigation
+`src-demo/demo_bridge.c` supplies a temporary flat debug test world, square walls,
+drift-gauge hypothesis, three-lap debug race, and an adapter for heuristic
+original-track triangle collision. This is **2004 demo physics**, not verified
+P5136 physics or every feature from the demo project. The former Rust physics investigation
 is preserved in [`OLD_PYS`](OLD_PYS/README.md) and is not loaded in the browser.
 
 ## Build and play locally (Windows)
@@ -37,13 +45,12 @@ python -m pip install usd-core==25.5.1
 .\tools\prepare-local-usd.ps1
 ```
 
-The locally copied artwork is Git-ignored. The three choices currently show
-the original `beach_I01`, `beach_I02`, and `village_R01` artwork and have a
-separate 3D track viewer. These are **not yet playable original courses**.
-The active physics still collides with a temporary square test world and its
-ring-shaped four-gate course. The provided converted model files are USDA, not
-FBX. See [`DEVELOPMENT_PROGRESS.md`](DEVELOPMENT_PROGRESS.md) for the inventory,
-verification, and prioritized next work.
+The locally copied artwork and collision candidates are Git-ignored. The new
+main page drives on `beach_I01`, `beach_I02`, and `village_R01` visual meshes
+with heuristic KTRK collision candidates. It is labelled practice driving
+because verified track checkpoints/finish are missing. The square test course
+remains on `/debug.html`. The supplied converted models are USDA, not FBX.
+See [`DEVELOPMENT_PROGRESS.md`](DEVELOPMENT_PROGRESS.md).
 
 Open [http://127.0.0.1:4173/](http://127.0.0.1:4173/). The generated
 `web-preview/demo_physics.wasm` is ignored by Git and must be built locally.
@@ -53,7 +60,7 @@ The bridge and build recipe alone cannot make a fresh public checkout playable
 until the user provides a locally obtained demo source and builds its Wasm.
 
 Controls: arrows or numpad 8/2/4/6 (W/A/S/D also work), Shift drift, Ctrl
-booster after gauge fills, R reset. Use the slider to set the demo's
+booster after gauge fills, R reset. On `/debug.html`, use the slider to set the demo's
 `max_steer_angle_deg` from 1° to 30° in 0.1° increments; the adjacent number
 box accepts an exact value and the setting is saved locally. The source
 default is 10°. `Space`/Exceed is disabled until later P5136 integration.
@@ -74,17 +81,27 @@ python .\tools\convert-1s-preview.py '..\..\work\original-assets\cotton11-model.
 If those ignored local meshes are absent, the 3D renderer shows a temporary
 geometric kart. Converted kart wheels now steer/spin from the C physics state,
 and timed boost shows a basic exhaust effect. The newer USD path additionally
-loads original kart/character textures and renders three original track scenes
-in a non-playable viewer. Skeletal animation and track collision remain missing.
+loads original kart/character textures and three original track scenes. The
+main page drives on heuristic collision triangles; skeletal animation and
+verified original collision remain missing.
 
 ## Verification
+
+The demo C speed-steering formula is linked unchanged:
+`maxSteer × exp(-abs(forwardVelocity / steer_constraint))`. Direct Wasm
+measurements at the same 10° slider setting yielded 10.00° at 0 m/s,
+5.77° at 15.50 m/s, and 3.54° at 29.15 m/s. The new regression test checks
+this trend. Drift slip calculation can use a separate maximum-steer path,
+so this evidence applies to non-drift steering only.
 
 ```powershell
 .\tools\build-demo-physics.ps1
 node --test tools\test-demo-physics.mjs tools\test-frame-interpolation.mjs
 ```
 
-The current local build is about 755 KB. In direct Wasm tests, the default
+The current local build is about 755 KB. The current local test run passed
+10 checks, including imported track collision and speed-dependent steering.
+In direct Wasm tests, the default
 demo kart accelerated to about 156 km/h after 1.6 seconds on the flat test world; with
 identical short inputs, 5°/10°/20° steering produced increasing heading
 changes. Browser QA confirmed Wasm loading, the actual `.1s` kart, the slider,

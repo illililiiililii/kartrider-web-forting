@@ -8,6 +8,7 @@ import argparse
 import json
 import math
 import shutil
+import struct
 from pathlib import Path
 
 from pxr import Gf, Usd, UsdGeom, UsdShade
@@ -36,7 +37,54 @@ def texture_for(prim, source, output_dir):
     return None
 
 
-def export(source, output, scale):
+def collision_candidate(part):
+    # The supplied USDA does not retain the original property/road tag.
+    # Exclude obvious non-solid backdrop/water; remaining meshes are an
+    # experimental collision proxy, not recovered original collision data.
+    label = f"{part['name']} {part.get('texture') or ''}".lower()
+    if any(word in label for word in ("skydome", "water", "sea0", "bird", "transparency")):
+        return False
+    if not any(word in label for word in (
+        "road", "bridge", "side", "tile", "sand", "grass", "cement"
+    )):
+        return False
+    values = part["positions"]
+    xs, zs = values[0::3], values[2::3]
+    return max(max(xs) - min(xs), max(zs) - min(zs)) < 200
+
+
+def write_ktrk(path, parts):
+    selected = [part for part in parts if collision_candidate(part)]
+    if not selected:
+        raise ValueError("No collision candidates in exported track")
+    vertices = sum(len(part["positions"]) // 3 for part in selected)
+    triangles = sum(len(part["indices"]) // 3 for part in selected)
+    coordinates = [[], [], []]
+    for part in selected:
+        p = part["positions"]
+        coordinates[0].extend(p[0::3])
+        coordinates[1].extend(-value for value in p[2::3])
+        coordinates[2].extend(p[1::3])
+    with path.open("wb") as file:
+        file.write(struct.pack("<4sIIII", b"KTRK", 2, len(selected), vertices, triangles))
+        file.write(struct.pack("<6f", *(min(axis) for axis in coordinates),
+                               *(max(axis) for axis in coordinates)))
+        for part in selected:
+            def field(value):
+                return value.encode("utf-8")[:96].ljust(96, b"\0")
+
+            p, uv, indices = part["positions"], part["uvs"], part["indices"]
+            file.write(field(part["name"]))
+            file.write(field(part.get("texture") or ""))
+            file.write(struct.pack("<III", 1, len(p) // 3, len(indices)))
+            for i in range(0, len(p), 3):
+                file.write(struct.pack("<5f", p[i], -p[i + 2], p[i + 1],
+                                       uv[i // 3 * 2], uv[i // 3 * 2 + 1]))
+            file.write(struct.pack(f"<{len(indices)}I", *indices))
+    print(f"KTRK collision candidates: {len(selected)} meshes / {triangles} triangles -> {path}")
+
+
+def export(source, output, scale, ktrk=None):
     stage = Usd.Stage.Open(str(source))
     if stage is None:
         raise ValueError(f"Cannot open USDA: {source}")
@@ -93,6 +141,8 @@ def export(source, output, scale):
         raise ValueError(f"No meshes in {source}")
     result = {"format": "p5136-usd-mesh-v1", "source": source.name, "parts": parts}
     output.write_text(json.dumps(result, separators=(",", ":")), encoding="utf-8")
+    if ktrk is not None:
+        write_ktrk(ktrk, parts)
     print(f"{source.name}: {len(parts)} meshes, {output.stat().st_size:,} bytes -> {output}")
 
 
@@ -101,5 +151,6 @@ if __name__ == "__main__":
     parser.add_argument("source", type=Path)
     parser.add_argument("output", type=Path)
     parser.add_argument("--scale", type=float, default=0.01)
+    parser.add_argument("--ktrk", type=Path)
     args = parser.parse_args()
-    export(args.source, args.output, args.scale)
+    export(args.source, args.output, args.scale, args.ktrk)

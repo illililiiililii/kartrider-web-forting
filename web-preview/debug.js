@@ -1,4 +1,4 @@
-import { createPreviewRenderer } from './render3d.js?v=7';
+import { createPreviewRenderer } from './render3d.js?v=14';
 import { interpolatePreviewState } from './frame-interpolation.mjs';
 
 const canvas = document.querySelector('#track');

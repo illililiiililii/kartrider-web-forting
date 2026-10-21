@@ -9,7 +9,10 @@ if (-not $DemoSource) { $DemoSource = Join-Path $workspaceWork 'reference-demo-p
 if (-not $ZigExe) { $ZigExe = Join-Path $workspaceWork 'zig-windows-x86_64-0.13.0\zig.exe' }
 $required = @('include\kart_simulation.h', 'include\kart_dynamics.h', 'include\kart_camera.h',
     'src\kart_dynamics.c', 'src\kart_simulation.c', 'src\kart_camera.c',
-    'include\kart_demo_data.h', 'src\kart_demo_data.c')
+    'include\kart_demo_data.h', 'src\kart_demo_data.c',
+    'include\kart_track_scene.h', 'src\kart_track_scene.c',
+    'include\kart_track_collision.h', 'src\kart_track_collision.c',
+    'src\kart_inflate.c')
 foreach ($part in $required) {
     if (-not (Test-Path -LiteralPath (Join-Path $DemoSource $part))) {
         throw "Missing demo source: $part in $DemoSource"
@@ -30,6 +33,9 @@ $output = Join-Path $root 'web-preview\demo_physics.wasm'
     (Join-Path $DemoSource 'src\kart_simulation.c') `
     (Join-Path $DemoSource 'src\kart_camera.c') `
     (Join-Path $DemoSource 'src\kart_demo_data.c') `
+    (Join-Path $DemoSource 'src\kart_track_scene.c') `
+    (Join-Path $DemoSource 'src\kart_track_collision.c') `
+    (Join-Path $DemoSource 'src\kart_inflate.c') `
     (Join-Path $root 'src-demo\demo_bridge.c') -lm -o $output
 if ($LASTEXITCODE -ne 0) { throw 'Demo physics Wasm build failed' }
 Write-Output "Local-only demo Wasm built: $output"

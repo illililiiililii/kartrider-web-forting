@@ -1,5 +1,28 @@
 # P5136 web port — development progress
 
+## 2026-10-21 new game page and rendering fixes
+
+- Replaced the public-facing prototype page with a new lobby and race HUD at
+  `/`; the old telemetry/steering test UI now lives at `/debug.html`.
+- The new page loads supplied White Knight/Saber, Dao/Bazzi, three original
+  track scenes, original menu button, track cards/minimaps and tachometer.
+  Its converted USD collision candidates feed demo C ground/body callbacks.
+  This permits practice driving, not verified original-course laps.
+- Confirmed in the linked Wasm that normal steering decreases from 10.00° at
+  rest to 5.77° at 15.50 m/s and 3.54° at 29.15 m/s with the same setting.
+  Added a regression test; demo drift slip uses a different steer path.
+- Matched the track X mirror used by the C collision reader in Three.js;
+  added camera occlusion checks. Set the default Beach I01 spawn on the road.
+- Reduced character visual scale from 0.60 to 0.42. PNG alpha cutouts now use
+  alpha testing, fixing opaque rectangular leaf/fence cards. Static USD nodes
+  with missing effect transforms are hidden until animation support exists;
+  the static Saber V1 still has small red triangles near its body, requiring
+  a material/mesh attachment pass rather than another blind scale change.
+  Offset the kart mesh from the demo body-centre pose so wheels meet the road.
+- Browser QA confirmed all three track loads, the new lobby, countdown/HUD,
+  Beach I01 road view, and the separate debug page. Automated tests: 10 passed.
+  Additional material/UV alignment and collision validation remain needed.
+
 ## Current playable state
 
 - Active driving uses the locally built 2004 KartRider demo C physics in Wasm.
@@ -11,9 +34,8 @@
   Bazzi. Their positions currently use manual seat scaling/offset; the USDA
   attach points and skeletal animation are not yet applied.
 - Three original P5136 tracks (`beach_I01`, `beach_I02`, `village_R01`) can be
-  selected and viewed as actual textured 3D scene meshes. This is **a viewer**:
-  the race still uses the temporary test course. Track collision and original
-  checkpoint/lap metadata have not been connected to the C world callbacks.
+  selected and driven using textured 3D scene meshes and heuristic collision
+  triangles. Original checkpoint/lap metadata remain unconnected.
 - Original P5136 tachometer sprite is locally copied from
   `gui/tachometer/default/tachometer.png`. Speed and gauge displays read live
   Wasm state; the present CSS crop/placement is provisional.
@@ -46,13 +68,12 @@ second reverse-engineering pass over `.1s` for geometry.
   demo Wasm running. Direct visual QA identified and corrected an oversized
   skydome/fog issue in the track viewer.
 - `node --test tools/test-demo-physics.mjs tools/test-frame-interpolation.mjs`:
-  8 passed. JavaScript syntax checks passed.
+  9 passed. JavaScript syntax checks passed.
 
 ## Next implementation order
 
-1. Extract the original track's drive and collision surfaces and map the
-   kart spawn pose into its coordinate frame. Feed triangle ground/wall
-   queries to the C demo world callbacks before permitting track racing.
+1. Verify the imported track collision candidates against original drive,
+   wall, ramp and jump surfaces; repair material/attachment transforms.
 2. Read track configuration/checkpoint data and replace the test ring gates.
    Verify lap/finish by manually driving one complete original course.
 3. Read USDA seat/attachment points and skeleton/animation to align and animate
