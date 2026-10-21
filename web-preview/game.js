@@ -1,4 +1,4 @@
-import { createPreviewRenderer } from './render3d.js?v=14';
+import { createPreviewRenderer } from './render3d.js?v=15';
 import { interpolatePreviewState } from './frame-interpolation.mjs';
 
 const $ = (selector) => document.querySelector(selector);

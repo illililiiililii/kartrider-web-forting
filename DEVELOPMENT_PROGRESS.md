@@ -9,6 +9,8 @@
 - Reduced the original kart/driver presentation scale from 0.72 to 0.55 after
   visual comparison against the imported Beach I01 roadway. This does not
   change the demo's collision body and still needs original unit verification.
+  Bumped module URLs so an already-open browser reload actually receives the
+  new scale; visually verified a narrower kart on the road.
 - Found Village R01's six previously missing dynamic ad images in the
   original `_rhoOut/zeta/kr/ppl/ingame/hangul/village/` folder. The local
   converter resolves them by exact filename and theme; no generated image or
