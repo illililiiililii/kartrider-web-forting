@@ -1,6 +1,7 @@
 param(
     [string]$DemoSource,
-    [string]$ZigExe
+    [string]$ZigExe,
+    [string]$RhoRoot = 'C:\Users\user\Downloads\kart web\KartRider_5136_01_UNPACK\KartRider_5136_01_UNPACK\_rhoOut'
 )
 $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $PSScriptRoot
@@ -32,6 +33,10 @@ if (Test-Path -LiteralPath (Join-Path $DemoSource '.git')) {
     }
 }
 $output = Join-Path $root 'web-preview\demo_physics.wasm'
+$generatedCourse = Join-Path $root 'src-demo\generated_5136_course.c'
+& python (Join-Path $PSScriptRoot 'prepare-local-course.py') `
+    --demo-source $DemoSource --rho-root $RhoRoot --output $generatedCourse
+if ($LASTEXITCODE -ne 0) { throw 'P5136 local course extraction failed' }
 & $ZigExe cc -target wasm32-wasi -O2 '-Wl,--no-entry' '-Wl,--export-memory' `
     '-Wl,-z,stack-size=1048576' -I (Join-Path $DemoSource 'include') -I (Join-Path $DemoSource 'demo') `
     (Join-Path $DemoSource 'src\kart_dynamics.c') `
@@ -46,6 +51,7 @@ $output = Join-Path $root 'web-preview\demo_physics.wasm'
     (Join-Path $DemoSource 'src\kart_course_data.c') `
     (Join-Path $DemoSource 'src\kart_engine_sound.c') `
     (Join-Path $DemoSource 'src\kart_input.c') `
+    $generatedCourse `
     (Join-Path $root 'src-demo\demo_bridge.c') -lm -o $output
 if ($LASTEXITCODE -ne 0) { throw 'Demo physics Wasm build failed' }
 Write-Output "Local-only demo Wasm built: $output"

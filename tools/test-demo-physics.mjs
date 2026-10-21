@@ -224,7 +224,7 @@ test('missing bridge edge rebounds without sinking through the original track',
     assert.ok(drive[11] <= 3, `wall counter=${drive[11]}`);
   });
 
-test('all three mirrored-back original tracks spawn on a road facing its clear direction',
+test('older manual spawn poses remain on-road without an immediate collision',
   { skip: !['beach_I01', 'beach_I02', 'village_R01'].every(
     name => existsSync(new URL(`../web-preview/assets/usd/${name}/collision.ktrk`, import.meta.url))) }, () => {
     for (const [name, x, y, heading, axis, direction] of [
@@ -247,5 +247,37 @@ test('all three mirrored-back original tracks spawn on a road facing its clear d
       assert.ok((drive[axis] - (axis ? y : x)) * direction > 10,
         `${name}: x=${drive[0]}, y=${drive[1]}`);
       assert.equal(drive[11], 0, `${name}: unexpected launch collision`);
+    }
+  });
+
+test('5136 ToRoad courses spawn behind their start gates and advance on the first crossing',
+  { skip: !['beach_I01', 'beach_I02', 'village_R01'].every(
+    name => existsSync(new URL(`../web-preview/assets/usd/${name}/collision.ktrk`, import.meta.url))) }, () => {
+    const tracks = [
+      ['beach_I01', 120, 98, Math.PI, 36, 121.25, 98.01, 0],
+      ['beach_I02', 70, 64, Math.PI, 23, 73.39, 63.99, Math.PI],
+      ['village_R01', 14.5, 49, Math.PI / 2, 61, 14.36, 51.57, Math.PI / 2],
+    ];
+    for (const [index, [name, x, y, heading, nodes, startX, startY, startHeading]] of tracks.entries()) {
+      const { api, state } = create();
+      const statePointer = state.byteOffset;
+      const bytes = readFileSync(new URL(`../web-preview/assets/usd/${name}/collision.ktrk`, import.meta.url));
+      const pointer = api.demo_track_alloc(bytes.length);
+      new Uint8Array(api.memory.buffer, pointer, bytes.length).set(bytes);
+      assert.ok(api.demo_track_load(pointer, bytes.length) > 0, name);
+      api.demo_track_free_buffer(pointer);
+      const ground = api.demo_track_ground_height(x, y, 80);
+      assert.equal(api.demo_track_enable(x, y, ground, heading), 1, name);
+      assert.equal(api.demo_set_5136_course(index), nodes, name);
+      const drive = new Float32Array(api.memory.buffer, statePointer, 40);
+      assert.ok(Math.abs(drive[0] - startX) < 0.03, name);
+      assert.ok(Math.abs(drive[1] - startY) < 0.03, name);
+      assert.ok(Math.abs(Math.cos(drive[2]) - Math.cos(startHeading)) < 0.01, name);
+      assert.equal(drive[39], nodes - 1, name);
+      api.demo_start_race();
+      for (let step = 0; step < 450; step++) api.demo_step(16, 1, 0, 0, 0, 0);
+      assert.equal(drive[19], 2, name);
+      assert.equal(drive[39], 0, `${name}: start gate not crossed`);
+      assert.equal(drive[21], 1, name);
     }
   });

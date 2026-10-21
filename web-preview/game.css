@@ -108,6 +108,15 @@ canvas{position:relative;z-index:1;display:block;width:100%;height:100%}
 .countdown.visible{display:block}
 .touch-controls{display:none}
 .error{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:406px;min-height:130px;padding:25px;background:url('./assets/ui/stage/mainMenu/leftbg.png') 0 0/100% 100% no-repeat;pointer-events:auto}
+.race-result{position:absolute;z-index:5;left:50%;top:calc(50% + 30px);transform:translate(-50%,-50%);width:317px;height:156px;pointer-events:auto}
+.result-times{height:58px;background:rgba(0,0,0,.59)}
+.result-row{height:29px;display:flex;align-items:center;justify-content:space-between;padding:0 10px}
+.result-row img{max-width:110px;max-height:22px;object-fit:contain;object-position:left center}
+.result-row span{font-size:21px;font-weight:700;font-variant-numeric:tabular-nums}
+.result-buttons{display:flex;justify-content:center;gap:25px;margin-top:12px}
+.result-buttons button{width:62px;height:62px;border:0;padding:0;background:transparent center/contain no-repeat}
+#result-retry{background-image:url('./assets/ui/stage/common/btn_singleAgain_1.png')}
+#result-lobby{background-image:url('./assets/ui/stage/common/btn_menu_1.png')}
 
 /* The following panels use the original P5136 stage/dialog graphics. */
 .original-modal{position:absolute;z-index:7;left:50%;top:50%;transform:translate(-50%,-50%);pointer-events:auto;background:#d7e1ea;border:3px solid #303746;border-radius:8px;box-shadow:0 0 0 2px #e8eef2,0 12px 35px #0009;color:#eaf4ff}

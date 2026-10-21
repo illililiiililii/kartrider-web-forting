@@ -4,6 +4,7 @@
 /.vs/
 /web-preview/assets/*.mesh.json
 /web-preview/demo_physics.wasm
+/src-demo/generated_5136_course.c
 /web-preview/assets/tracks/
 /web-preview/assets/usd/
 /web-preview/assets/ui/

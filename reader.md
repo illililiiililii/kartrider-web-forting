@@ -5,7 +5,9 @@ the old physics test UI. The new page drives on local KTRK triangles generated
 from the supplied USDA `beach_I01`, `beach_I02`, and `village_R01` scenes.
 `tools/convert-usd-local.py` chooses collision candidates by mesh/texture
 names; these are **not verified original collision meshes**. Track-specific
-route/checkpoint/lap data are not wired, so the UI correctly says practice.
+ToRoad route/checkpoint/lap data are now wired from each original `track.1s`.
+Complete human-driven lap/finish through the provisional collision mesh is
+not yet verified.
 The Three.js renderer now leaves original USD X unmirrored while the KTRK
 exporter cancels `kart_track_scene_world_vertex`'s internal X mirror,
 tests camera occlusion, scales the character by 0.42 times the new 0.72 kart
@@ -73,35 +75,33 @@ not permanent removal. Other opaque/transparent material mismatches may remain.
   geometry/triangle parser if USD is unavailable. The separate provided USDA
   files now render as 3D scenes, but the drive/collision subset must be
   checked against original metadata before claiming original parity.
-- The demo's 13 course gate graphs are compiled and testable in Wasm, but only
-  the synthetic debug world is playable on `/debug.html`; the P5136 imported
-  tracks are practice runs without original checkpoint/lap mapping. A complete manually
-  driven 3-lap race has not yet been verified. Kart/character and 3D track
+- The demo's 13 course gate graphs are compiled and testable in Wasm. The P5136
+  imported tracks now use their own original `.1s` ToRoad gate graphs (36, 23,
+  and 61 built graph nodes) and 3/3/2-lap finish rules. A complete manually
+  driven race has not yet been verified. Kart/character and 3D track
   scenes and a new lobby/HUD exist. The visible lobby/HUD now uses unchanged
   original GUI sprites and XML-derived positioning rather than fabricated
   panel/button artwork. The supplied 1280×720 screenshot now guides the
   lobby composition, with `myRoom/2022_Facelift_main` background tiles and
   rider atlas. Their screen-space placement is approximate; original room
   transforms/camera, the exact event advertisement, route/lap
-  logic, animation, room multiplayer, and results remain missing. `server.mjs`
+  collision quality, animation, room multiplayer, and accurate results remain missing. `server.mjs`
   implements register/login/logout/session endpoints with a provisional
   account-entry page; an original account-login layout is still missing.
   `stage/authenStage/stage_window@zz.xml` describes a matrix/OTP challenge,
   not an account login. The extracted `stage/mainMenu/mq_window@kr.xml`
   establishes original lobby panel and mode coordinates.
 - `_rhoOut/track/common/track@zz.xml` establishes 3 laps for `beach_I01`
-  and `beach_I02`, and 2 for `village_R01`; those totals appear in the HUD.
-  Their actual checkpoints are still missing. `_rhoOut/track/common/aiPath/`
-  contains track-specific `.kap` files, but `beach_I01_1.kap` starts with a
-  length word followed by encoded bytes; it is not a directly readable gate
-  table. The demo's `src/kart_course_data.c` has `village_R01` gates, but its
-  first course position is approximately `(457.7,-219)` while the converted
-  5136 road starts near `(14.5,49)`; there is no verified transform. Next:
-  decode the original KAP/ToRoad 5136 route or establish the scene transform,
-  then bind those gates to C/Wasm and validate a complete lap by driving.
-  Until then, `R`/deep-fall recovery uses a rolling grounded safety pose in
-  `src-demo/demo_bridge.c`, preserving the race clock. It is **not** an
-  original checkpoint and cannot prove a legal lap.
+  and `beach_I02`, and 2 for `village_R01`. `tools/prepare-local-course.py`
+  now decodes ToRoad in each original `track.1s`, scales its positions by
+  0.1 and emits a local-only C table. Native synthetic gate traversal passes
+  all 3/3/2 laps. It does not prove a driveable route with the provisional
+  USDA-derived KTRK collision. `R` now requests source-course respawn where
+  a gate has been reached; deep-fall recovery still has a rolling grounded
+  fallback if no suitable course pose is available. Next: drive each full
+  course in-browser, repair KTRK missing walls/road transitions, and compare
+  gate pass order against original track metadata. The `.kap` AI paths remain
+  encoded and are not used.
 - The Dao/Bazzi body atlases (`character/dao/1.png`, `character/bazzi/1.png`)
   are neutral and now tinted on the imported mesh; face atlas `f00.png` is
   separate. The tint is a visual approximation. The supplied `.1s` files

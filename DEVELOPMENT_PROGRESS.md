@@ -213,8 +213,8 @@ second reverse-engineering pass over `.1s` for geometry.
 
 1. Verify the imported track collision candidates against original drive,
    wall, ramp and jump surfaces; repair material/attachment transforms.
-2. Read track configuration/checkpoint data and replace the test ring gates.
-   Verify lap/finish by manually driving one complete original course.
+2. Manually drive one complete original `.1s` ToRoad course in the browser,
+   confirming each lap and finish through the provisional collision mesh.
 3. Read USDA seat/attachment points and skeleton/animation to align and animate
    the driver and kart parts. Eliminate the manual offset.
 4. Map original UI XML/sprite atlases for HUD/lobby and connect selections to
@@ -250,3 +250,21 @@ and local build instructions are tracked.
   rolling safety point is a temporary fallback, not an original checkpoint.
 - New-browser visual QA confirmed the blue Dao lobby model, original race
   scenery/HUD, and Beach I01 `/3` readout. Automated tests: 19/19 passed.
+
+## 2026-10-22: original 5136 ToRoad checkpoints and finish
+
+- `tools/prepare-local-course.py` reads the supplied original `track.1s`
+  files with the separately obtained demo ToRoad parser. It emits ignored
+  local C tables for Beach I01, Beach I02 and Village R01; the Wasm builder
+  links those tables to the unchanged demo course implementation.
+- Original start positions divided by 10 agree with the converted road surface
+  within 0.005 m. Spawn headings now follow the original course instead of
+  manually guessed directions. Three 5136 route graphs contain 36/23/61
+  built nodes and use the original metadata's 3/3/2 laps.
+- The race HUD shows live lap and best-lap time. On C/Wasm finish it opens a
+  minimal result view using the original `stage/timeAttack/mq_window@zz.xml`
+  panel dimensions and supplied `laptime_*`/button sprites, with retry/lobby.
+- Native synthetic traversal tests pass all three complete course graphs;
+  Node/Wasm tests pass 20 checks including original spawn/first gate. Browser
+  QA confirmed the Beach I01 start stripe is ahead of the kart. A complete
+  human-driven lap still needs collision/route QA and is not claimed here.

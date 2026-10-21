@@ -14,6 +14,7 @@ const trackChoice = $('#track-choice');
 const trackNames = { beach_I01: '비치 I01', beach_I02: '비치 I02', village_R01: '빌리지 R01' };
 // _rhoOut/track/common/track@zz.xml: item tracks have three laps; R01 has two.
 const trackLaps = { beach_I01: 3, beach_I02: 3, village_R01: 2 };
+const courseIndices = { beach_I01: 0, beach_I02: 1, village_R01: 2 };
 const spawns = {
   beach_I01: [120, 98, Math.PI],
   beach_I02: [70, 64, Math.PI],
@@ -104,10 +105,12 @@ async function loadSelectedTrack() {
     const height = wasm.demo_track_ground_height(x, y, 80);
     if (!Number.isFinite(height)) throw new Error('시작 지점의 바닥을 찾지 못함');
     if (!wasm.demo_track_enable(x, y, height, heading)) throw new Error('트랙 활성화 실패');
+    const gates = wasm.demo_set_5136_course(courseIndices[name]);
+    if (!gates) throw new Error(`${name} 원본 체크포인트 그래프를 생성하지 못함`);
     wasm.demo_set_steer_angle(Number(localStorage.getItem('demo-steer-angle')) || 10);
     syncState();
     view.setLobbyMode(true);
-    status.textContent = `원본 3D 트랙 · ${triangles.toLocaleString()}개 충돌 후보 삼각형`;
+    status.textContent = `원본 3D 트랙 · ${triangles.toLocaleString()}개 충돌 후보 삼각형 · 체크포인트 ${gates}개`;
     $('#start').disabled = false;
     $('#setup-start').disabled = false;
   } finally {
@@ -139,6 +142,7 @@ function startRace() {
   closeAllDialogs();
   lobby.classList.add('hidden');
   raceUi.classList.remove('hidden');
+  $('#race-result').classList.add('hidden');
   active = 'race';
 }
 
@@ -151,6 +155,7 @@ function goLobby() {
   view.setLobbyMode(true);
   $('#lobby-backdrop').classList.remove('hidden');
   raceUi.classList.add('hidden');
+  $('#race-result').classList.add('hidden');
   lobby.classList.remove('hidden');
   $('#single-setup').classList.remove('hidden');
 }
@@ -253,14 +258,21 @@ function draw(state, frameMs) {
   const timeText = formatTime(state[23]);
   renderSpriteDigits($('#timer'), timeText, 'time-digit', 18, 11);
   $('#race-time').textContent = timeText;
-  $('#lap-number').textContent = Math.max(1, Math.round(state[21]));
+  $('#best-time').textContent = formatTime(state[18]);
+  $('#lap-number').textContent = Math.min(trackLaps[trackChoice.value], Math.max(1, Math.round(state[21])));
   $('#collision-count').textContent = Math.round(state[11]);
   $('#timer').setAttribute('aria-label', `주행 시간 ${timeText}`);
   const countdown = state[19] === 1 && state[20] <= 3 ? Math.ceil(state[20]) : 0;
   $('#countdown').classList.toggle('visible', Boolean(countdown));
   if (countdown) $('#countdown').style.backgroundPosition = `${-countdown * 64}px 0`;
   $('#lap').textContent = state[19] === 1 ? '출발 준비' :
-    state[19] === 3 ? '완주' : '연습 주행 · 원본 체크포인트 미연결';
+    state[19] === 3 ? '완주' : '원본 체크포인트 레이스';
+  const finished = state[19] === 3;
+  $('#race-result').classList.toggle('hidden', !finished);
+  if (finished) {
+    $('#result-time').textContent = formatTime(state[24]);
+    $('#result-best').textContent = formatTime(state[18]);
+  }
 }
 
 function frame(time) {
@@ -367,6 +379,8 @@ for (const button of document.querySelectorAll('[data-cycle]')) {
   });
 }
 $('#back-lobby').addEventListener('click', goLobby);
+$('#result-retry').addEventListener('click', startRace);
+$('#result-lobby').addEventListener('click', goLobby);
 $('#reset').addEventListener('click', () => { wasm.demo_request_reset(); syncState(); });
 
 try {

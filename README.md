@@ -14,7 +14,8 @@ native account fields are text, not newly drawn UI art. The account-entry
 layout remains provisional because an original account-login screen was not
 found in the extracted files.
 All three converted original tracks can be driven with experimental collision
-triangles; original checkpoints/laps and multiplayer are **not implemented**.
+triangles. Their original `.1s` ToRoad checkpoint routes, lap counts and a
+basic finish result are connected to C/Wasm. Multiplayer is not implemented.
 
 The browser game now links the **unmodified** `kart_dynamics.c`,
 `kart_simulation.c`, `kart_camera.c`, `kart_countdown.c`, `kart_course.c`,
@@ -29,8 +30,9 @@ and an adapter for heuristic original-track triangle collision. The demo's
 200-unit/two-slot hypothesis, course-gate graph, warp, recovery, and sound
 driving laws are linked. This is **2004 demo physics**, not verified P5136
 physics. Its Windows renderer/playback and experimental multi-gear sound are
-not part of the physics Wasm. The demo's course tables are not silently applied
-to later P5136 track versions without coordinate validation. The former Rust physics investigation
+not part of the physics Wasm. The demo's 2004 course tables are not silently
+applied to the 5136 tracks: local 5136 ToRoad gates are decoded separately
+from the supplied `track.1s`. The former Rust physics investigation
 is preserved in [`OLD_PYS`](OLD_PYS/README.md) and is not loaded in the browser.
 
 ## Build and play locally (Windows)
@@ -40,7 +42,8 @@ is preserved in [`OLD_PYS`](OLD_PYS/README.md) and is not loaded in the browser.
 2. Obtain Zig 0.13.0 from the [official downloads](https://ziglang.org/download/0.13.0/)
    and extract it outside this repository.
 3. Run the local-only builder, passing the actual paths if they differ from
-   the sibling `work` defaults:
+   the sibling `work` defaults. The builder also requires the supplied
+   unpacked 5136 `_rhoOut` folder; override it with `-RhoRoot` if needed:
 
 ```powershell
 .\tools\build-demo-physics.ps1 -DemoSource 'C:\path\to\KartriderDemoPhysics' -ZigExe 'C:\path\to\zig.exe'
@@ -60,10 +63,13 @@ python -m pip install usd-core==25.5.1
 .\tools\prepare-local-usd.ps1
 ```
 
-The locally copied artwork and collision candidates are Git-ignored. The new
+The locally copied artwork, 5136-derived C gate table, and collision candidates
+are Git-ignored. The new
 main page drives on `beach_I01`, `beach_I02`, and `village_R01` visual meshes
-with heuristic KTRK collision candidates. It is labelled practice driving
-because verified track checkpoints/finish are missing. The square test course
+with heuristic KTRK collision candidates. Its checkpoint gates are decoded
+from those tracks' original `.1s` ToRoad records and use 3/3/2 laps
+respectively. Source coordinates scale by 0.1 into the converted scene; all
+three original start heights agree with KTRK within 0.005 m. The square test course
 remains on `/debug.html`. The supplied converted models are USDA, not FBX.
 See [`DEVELOPMENT_PROGRESS.md`](DEVELOPMENT_PROGRESS.md).
 
@@ -88,10 +94,10 @@ explicitly a hypothesis, not a recovered original charging formula. The two
 selectable V1 karts additionally use a configurable passive charger in the
 C/Wasm bridge: grounded forward speed above 25 m/s adds 2 gauge units/s.
 These values are provisional, not recovered P5136 constants. The visible lap
-totals come from original `track@zz.xml`; original checkpoint/finish gates
-remain unconnected, so these tracks are still practice runs.
-On imported tracks, `R` and deep-fall recovery use a temporary grounded
-safety position without clearing the timer; this is not an original checkpoint.
+totals come from original `track@zz.xml`; original `.1s` ToRoad checkpoints
+drive the Wasm lap and finish state. On imported tracks, `R` requests a
+course checkpoint respawn; deep-fall recovery can still use a temporary
+grounded safety pose without clearing the timer.
 
 `server.mjs` provides independent web-game accounts (not Nexon/P5136 accounts):
 `POST /api/auth/register`, `POST /api/auth/login`, `GET /api/auth/me`, and
@@ -128,10 +134,12 @@ so this evidence applies to non-drift steering only.
 
 ```powershell
 .\tools\build-demo-physics.ps1
+.\tools\test-5136-course.ps1
 node --test tools\test-auth-server.mjs tools\test-demo-physics.mjs tools\test-frame-interpolation.mjs tools\test-local-ui-assets.mjs
 ```
 
-The current local test run passed 19 checks, including V1 speed-threshold
+The current local test run passed 20 Node checks plus native synthetic traversal
+of all three complete original routes. These checks include V1 speed-threshold
 charging, original GUI asset
 hash verification, imported track
 collision, clear launch directions on all three tracks, speed-dependent steering, demo gauge/countdown/input/course
@@ -140,6 +148,9 @@ In direct Wasm tests, the default
 demo kart accelerated to about 156 km/h after 1.6 seconds on the flat test world; with
 identical short inputs, 5°/10°/20° steering produced increasing heading
 changes. Browser QA confirmed Wasm loading, the actual `.1s` kart, the slider,
-and the race countdown. Full human-driven lap completion and original-client
+and the race countdown; browser QA also confirmed Beach I01's corrected
+original start-line direction. Native traversal tests feed the gate quads
+directly and do **not** establish that a human can drive full laps through
+the provisional collision mesh. Full human-driven lap completion and original-client
 trajectory equivalence are **not** verified. See [`reader.md`](reader.md) for
 remaining work and limitations.

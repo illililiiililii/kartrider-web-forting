@@ -31,6 +31,9 @@ static KartSoundDriver sound_driver;
 static KartSoundState sound_state;
 static KartSteeringInputState steering_keys;
 static KartCourse course;
+/* This table is generated locally from the user's 5136 track.1s files. */
+extern const KartCourseAsset *kart_5136_course_asset_at(unsigned int index);
+float demo_track_ground_height(float x, float y, float top);
 static KartCourseProgress course_progress;
 static bool course_enabled;
 static unsigned int clock_ms;
@@ -168,7 +171,7 @@ static void update_race(float dt) {
                 kart.position, kart.orientation, kart.linear_velocity,
                 (unsigned int)(race_time * 1000.0f));
         }
-        lap = (float)(course_progress.lap + 1u);
+        lap = (float)(course_progress.lap ? course_progress.lap : 1u);
         next_gate = (float)course_progress.node_id;
         if (course_progress.lap >= course.lap_count) {
             race_phase = 3.0f;
@@ -240,6 +243,7 @@ static void publish(unsigned int elapsed_ms, KartSimulationStepResult step) {
     telemetry[15] = atan2f(lateral, forward) * 57.295779513f;
     telemetry[16] = (float)step.substeps;
     telemetry[17] = kart.instant_boost.active_timer;
+    telemetry[18] = course_enabled ? course_progress.best_lap_ms * 0.001f : 0.0f;
     telemetry[19] = race_phase;
     telemetry[20] = countdown;
     telemetry[21] = lap;
@@ -326,6 +330,36 @@ __attribute__((export_name("demo_set_course"))) unsigned int demo_set_course(uns
     return 1u;
 }
 
+__attribute__((export_name("demo_set_5136_course"))) unsigned int demo_set_5136_course(
+    unsigned int index) {
+    const KartCourseAsset *asset = kart_5136_course_asset_at(index);
+    if (!track_enabled || !asset || index > 2u) return 0u;
+    kart_course_free(&course);
+    course_enabled = false;
+    if (!kart_course_build(&course, asset)) return 0u;
+    kart_course_set_lap_count(&course, index == 2u ? 2u : 3u);
+    KartVec3 start;
+    KartQuat orientation;
+    kart_course_start_pose(&course, 0u, &start, &orientation);
+    const float height = demo_track_ground_height(start.x, start.y, start.z + 10.0f);
+    if (!isfinite(height)) {
+        kart_course_free(&course);
+        return 0u;
+    }
+    const float fx = 2.0f * (orientation.w*orientation.z -
+                             orientation.x*orientation.y);
+    const float fy = -(1.0f - 2.0f * (orientation.x*orientation.x +
+                                      orientation.z*orientation.z));
+    spawn_x = start.x;
+    spawn_y = start.y;
+    spawn_z = height;
+    spawn_heading = atan2f(fy, fx);
+    course_enabled = true;
+    reset_at(spawn_x, spawn_y, spawn_heading);
+    publish(0, (KartSimulationStepResult){0});
+    return course.node_count;
+}
+
 __attribute__((export_name("demo_clear_course"))) void demo_clear_course(void) {
     kart_course_free(&course);
     course_enabled = false;
@@ -365,6 +399,8 @@ __attribute__((export_name("demo_track_free_buffer"))) void demo_track_free_buff
 __attribute__((export_name("demo_track_load"))) unsigned int demo_track_load(
     const void *data, unsigned int size) {
     track_enabled = false;
+    kart_course_free(&course);
+    course_enabled = false;
     kart_track_scene_free(&track_scene);
     return kart_track_scene_load_memory(&track_scene, data, size) ?
         track_scene.total_triangle_count : 0u;
