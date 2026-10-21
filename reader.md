@@ -16,8 +16,9 @@ not permanent removal. Other opaque/transparent material mismatches may remain.
 - Active driving calls the unmodified C demo source (pinned commit in README),
   but this is the **2004 demo**. KartRider P5136 `BodyParam`, `KartSpec`, S0–S8,
   V1/XUN, Charger, Exceed, and boost timings are not integrated. The archived
-  investigation and fixtures are in `OLD_PYS/`. Future comparison should run
-  the same P5136 input trace against the demo Wasm before mixing formulas.
+  investigation and fixtures are in `OLD_PYS/`. Per the user's current
+  direction, the 2004 demo C simulation is the chosen driving model;
+  P5136-versus-demo numerical parity work is not planned.
 - `src-demo/demo_bridge.c` retains the flat ground and square walls only for
   `/debug.html`. The new page loads heuristic USDA triangle candidates into
   `KartSimulationWorld` ground/body callbacks. The original slope, jump, wall
@@ -34,7 +35,7 @@ not permanent removal. Other opaque/transparent material mismatches may remain.
   storage, and handoff on drift exit. `demo_set_gauge_factor` exposes its
   coefficient. The formula itself is not recovered from either the 2004 EXE
   or P5136. The original demo's 7-second countdown and ±100 ms start-boost
-  press window are linked; P5136 equivalence has not been checked.
+  press window are linked. These remain demo behavior, not asserted P5136 formulas.
 - The camera pose and FOV come from `kart_camera.c`; the new renderer adds
   raycast occlusion avoidance on track meshes. This is not proven P5136 camera
   behavior, and some scene pieces may still intrude into the view.
@@ -42,8 +43,8 @@ not permanent removal. Other opaque/transparent material mismatches may remain.
   Dao/Bazzi characters, three textured track scenes, and a dashboard sprite.
   The USD hierarchy was exported to browser JSON with UVs; skeleton weights,
   animation, seat attachment alignment, verified track drive surfaces, and material
-  nuances are not integrated. The displayed kart/driver are scaled to 0.55
-  relative to the previous browser view, but the demo collision body is still
+  nuances are not integrated. The race kart/driver display calibration is
+  0.22 (lobby 0.85), but the demo collision body is still
   the source preset geometry; their exact overlap is unverified. Kart
   front-wheel steering for USD meshes still needs visual verification. Do not
   commit extracted models or textures without verified redistribution rights.
@@ -61,12 +62,18 @@ not permanent removal. Other opaque/transparent material mismatches may remain.
   the synthetic debug world is playable on `/debug.html`; the P5136 imported
   tracks are practice runs without original checkpoint/lap mapping. A complete manually
   driven 3-lap race has not yet been verified. Kart/character and 3D track
-  scenes and a new lobby/HUD exist. Full original UI atlas mapping, route/lap
+  scenes and a new lobby/HUD exist. The visible lobby/HUD now uses unchanged
+  original GUI sprites and XML-derived positioning rather than fabricated
+  panel/button artwork. The supplied 1280×720 screenshot now guides the
+  lobby composition, with `myRoom/2022_Facelift_main` background tiles and
+  rider atlas. Their screen-space placement is approximate; original room
+  transforms/camera, the exact event advertisement, route/lap
   logic, animation, room multiplayer, and results remain missing. `server.mjs`
-  implements register/login/logout/session endpoints, but no original-derived
-  login screen is attached. `stage/authenStage/stage_window@zz.xml` describes a
-  matrix/OTP challenge, not an account login. The extracted `stage/mainMenu/
-  mq_window@kr.xml` does establish original lobby panel and mode coordinates.
+  implements register/login/logout/session endpoints with a provisional
+  account-entry page; an original account-login layout is still missing.
+  `stage/authenStage/stage_window@zz.xml` describes a matrix/OTP challenge,
+  not an account login. The extracted `stage/mainMenu/mq_window@kr.xml`
+  establishes original lobby panel and mode coordinates.
 - Missing USDA track art includes `ad_board_a.png`, `ad_board_b.png`,
   `ad_fence_a/b/c.png`, `ad_start.png` on Beach I01; these are referenced by
   the supplied USDA but absent from its sibling texture folder, exact

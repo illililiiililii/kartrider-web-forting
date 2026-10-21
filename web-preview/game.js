@@ -1,4 +1,4 @@
-import { createPreviewRenderer } from './render3d.js?v=15';
+import { createPreviewRenderer } from './render3d.js?v=24';
 import { interpolatePreviewState } from './frame-interpolation.mjs';
 
 const $ = (selector) => document.querySelector(selector);
@@ -6,6 +6,8 @@ const view = createPreviewRenderer($('#world'));
 const lobby = $('#lobby');
 const raceUi = $('#race-ui');
 const status = $('#load-status');
+const accountState = $('#account-state');
+const accountLink = $('#account-link');
 const kartChoice = $('#kart-choice');
 const characterChoice = $('#character-choice');
 const trackChoice = $('#track-choice');
@@ -29,6 +31,26 @@ const keyMap = {
   ShiftLeft: 'drift', ShiftRight: 'drift',
   ControlLeft: 'boost', ControlRight: 'boost',
 };
+
+async function refreshAccount() {
+  try {
+    const response = await fetch('/api/auth/me', { credentials: 'same-origin', cache: 'no-store' });
+    if (!response.ok || !response.headers.get('content-type')?.includes('application/json')) return;
+    const { user } = await response.json();
+    accountState.textContent = user ? user.handle : '게스트';
+    accountLink.textContent = user ? '로그아웃' : '로그인';
+    accountLink.href = user ? '#' : 'login.html';
+    accountLink.dataset.loggedIn = user ? 'true' : 'false';
+  } catch { /* Static-only preview can still be played as a guest. */ }
+}
+
+accountLink.addEventListener('click', async (event) => {
+  if (accountLink.dataset.loggedIn !== 'true') return;
+  event.preventDefault();
+  await fetch('/api/auth/logout', { method: 'POST', credentials: 'same-origin' });
+  await refreshAccount();
+});
+refreshAccount();
 
 function syncState() {
   current.set(new Float32Array(wasm.memory.buffer, statePointer, 40));
@@ -94,6 +116,8 @@ function startRace() {
   wasm.demo_set_steer_angle(Number(localStorage.getItem('demo-steer-angle')) || 10);
   syncState();
   view.setLobbyMode(false);
+  $('#lobby-backdrop').classList.add('hidden');
+  $('#selection-panel').classList.add('hidden');
   lobby.classList.add('hidden');
   raceUi.classList.remove('hidden');
   active = 'race';
@@ -106,27 +130,48 @@ function goLobby() {
   wasm.demo_reset();
   syncState();
   view.setLobbyMode(true);
+  $('#lobby-backdrop').classList.remove('hidden');
   raceUi.classList.add('hidden');
   lobby.classList.remove('hidden');
 }
 
 function formatTime(seconds) {
   const minutes = Math.floor(seconds / 60);
-  const rest = seconds - minutes * 60;
-  return `${String(minutes).padStart(2, '0')}:${rest.toFixed(2).padStart(5, '0')}`;
+  const wholeSeconds = Math.floor(seconds) % 60;
+  const hundredths = Math.floor((seconds % 1) * 100);
+  return `${String(minutes).padStart(2, '0')}:${String(wholeSeconds).padStart(2, '0')}:${String(hundredths).padStart(2, '0')}`;
+}
+
+function renderSpriteDigits(element, value, className, glyphWidth, columns) {
+  if (element.dataset.value === value) return;
+  element.dataset.value = value;
+  element.replaceChildren(...[...value].map((character, index) => {
+    const span = document.createElement('span');
+    span.className = className;
+    const digit = character === ':' ? 10 : Number(character);
+    span.style.backgroundPosition = `${-(digit % columns) * glyphWidth}px ${-Math.floor(digit / columns) * (className === 'speed-digit' ? 44 : 22)}px`;
+    if (className === 'time-digit') span.style.left = `${[85, 99, 111, 122, 136, 148, 159, 173][index]}px`;
+    return span;
+  }));
 }
 
 function draw(state, frameMs) {
   view.render(visual, frameMs);
   if (active !== 'race') return;
   const speed = Math.max(0, Math.round(state[6] * 3.6));
-  $('#speed').textContent = String(speed).padStart(3, '0');
-  $('#needle').style.transform = `rotate(${-90 + Math.min(270, speed / 360 * 270)}deg)`;
+  const speedText = String(Math.min(speed, 999)).padStart(3, '0');
+  renderSpriteDigits($('#speed'), speedText, 'speed-digit', 38, 10);
+  $('#speed').setAttribute('aria-label', `속도 ${speed} km/h`);
   $('#gauge').style.width = `${Math.min(100, Math.max(0, state[7]))}%`;
-  $('#nitro-count').textContent = String(state[32]);
-  $('#timer').textContent = formatTime(state[23]);
+  const nitroCount = Math.max(0, Math.floor(state[32]));
+  $('#nitro-count').setAttribute('aria-label', `보유 부스터 ${nitroCount}개`);
+  $('.nitro-inventory').classList.toggle('has-nitro', nitroCount > 0);
+  const timeText = formatTime(state[23]);
+  renderSpriteDigits($('#timer'), timeText, 'time-digit', 18, 11);
+  $('#timer').setAttribute('aria-label', `주행 시간 ${timeText}`);
   const countdown = state[19] === 1 && state[20] <= 3 ? Math.ceil(state[20]) : 0;
-  $('#countdown').textContent = countdown ? String(countdown) : '';
+  $('#countdown').classList.toggle('visible', Boolean(countdown));
+  if (countdown) $('#countdown').style.backgroundPosition = `${-countdown * 64}px 0`;
   $('#lap').textContent = state[19] === 1 ? '출발 준비' : '연습 주행';
 }
 
@@ -185,12 +230,19 @@ $('#mode-speed').addEventListener('click', startRace);
 for (const item of document.querySelectorAll('[data-lobby-action]')) {
   item.addEventListener('click', () => {
     const action = item.dataset.lobbyAction;
-    if (action === 'start') startRace();
-    else {
-      const select = ({ kart: kartChoice, character: characterChoice, track: trackChoice })[action];
-      select.focus();
-      try { select.showPicker(); } catch { /* focus still works on older browsers */ }
-    }
+    if (action === 'home') $('#selection-panel').classList.add('hidden');
+    else $('#selection-panel').classList.remove('hidden');
+    if (action === 'kart') kartChoice.focus();
+    if (action === 'character') characterChoice.focus();
+  });
+}
+$('#close-selection').addEventListener('click', () => $('#selection-panel').classList.add('hidden'));
+for (const button of document.querySelectorAll('[data-cycle]')) {
+  button.addEventListener('click', () => {
+    const select = document.getElementById(button.dataset.cycle);
+    const step = Number(button.dataset.direction);
+    select.selectedIndex = (select.selectedIndex + step + select.options.length) % select.options.length;
+    select.dispatchEvent(new Event('change', { bubbles: true }));
   });
 }
 $('#back-lobby').addEventListener('click', goLobby);

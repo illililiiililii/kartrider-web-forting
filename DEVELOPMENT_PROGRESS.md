@@ -1,5 +1,62 @@
 # P5136 web port — development progress
 
+## 2026-10-22 original-only game GUI pass
+
+- Matched the user-supplied 1280×720 lobby reference using unchanged
+  `myRoom/2022_Facelift_main/backboard_01`–`06.png` and `obj.png` for the
+  mountain/clock-tower/roof and decorative riders. Mode choice, right-hand
+  pass/event stack, account bars, and 66-pixel white taskbar now follow the
+  screenshot's principal placement. The tiled backboard is a screen-space
+  approximation, not recovered original room geometry/camera.
+- Separated the lobby backdrop from the original track drive scene. The
+  transparent WebGL layer shows the real 3D kart and character in the lobby;
+  entering the race restores the original track scene and demo camera.
+  Lobby-only framing and scale were adjusted against the supplied reference.
+  Browser QA at 1280×720 confirmed lobby, race entry, and lobby return.
+- Rebuilt `/` rather than layering another style over the provisional UI.
+  Lobby modes, list/promotion frames, arrows, start button, notice, taskbar,
+  race rank/time digit sheets, REC sheet, N₂O gauge/slot, tachometer, and
+  minimap frame are unchanged PNGs from original `_rhoOut` stage/gui folders.
+  Their positioning follows `mq_window@kr.xml`, `taskBar@kr.xml`,
+  `rankBoard.xml`, `timeInfo.xml`, `boostGauge.xml`, and `tachometer.xml` where
+  the present practice-mode game has matching state. No new UI artwork was
+  generated. The account form uses the original list frame and generic red
+  button art; its precise P5136 login layout is unavailable.
+- Original fonts now load locally. A SHA-256 regression test checks each
+  referenced local GUI file against `_rhoOut` and rejects CSS gradients.
+  The sprite assets remain Git-ignored and are copied by
+  `tools/prepare-local-ui.ps1` from the user's installation.
+- Mobile race touch buttons use the original `gui/tablet` direction,
+  Drift, and Item sprites, including their pressed-state images.
+- Browser QA confirmed lobby selection labels/button and race rank, timer,
+  speed, N₂O, REC, and minimap render. Removed a static fake minimap player
+  marker; actual map-coordinate mapping is still unimplemented.
+
+## 2026-10-21 original GUI, visual scale, camera, and local login
+
+- Retained the upstream demo C physics as the chosen driving model; removed
+  P5136 numerical-parity comparison from the active work plan.
+- Race kart/driver visual scale is now 0.22 by default (previously 0.55),
+  adjustable from `/debug.html` without changing collision or speed. The
+  original C camera pose/forward vector is used directly: removed an extra JS
+  smoothing pass and independent look-at pitch. Camera obstruction tests now
+  ignore obvious non-solid decorative meshes.
+- Removed the fabricated blue showroom pad. The lobby shows original Beach
+  track geometry and the original kart and character with separate lobby
+  display calibration. Visual placement remains provisional.
+- Replaced the custom lobby panel/button graphics with the unchanged P5136
+  `stage/mainMenu` / Korean override PNGs chosen from `mq_window@kr.xml`;
+  HUD N₂O frame/bar now uses `stage/speedIndiGame/boostGauge.xml` assets.
+  Some layout/text controls are still browser-native rather than XML-complete.
+- Added a local-account login/register screen using the original menu panel
+  art because no normal account-entry screen was found; `authenStage` is an
+  additional challenge screen. The login page calls the existing SQLite
+  server APIs. The lobby displays account state and supports logout.
+- Replaced the old 4173 static preview server with `node server.mjs` on the
+  same URL. Browser QA confirmed the lobby and login page load. The race
+  kart is visibly smaller, but original attachment/collision data remain
+  unresolved.
+
 ## 2026-10-21 idle collision and original localized textures
 
 - Reproduced ~37 m of idle creep over eight simulated minutes on the imported
@@ -132,8 +189,8 @@ second reverse-engineering pass over `.1s` for geometry.
    the driver and kart parts. Eliminate the manual offset.
 4. Map original UI XML/sprite atlases for HUD/lobby and connect selections to
    real race state. Verify the original audio's per-track mapping and timing.
-5. Add room multiplayer after a stable single-player track race; compare
-   P5136 behavior separately rather than claiming 2004 demo equivalence.
+5. Add room multiplayer after a stable single-player track race. Continue
+   labeling the driving simulation as the chosen 2004 demo model.
 
 ## Distribution boundary
 

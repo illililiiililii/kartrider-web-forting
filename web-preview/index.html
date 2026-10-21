@@ -4,30 +4,57 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>카트라이더 5136 · 웹 포트</title>
-  <link rel="stylesheet" href="game.css?v=2">
+  <link rel="stylesheet" href="game.css?v=10">
 </head>
 <body>
   <main class="game-shell">
+    <div id="lobby-backdrop" class="lobby-backdrop" aria-hidden="true">
+      <div class="backboard-grid"><img src="assets/ui/myRoom/2022_Facelift_main/backboard_01.png" alt=""><img src="assets/ui/myRoom/2022_Facelift_main/backboard_02.png" alt=""><img src="assets/ui/myRoom/2022_Facelift_main/backboard_03.png" alt=""><img src="assets/ui/myRoom/2022_Facelift_main/backboard_06.png" alt=""><img src="assets/ui/myRoom/2022_Facelift_main/backboard_05.png" alt=""><img src="assets/ui/myRoom/2022_Facelift_main/backboard_04.png" alt=""></div>
+      <span class="room-sprite bridge"></span><span class="room-sprite green-rider"></span><span class="room-sprite red-rider"></span><span class="room-sprite blue-rider"></span>
+    </div>
     <canvas id="world" aria-label="카트라이더 3D 게임"></canvas>
-    <section id="lobby" class="lobby">
-      <header class="lobby-header"><div class="brand">크레이지레이싱 <strong>카트라이더</strong><small>5136 WEB PORT</small></div><div class="header-actions"><span id="load-status">원본 리소스 로딩 중…</span><a href="debug.html">물리 테스트</a></div></header>
-      <div class="lobby-body">
-        <div class="lobby-left"><p class="section-kicker">SPEED MODE</p><h1>스피드 개인전</h1><p class="lobby-caption">카트와 캐릭터를 고르고 원본 트랙에서 달려보세요.</p><button id="mode-speed" class="sprite-mode" aria-label="스피드 개인전 선택"></button><div class="selection"><label>카트바디<select id="kart-choice"><option value="whiteKnightV1">백기사 V1</option><option value="saberV1">세이버 V1</option></select></label><label>캐릭터<select id="character-choice"><option value="dao">다오</option><option value="bazzi">배찌</option></select></label><label>트랙<select id="track-choice"><option value="beach_I01">비치 I01</option><option value="beach_I02">비치 I02</option><option value="village_R01">빌리지 R01</option></select></label></div><button id="start" class="start-button" disabled>주행 시작</button></div>
-        <aside class="lobby-right"><span class="panel-heading">TRACK SELECT</span><img id="track-card" alt="선택한 원본 트랙 카드"><div class="track-name" id="track-name">비치 I01</div><p>원본 3D 메시 · 실험적 충돌 메시</p><div class="info-card">LOCAL ASSET PREVIEW<small>추출된 5136 리소스는 이 컴퓨터에서만 불러옵니다.</small></div></aside>
+    <section id="lobby" class="lobby" aria-label="로비">
+      <div class="player-bar"><span id="account-state">게스트</span><a id="account-link" href="login.html">로그인</a></div>
+      <div class="currency-bar" role="img" aria-label="원작 루찌 표시 영역"></div>
+      <div class="lobby-content">
+        <div class="mode-choice">
+          <img class="competition-ribbon" src="assets/ui/zeta/kr/stage/mainMenu/타임어택경쟁전_1.png" alt="타임어택 경쟁전">
+          <button id="mode-speed" class="mode-speed" title="스피드 개인전 시작" aria-label="스피드 개인전 시작"></button>
+          <img class="mode-item" src="assets/ui/zeta/kr/stage/mainMenu/btn_itemIndi_1.png" alt="아이템 개인전 (아직 미구현)">
+          <div class="mode-icons"><img src="assets/ui/stage/mainMenu/event_single_01.png" alt=""><img src="assets/ui/stage/mainMenu/event_time_01.png" alt=""><img src="assets/ui/stage/mainMenu/main_event_1.png" alt=""></div>
+        </div>
+        <aside class="pass-stack" aria-label="원작 패스 영역">
+          <div class="pass-kart"><img src="assets/ui/stage/mainMenu/kartPass_lobby_passIcon0_1.png" alt="일반 패스"><img src="assets/ui/stage/mainMenu/kartPass_lobby_passIcon4_2.png" alt="프리미엄 패스"><img src="assets/ui/stage/mainMenu/kartPass_lobby_passIcon5_2.png" alt="스페셜 패스"></div>
+          <div class="pass-event"></div><div class="pass-pc"></div>
+          <div class="promotion-panel"><img id="track-card" alt="선택한 원본 트랙 카드"><span id="track-name">비치 I01</span></div>
+          <div class="notice-panel"><span id="load-status">원본 리소스 로딩 중…</span></div>
+        </aside>
+        <div id="selection-panel" class="mode-panel hidden" aria-label="카트·캐릭터·트랙 선택">
+          <button id="close-selection" class="close-selection" aria-label="선택창 닫기"></button>
+          <div class="selection-row"><span class="selection-label">카트바디</span><div class="selection-controls"><button class="cycle previous" data-cycle="kart-choice" data-direction="-1" aria-label="이전 카트"></button><select id="kart-choice" aria-label="카트바디"><option value="whiteKnightV1">백기사 V1</option><option value="saberV1">세이버 V1</option></select><button class="cycle next" data-cycle="kart-choice" data-direction="1" aria-label="다음 카트"></button></div></div>
+          <div class="selection-row"><span class="selection-label">캐릭터</span><div class="selection-controls"><button class="cycle previous" data-cycle="character-choice" data-direction="-1" aria-label="이전 캐릭터"></button><select id="character-choice" aria-label="캐릭터"><option value="dao">다오</option><option value="bazzi">배찌</option></select><button class="cycle next" data-cycle="character-choice" data-direction="1" aria-label="다음 캐릭터"></button></div></div>
+          <div class="selection-row"><span class="selection-label">트랙</span><div class="selection-controls"><button class="cycle previous" data-cycle="track-choice" data-direction="-1" aria-label="이전 트랙"></button><select id="track-choice" aria-label="트랙"><option value="beach_I01">비치 I01</option><option value="beach_I02">비치 I02</option><option value="village_R01">빌리지 R01</option></select><button class="cycle next" data-cycle="track-choice" data-direction="1" aria-label="다음 트랙"></button></div></div>
+          <button id="start" class="start-button" disabled aria-label="빠른시작"></button>
+        </div>
       </div>
-      <nav class="bottom-menu"><button class="menu-active" data-lobby-action="start">게임 시작</button><button data-lobby-action="kart">카트 선택</button><button data-lobby-action="character">캐릭터 선택</button><button data-lobby-action="track">트랙 선택</button><span class="bottom-note">스피드 개인전 · 로컬 연습</span></nav>
+      <nav class="taskbar" aria-label="원작 작업표시줄">
+        <div class="taskbar-left"><button class="bottom-icon allmenu" data-lobby-action="select" aria-label="선택 메뉴 열기"></button><button class="bottom-icon home" data-lobby-action="home" aria-label="로비 홈"></button><img src="assets/ui/gui/window/menu/btn_menuReward_1.png" alt="선물함 (미구현)"></div>
+        <div class="taskbar-center"><img src="assets/ui/gui/window/menu/btn_mainMulti_1@zz.png" alt="멀티플레이 (미구현)"><button class="bottom-main single" data-lobby-action="select" aria-label="싱글플레이 선택"></button><button class="bottom-main myroom" data-lobby-action="character" aria-label="캐릭터 선택"></button><img src="assets/ui/gui/window/menu/btn_mainShop_1@zz.png" alt="상점 (미구현)"><button class="bottom-main tuning" data-lobby-action="kart" aria-label="카트 선택"></button><img src="assets/ui/gui/window/menu/클럽_01@zz.png" alt="클럽 (미구현)"><img src="assets/ui/gui/window/menu/kartPass_lobby_passShortcut_1@zz.png" alt="카트 패스 (미구현)"></div>
+        <div class="taskbar-right"><img src="assets/ui/gui/window/menu/btn_menuQuest_1.png" alt="퀘스트 (미구현)"><img src="assets/ui/gui/window/menu/btn_menuChatting_1.png" alt="채팅 (미구현)"><img src="assets/ui/gui/window/menu/btn_menuMessenger_1.png" alt="메신저 (미구현)"><img src="assets/ui/gui/window/menu/btn_menuSearch_1.png" alt="라이더 검색 (미구현)"><img src="assets/ui/gui/window/menu/btn_menuOption_1.png" alt="설정 (미구현)"></div>
+      </nav>
     </section>
     <section id="race-ui" class="race-ui hidden" aria-label="레이스 화면">
-      <div class="hud-top-left"><strong>1<span>st</span></strong><div class="nitro-slot">N₂O <span id="nitro-count">0</span></div></div>
-      <div class="hud-top-right"><div id="lap">연습 주행</div><strong id="timer">00:00.00</strong><span class="rec">● REC</span></div>
-      <div class="countdown" id="countdown"></div>
-      <div class="race-actions"><button id="back-lobby">로비</button><button id="reset" title="체크포인트 리셋 (R)">R · 재시작</button></div>
-      <div class="map-panel"><img id="minimap" alt="선택한 원본 트랙 미니맵"><span id="map-label">비치 I01</span></div>
-      <div class="dash"><div class="tacho"><div id="needle" class="needle"></div><div class="needle-cap"></div><span id="speed">000</span></div><div class="booster"><span>N₂O</span><div class="gauge-rail"><i id="gauge"></i></div></div></div>
-      <div class="touch-controls"><button data-control="left">◀</button><button data-control="right">▶</button><button data-control="throttle">가속</button><button data-control="brake">후진</button><button data-control="drift">Shift</button><button data-control="boost">Ctrl</button></div>
+      <div class="rankboard"><span id="rank-digit" class="big-digit"></span><span class="ordinal"></span><span class="rank-divider"></span><span id="rider-count" class="small-digit"></span></div>
+      <div class="nitro-inventory"><span id="nitro-count" aria-label="보유 부스터 0개"></span></div>
+      <div class="time-panel"><span id="lap" class="lap-status">연습 주행</span><div id="timer" class="time-digits" aria-label="주행 시간 00:00:00"></div><span class="recording" role="img" aria-label="REC"></span></div>
+      <div id="countdown" class="countdown" aria-live="polite"></div>
+      <div class="race-actions"><button id="back-lobby" class="race-icon home" aria-label="로비로 돌아가기" title="로비로 돌아가기"></button><button id="reset" class="race-icon previous" aria-label="체크포인트 리셋 (R)" title="체크포인트 리셋 (R)"></button></div>
+      <div class="map-panel"><img id="minimap" alt="선택한 원본 트랙 미니맵"><span id="map-label" class="visually-hidden">비치 I01</span></div>
+      <div class="dashboard"><div id="speed" class="speed-digits" aria-label="속도 0 km/h"></div><div class="tacho"></div><div class="booster"><div class="gauge-rail"><i id="gauge"></i></div></div></div>
+      <div class="touch-controls" aria-label="터치 조작"><button data-control="left" class="touch-button left" aria-label="왼쪽"></button><button data-control="right" class="touch-button right" aria-label="오른쪽"></button><button data-control="throttle" class="touch-button throttle" aria-label="가속"></button><button data-control="brake" class="touch-button brake" aria-label="후진"></button><button data-control="drift" class="touch-button drift" aria-label="드리프트"></button><button data-control="boost" class="touch-button boost" aria-label="부스터"></button></div>
     </section>
     <div id="error" class="error hidden" role="alert"></div>
   </main>
-  <script type="module" src="game.js?v=3"></script>
+  <script type="module" src="game.js?v=10"></script>
 </body>
 </html>

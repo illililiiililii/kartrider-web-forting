@@ -2,8 +2,16 @@
 
 Main game: [http://127.0.0.1:4173/](http://127.0.0.1:4173/).
 Physics/telemetry test page: [http://127.0.0.1:4173/debug.html](http://127.0.0.1:4173/debug.html).
-The main page is a fresh original-inspired lobby and HUD with the supplied
-kart/character/track meshes, menu button, track cards, minimap, and tachometer.
+The main page now composes unchanged P5136 GUI PNGs according to the supplied
+1280×720 lobby screenshot and `stage/mainMenu`, `stage/logo`, and
+`stage/speedIndiGame` XML layouts. Its mountain/clock-tower/roof backdrop and
+decorative riders come from `myRoom/2022_Facelift_main`, and its white bottom
+taskbar comes from `gui/window/menu`. It uses
+the supplied kart/character/track meshes, track cards, minimap, speed-number
+sheet, timer-number sheet, N₂O gauge, and taskbar icons. Dynamic labels and
+native account fields are text, not newly drawn UI art. The account-entry
+layout remains provisional because an original account-login screen was not
+found in the extracted files.
 All three converted original tracks can be driven with experimental collision
 triangles; original checkpoints/laps and multiplayer are **not implemented**.
 
@@ -78,11 +86,12 @@ explicitly a hypothesis, not a recovered original charging formula.
 
 `server.mjs` provides independent web-game accounts (not Nexon/P5136 accounts):
 `POST /api/auth/register`, `POST /api/auth/login`, `GET /api/auth/me`, and
-`POST /api/auth/logout`. Passwords are scrypt-hashed; hashed session tokens
+`POST /api/auth/logout`. `/login.html` provides a local account form using the
+original menu panel and generic red button sprites. Passwords are scrypt-hashed; hashed session tokens
 are stored in ignored `local-data/accounts.sqlite`; cookies are HttpOnly and
-SameSite=Strict. Set `KART_COOKIE_SECURE=1` behind HTTPS. The login screen is
-not wired: original `stage/authenStage` is a separate challenge screen, not
-evidence for a P5136 account-login layout.
+SameSite=Strict. Set `KART_COOKIE_SECURE=1` behind HTTPS. The original
+`stage/authenStage` is a separate challenge screen, not evidence for a P5136
+account-login layout.
 
 The local original `.1s` kart geometry can be converted without committing
 copyrighted assets:
@@ -110,10 +119,11 @@ so this evidence applies to non-drift steering only.
 
 ```powershell
 .\tools\build-demo-physics.ps1
-node --test tools\test-auth-server.mjs tools\test-demo-physics.mjs tools\test-frame-interpolation.mjs
+node --test tools\test-auth-server.mjs tools\test-demo-physics.mjs tools\test-frame-interpolation.mjs tools\test-local-ui-assets.mjs
 ```
 
-The current local test run passed 13 checks, including imported track
+The current local test run passed 15 checks, including original GUI asset
+hash verification, imported track
 collision, speed-dependent steering, demo gauge/countdown/input/course
 behavior, and register/login/logout.
 In direct Wasm tests, the default

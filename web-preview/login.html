@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>로컬 계정 · 카트라이더 5136 웹 포트</title>
+  <link rel="stylesheet" href="login.css">
+</head>
+<body>
+  <main class="login-panel">
+    <h1>카트라이더 웹 포트</h1>
+    <p>이 계정은 이 웹 서버에만 저장됩니다. 넥슨 계정과 연결되지 않습니다.</p>
+    <form id="account-form">
+      <label for="handle">라이더 이름</label>
+      <input id="handle" name="handle" autocomplete="username" minlength="3" maxlength="20" required>
+      <label for="password">비밀번호</label>
+      <input id="password" name="password" type="password" autocomplete="current-password" minlength="8" maxlength="128" required>
+      <div class="actions"><button type="submit" id="login-button">로그인</button><button type="button" id="register-button">새 계정 만들기</button></div>
+    </form>
+    <p id="message" role="status" aria-live="polite"></p>
+    <a href="/">게스트로 돌아가기</a>
+  </main>
+  <script type="module" src="login.js"></script>
+</body>
+</html>

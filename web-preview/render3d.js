@@ -2,14 +2,15 @@ import * as THREE from './vendor/three.module.js';
 
 // Rendering only: position and heading come from the C/Wasm demo state.
 export function createPreviewRenderer(canvas) {
-  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.25;
 
   const scene = new THREE.Scene();
-  scene.background = new THREE.Color(0x9bc8d4);
+  const skyBackground = new THREE.Color(0x9bc8d4);
+  scene.background = skyBackground;
   scene.fog = new THREE.Fog(0x9bc8d4, 85, 200);
   const testFog = scene.fog;
   scene.add(new THREE.HemisphereLight(0xeaf8ff, 0x456357, 2.4));
@@ -18,12 +19,6 @@ export function createPreviewRenderer(canvas) {
   scene.add(sun);
   const testWorld = new THREE.Group();
   scene.add(testWorld);
-  const showroom = new THREE.Group();
-  scene.add(showroom);
-  const showroomPad = new THREE.Mesh(new THREE.CylinderGeometry(6, 6, 0.25, 64),
-    new THREE.MeshStandardMaterial({ color: 0x13669b, metalness: 0.25, roughness: 0.5 }));
-  showroom.add(showroomPad);
-  showroom.visible = false;
 
   const material = (color, metalness = 0, roughness = 0.8) =>
     new THREE.MeshStandardMaterial({ color, metalness, roughness });
@@ -92,7 +87,10 @@ export function createPreviewRenderer(canvas) {
   // The supplied kart USDA and track USDA were authored in different units.
   // Keep the demo's physical dimensions untouched; calibrate only presentation
   // against the 6.5-unit original road mesh while P5136 BodyParam is pending.
-  const kartVisualScale = 0.55;
+  const requestedRaceScale = Number(localStorage.getItem('kart-race-scale'));
+  const kartVisualScale = Number.isFinite(requestedRaceScale) && requestedRaceScale >= 0.05 &&
+    requestedRaceScale <= 0.55 ? requestedRaceScale : 0.22;
+  const lobbyVisualScale = 0.85;
   const shell = material(0x33b6e4, 0.32, 0.32);
   const dark = material(0x192936, 0.18, 0.6);
   const rubber = material(0x161a21);
@@ -204,7 +202,7 @@ export function createPreviewRenderer(canvas) {
       });
     }
     original = group;
-    group.scale.setScalar(kartVisualScale);
+    group.scale.setScalar(lobbyMode ? lobbyVisualScale : kartVisualScale);
     originalWheels = nextWheels;
     kart.add(group);
     proxy.visible = false;
@@ -256,7 +254,11 @@ export function createPreviewRenderer(canvas) {
       } else if (Math.max(size.x, size.z) < 70 && box.getCenter(new THREE.Vector3()).y > 10) {
         trackFocus.union(box);
       }
-      if (node.visible) trackMeshes.push(node);
+      // A camera obstruction must be solid scenery, not a bird, sign, or
+      // alpha card that happens to cross the kart-to-camera ray.
+      if (node.visible &&
+          /(road|bridge|side|tile|sand|grass|cement)/.test(tag) &&
+          Math.max(size.x, size.z) < 200) trackMeshes.push(node);
     });
     const bounds = new THREE.Box3().setFromObject(group);
     const focus = trackFocus.isEmpty() ? bounds : trackFocus;
@@ -279,7 +281,13 @@ export function createPreviewRenderer(canvas) {
 
   function setLobbyMode(enabled) {
     lobbyMode = enabled;
-    showroom.visible = enabled;
+    scene.background = enabled ? null : skyBackground;
+    if (original) original.scale.setScalar(enabled ? lobbyVisualScale : kartVisualScale);
+    if (originalCharacter) originalCharacter.scale.setScalar(
+      0.42 * (enabled ? lobbyVisualScale : kartVisualScale));
+    if (originalCharacter) originalCharacter.position.set(
+      -0.25 * (enabled ? lobbyVisualScale : kartVisualScale),
+      0.5 * (enabled ? lobbyVisualScale : kartVisualScale), 0);
     if (originalTrack && trackDrive) originalTrack.visible = !enabled;
     if (lobbyCharacter) {
       kart.remove(lobbyCharacter);
@@ -290,7 +298,9 @@ export function createPreviewRenderer(canvas) {
       if (enabled) {
         lobbyCharacter = originalCharacter.clone(true);
         lobbyCharacter.visible = true;
-        lobbyCharacter.position.set(0, -0.15, -2.4);
+        lobbyCharacter.scale.setScalar(0.65);
+        lobbyCharacter.position.set(-1.4, -0.05, 0.45);
+        lobbyCharacter.rotation.y = Math.PI;
         kart.add(lobbyCharacter);
       }
     }
@@ -326,6 +336,8 @@ export function createPreviewRenderer(canvas) {
   const targetLook = new THREE.Vector3();
   const cameraRay = new THREE.Raycaster();
   const cameraDirection = new THREE.Vector3();
+  const lobbyRight = new THREE.Vector3();
+  const up = new THREE.Vector3(0, 1, 0);
 
   function render(state, frameDeltaMs = 16) {
     const [x, y, heading, vx, vy, , speed, , boost, drifting] = state;
@@ -340,8 +352,7 @@ export function createPreviewRenderer(canvas) {
     // The demo pose is the body centre (~0.5 m above contact); USDA kart
     // wheels are authored at local Y=0. Align their base to the road.
     kart.position.set(x, (state[14] || 0) - 0.48, -y);
-    showroom.position.set(x, (state[14] || 0) - 0.75, -y);
-    kart.rotation.y = heading;
+    kart.rotation.y = heading + (lobbyMode ? Math.PI / 2 : 0);
     shell.color.setHex(boost > 0 ? 0xffcd4f : drifting ? 0xf779a8 : 0x33b6e4);
     boostFlames.visible = boost > 0;
     const localSpeed = vx * Math.cos(heading) + vy * Math.sin(heading);
@@ -362,18 +373,26 @@ export function createPreviewRenderer(canvas) {
       camera.fov = 62;
       camera.updateProjectionMatrix();
     } else if (lobbyMode) {
-      desired.set(x - 8, (state[14] || 0) + 5, -y - 9);
-      targetLook.set(x, (state[14] || 0) + 1, -y - 1);
+      desired.set(state[25], state[27], -state[26]);
+      targetLook.set(x, (state[14] || 0) + 0.35, -y);
       camera.fov = 55;
       camera.updateProjectionMatrix();
+      // Original lobby composition leaves the right side for pass/event UI.
+      // Translate the presentation camera only; Wasm race pose is untouched.
+      const distance = desired.distanceTo(targetLook);
+      lobbyRight.subVectors(targetLook, desired).cross(up).normalize();
+      const viewHeight = 2 * distance * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
+      const viewWidth = viewHeight * camera.aspect;
+      desired.addScaledVector(lobbyRight, viewWidth * 0.30);
+      targetLook.addScaledVector(lobbyRight, viewWidth * 0.30);
+      desired.y += viewHeight * 0.12;
+      targetLook.y += viewHeight * 0.12;
     } else if (overhead) {
       desired.set(x, 28, -y + 0.01);
       targetLook.set(x, 0, -y);
     } else {
       desired.set(trackDrive ? state[25] : Math.max(-78.5, Math.min(78.5, state[25])), state[27],
         trackDrive ? -state[26] : Math.max(-78.5, Math.min(78.5, -state[26])));
-      targetLook.set(x + Math.cos(heading) * 3, (state[14] || 0) + 1.4,
-        -y - Math.sin(heading) * 3);
       if (trackDrive && originalTrack) {
         const origin = new THREE.Vector3(x, (state[14] || 0) + 1.2, -y);
         cameraDirection.subVectors(desired, origin);
@@ -388,18 +407,16 @@ export function createPreviewRenderer(canvas) {
           }
         }
       }
+      // The demo C camera already computes the follow orientation and pitch.
+      // Use its forward vector instead of aiming independently at the kart.
+      targetLook.set(desired.x + state[28] * 10,
+        desired.y + state[30] * 10, desired.z - state[29] * 10);
       camera.fov = state[31] || 75;
       camera.updateProjectionMatrix();
     }
-    if (firstFrame) {
-      camera.position.copy(desired);
-      look.copy(targetLook);
-      firstFrame = false;
-    } else {
-      const follow = 1 - Math.exp(-Math.min(frameDeltaMs, 50) / (overhead ? 90 : 40));
-      camera.position.lerp(desired, follow);
-      look.lerp(targetLook, follow);
-    }
+    camera.position.copy(desired);
+    look.copy(targetLook);
+    firstFrame = false;
     camera.lookAt(look);
     renderer.render(scene, camera);
   }

@@ -14,6 +14,10 @@ test('web accounts persist session identity with HttpOnly cookies and reject bad
   });
   try {
     assert.equal((await fetch(base + '/')).status, 200);
+    const loginPage = await fetch(base + '/login.html');
+    assert.equal(loginPage.status, 200);
+    assert.match(await loginPage.text(), /id="account-form"/);
+    assert.equal((await fetch(base + '/login.js')).status, 200);
     assert.equal((await fetch(base + '/api/auth/me')).status, 200);
     const registration = await post('/api/auth/register', {
       handle: 'test_rider', password: 'correct horse 123',

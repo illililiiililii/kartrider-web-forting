@@ -67,6 +67,13 @@ for (const image of [trackCard, trackMinimap]) {
 selectTrackArtwork();
 const raceReadout = document.querySelector('#race-status');
 const steerAngle = document.querySelector('#steer-angle');
+const raceKartScale = document.querySelector('#race-kart-scale');
+raceKartScale.value = localStorage.getItem('kart-race-scale') || '0.22';
+document.querySelector('#race-kart-scale-value').textContent = raceKartScale.value;
+raceKartScale.addEventListener('input', () => {
+  localStorage.setItem('kart-race-scale', raceKartScale.value);
+  document.querySelector('#race-kart-scale-value').textContent = raceKartScale.value;
+});
 const steerAngleNumber = document.querySelector('#steer-angle-number');
 const steerValue = document.querySelector('#steer-value');
 function applySteerAngle(syncNumber = true) {

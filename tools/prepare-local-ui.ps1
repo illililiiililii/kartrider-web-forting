@@ -21,7 +21,7 @@ foreach ($name in @('btn_speedIndi_1.png', 'btn_speedTeam_1.png')) {
 
 # Preserve the original stage namespaces: the same basename can have a
 # different graphic in the base stage and Korean locale override.
-foreach ($relative in @('stage\mainMenu', 'zeta\kr\stage\mainMenu', 'stage\speedIndiGame')) {
+foreach ($relative in @('stage\mainMenu', 'zeta\kr\stage\mainMenu', 'stage\speedIndiGame', 'stage\logo', 'stage\common', 'gui\monocoque', 'gui\window\menu', 'gui\tablet', 'myRoom\2022_Facelift_main')) {
   $folder = Join-Path $AssetRoot $relative
   if (-not (Test-Path -LiteralPath $folder -PathType Container)) {
     throw "Original GUI folder missing: $folder"
@@ -33,4 +33,14 @@ foreach ($relative in @('stage\mainMenu', 'zeta\kr\stage\mainMenu', 'stage\speed
     Copy-Item -LiteralPath $image.FullName -Destination (Join-Path $destination $image.Name) -Force
   }
   Write-Host "Prepared $($images.Count) original GUI sprites from $relative"
+}
+
+$fontSource = Join-Path $AssetRoot 'gui\font'
+$fontTarget = Join-Path $target 'gui\font'
+New-Item -ItemType Directory -Force -Path $fontTarget | Out-Null
+foreach ($name in @('NotoSansCJKkr-Medium.otf', 'NotoSansCJKkr-Bold.otf')) {
+  $font = Join-Path $fontSource $name
+  if (Test-Path -LiteralPath $font -PathType Leaf) {
+    Copy-Item -LiteralPath $font -Destination (Join-Path $fontTarget $name) -Force
+  }
 }
