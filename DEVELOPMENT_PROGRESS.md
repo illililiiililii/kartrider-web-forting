@@ -1,5 +1,35 @@
 # P5136 web port — development progress
 
+## 2026-10-22 race framing, mirrored track correction, original setup GUI
+
+- Rebuilt the single-play setup, My Items, and track selection overlays around
+  unchanged local P5136 dialog/stage sprites. The race HUD now uses the
+  original V1 tachometer base, booster bar, and `item/slot/slot_v1.png`, with
+  rank/time/map positioned against the supplied race screenshots. Buttons
+  for the available karts, characters, tracks, race start, and lobby return
+  are wired; missing original inventory content is not fabricated.
+- The USDA track had been mirrored in both rendering and demo collision, so
+  the three scenes now render in original USD horizontal orientation and
+  the KTRK exporter cancels the demo reader's X mirror. Verified solid spawn
+  heights and clear initial forward motion on Beach I01, Beach I02, and
+  Village R01. Village's old spawn faced a building; it now starts on the
+  roadway at (14.5, 49) toward the visible original start banner.
+- Race model scale 0.50 is matched by bridge body half-width 0.42 m and
+  half-length 0.62 m. Lobby-only kart/character scales are 0.75/0.80 after
+  screenshot calibration. In tall app panels, horizontal camera field of
+  view is retained so the kart does not grow disproportionately. Camera and
+  road framing were checked in the live browser at 1280×720.
+- The extracted Beach I01 `bc_br_002.png` cards at `Object49s0` and
+  `Object274363279s0` formed an opaque green bar across the drivable lane;
+  only these broken visual placements are hidden pending native transform
+  recovery. UV orientation and PNG alpha flags were corrected in the local
+  USDA converter. Track edge rebound/floor support and wall-count debounce
+  live only in the bridge, leaving upstream demo C unchanged.
+- The V1 speed-threshold automatic gauge charge reported by the user remains
+  a separate future V1 behavior; no unsupported threshold/rate was guessed
+  into the demo gauge hypothesis. Browser QA confirmed original lobby,
+  setup, My Items, track selection, Beach I01 race, and Village R01 race.
+
 ## 2026-10-22 original-only game GUI pass
 
 - Matched the user-supplied 1280×720 lobby reference using unchanged

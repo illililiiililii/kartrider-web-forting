@@ -34,6 +34,8 @@ static bool previous_throttle, previous_boost;
 static float race_phase, countdown, lap, next_gate, race_time, finish_time;
 static float wall_hits;
 static bool wall_contact;
+static unsigned int last_wall_hit_ms;
+static KartVec3 stable_ground_position;
 static float previous_x, previous_y;
 static unsigned int preset_index = 10; /* cotten5, demo simulator default */
 static KartTrackScene track_scene;
@@ -82,9 +84,18 @@ static unsigned int body_query(void *unused, const KartSimulationState *state,
 
 static void reset_at(float x, float y, float heading) {
     const KartDemoKartSpec *spec = kart_demo_kart_at(preset_index);
+    KartSimulationGeometry web_geometry = spec ? spec->geometry : (KartSimulationGeometry){0};
+    /* Converted P5136 kart mesh is rendered at 0.65 USDA units. Keep wheel
+       and wall probes near that visual footprint instead of the demo's
+       full-size 1.75 x 2.28 m preset. Dynamics remain upstream demo code. */
+    if (track_enabled) {
+        web_geometry.half_width = 0.42f;
+        web_geometry.half_length = 0.62f;
+    }
     kart_simulation_init(&kart, spec ? &spec->dynamics : NULL,
-                         spec ? &spec->geometry : NULL);
+                         &web_geometry);
     kart.position = (KartVec3){x, y, track_enabled ? spawn_z + 0.5f : 0.5f};
+    stable_ground_position = kart.position;
     /* Identity faces world -Y; +pi/2 rotates the forward axis to +X. */
     const float angle = heading + 1.5707963267948966f;
     kart.orientation = (KartQuat){cosf(angle * 0.5f), 0.0f, 0.0f, sinf(angle * 0.5f)};
@@ -102,6 +113,7 @@ static void reset_at(float x, float y, float heading) {
     previous_throttle = previous_boost = false;
     wall_hits = 0.0f;
     wall_contact = false;
+    last_wall_hit_ms = 0;
     race_phase = countdown = next_gate = race_time = finish_time = 0.0f;
     lap = 1.0f;
     previous_x = x;
@@ -189,12 +201,16 @@ static void publish(unsigned int elapsed_ms, KartSimulationStepResult step) {
     telemetry[8] = kart.timed_boost.remaining_ms * 0.001f;
     telemetry[9] = drifting ? 1.0f : 0.0f;
     telemetry[10] += dt;
-    if ((track_enabled && step.wall_impact_speed <= 0.0f) ||
-        (!track_enabled && fabsf(kart.position.x) < 77.5f && fabsf(kart.position.y) < 77.5f))
+    if (clock_ms - last_wall_hit_ms >= 500u &&
+        ((track_enabled && step.wall_impact_speed <= 0.0f) ||
+         (!track_enabled && fabsf(kart.position.x) < 76.5f &&
+          fabsf(kart.position.y) < 76.5f)))
         wall_contact = false;
-    if (step.wall_impact_speed > 0.0f && !wall_contact) {
+    if (step.wall_impact_speed > 1.0f && !wall_contact &&
+        (last_wall_hit_ms == 0u || clock_ms - last_wall_hit_ms >= 2500u)) {
         wall_hits += 1.0f;
         wall_contact = true;
+        last_wall_hit_ms = clock_ms;
     }
     telemetry[11] = wall_hits;
     telemetry[12] = kart.drift.linger_timer;
@@ -388,7 +404,40 @@ __attribute__((export_name("demo_step"))) void demo_step(
         !kart.timed_boost.active && kart_gauge_take_booster(&gauge);
     previous_throttle = throttle_pressed;
     previous_boost = boost_pressed;
+    const KartVec3 prior_position = kart.position;
+    const bool prior_grounded = kart.grounded;
+    const float prior_vertical_speed = kart.linear_velocity.z;
     KartSimulationStepResult step = kart_simulate_milliseconds(&kart, &controls, &world, elapsed_ms);
+    if (track_enabled) {
+        KartGroundHit ahead;
+        const KartVec3 probe = {kart.position.x, kart.position.y, prior_position.z + 1.5f};
+        const KartVec3 down = {0.0f, 0.0f, -4.0f};
+        const bool center_supported = ground_query(NULL, probe, down, &ahead) &&
+                                      ahead.normal.z > 0.65f;
+        if (!center_supported && prior_grounded && prior_vertical_speed < 1.0f &&
+            kart.position.z <= prior_position.z + 0.25f) {
+            /* This provisional KTRK lacks some original fence collision.
+               Rebound at a flat road's missing edge; rising jump trajectories
+               remain governed by the upstream suspension and gravity. */
+            const float impact = sqrtf(kart.linear_velocity.x * kart.linear_velocity.x +
+                                       kart.linear_velocity.y * kart.linear_velocity.y);
+            kart.position = stable_ground_position;
+            kart.linear_velocity.x *= -0.32f;
+            kart.linear_velocity.y *= -0.32f;
+            kart.linear_velocity.z = 0.0f;
+            kart.angular_velocity.z *= 0.4f;
+            step.wall_impact_speed = fmaxf(step.wall_impact_speed, impact);
+        } else if (center_supported && kart.grounded &&
+                   kart.position.z < ahead.point.z + 0.45f) {
+            /* Four wheel samples can straddle a mesh seam while the body
+               slips below the road surface. Bound this proxy-import error. */
+            kart.position.z = ahead.point.z + 0.45f;
+            kart.linear_velocity.z = fmaxf(0.0f, kart.linear_velocity.z);
+        }
+        if (center_supported && kart.grounded &&
+            kart.position.z >= ahead.point.z + 0.35f)
+            stable_ground_position = kart.position;
+    }
     /* The imported P5136 collision proxy contains nearly-flat triangles
        with small normal errors. The demo has no static-friction branch, so an
        unattended kart slowly creeps for minutes. Keep this compatibility

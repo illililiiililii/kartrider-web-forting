@@ -4,6 +4,10 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
+$localUsd = Join-Path $PSScriptRoot '..\..\..\work\usd-python'
+if (Test-Path -LiteralPath (Join-Path $localUsd 'pxr') -PathType Container) {
+  $env:PYTHONPATH = "$localUsd$([IO.Path]::PathSeparator)$env:PYTHONPATH"
+}
 python -c 'from pxr import Usd' 2>$null
 if ($LASTEXITCODE -ne 0) {
   throw 'Python usd-core is required. Install locally: python -m pip install usd-core==25.5.1'

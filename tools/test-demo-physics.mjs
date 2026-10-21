@@ -136,9 +136,9 @@ test('local original track collision loads and keeps the practice timer separate
     assert.ok(api.demo_track_load(pointer, bytes.length) > 1000);
     api.demo_track_free_buffer(pointer);
     const trackState = new Float32Array(api.memory.buffer, statePointer, 40);
-    const height = api.demo_track_ground_height(-120, 98, 80);
+    const height = api.demo_track_ground_height(120, 98, 80);
     assert.ok(height > 30 && height < 40);
-    assert.equal(api.demo_track_enable(-120, 98, height, 0), 1);
+    assert.equal(api.demo_track_enable(120, 98, height, Math.PI), 1);
     api.demo_start_race();
     for (let i = 0; i < 440; i++) api.demo_step(16, 1, 0, 0, 0, 0);
     assert.equal(trackState[19], 2);
@@ -156,12 +156,56 @@ test('idle kart does not creep across an imported near-flat original track',
     assert.ok(api.demo_track_load(pointer, bytes.length) > 1000);
     api.demo_track_free_buffer(pointer);
     const trackState = new Float32Array(api.memory.buffer, statePointer, 40);
-    const height = api.demo_track_ground_height(-120, 98, 80);
-    assert.ok(Math.abs(api.demo_track_ground_normal(-120, 98, 80, 0)) < 0.02);
-    assert.equal(api.demo_track_enable(-120, 98, height, 0), 1);
+    const height = api.demo_track_ground_height(120, 98, 80);
+    assert.ok(Math.abs(api.demo_track_ground_normal(120, 98, 80, 0)) < 0.02);
+    assert.equal(api.demo_track_enable(120, 98, height, Math.PI), 1);
     api.demo_start_race();
     for (let i = 0; i < 30000; i++) api.demo_step(16, 0, 0, 0, 0, 0);
-    assert.ok(Math.abs(trackState[0] + 120) < 0.5, `idle x=${trackState[0]}`);
+    assert.ok(Math.abs(trackState[0] - 120) < 0.5, `idle x=${trackState[0]}`);
     assert.ok(Math.abs(trackState[1] - 98) < 0.5, `idle y=${trackState[1]}`);
     assert.ok(trackState[6] < 0.1, `idle speed=${trackState[6]}`);
+  });
+
+test('missing bridge edge rebounds without sinking through the original track',
+  { skip: !existsSync(localTrack) }, () => {
+    const { api, state } = create();
+    const statePointer = state.byteOffset;
+    const pointer = api.demo_track_alloc(readFileSync(localTrack).length);
+    const bytes = readFileSync(localTrack);
+    new Uint8Array(api.memory.buffer, pointer, bytes.length).set(bytes);
+    assert.ok(api.demo_track_load(pointer, bytes.length) > 1000);
+    const drive = new Float32Array(api.memory.buffer, statePointer, 40);
+    const height = api.demo_track_ground_height(120, 98, 80);
+    api.demo_track_enable(120, 98, height, Math.PI);
+    api.demo_start_race();
+    for (let i = 0; i < 900; i++) api.demo_step(16, +(i > 440), 0, 0, 0, 0);
+    assert.ok(drive[0] > 76 && drive[0] < 85, `edge x=${drive[0]}`);
+    assert.ok(drive[14] > height - 0.5, `edge z=${drive[14]}`);
+    assert.ok(drive[11] <= 3, `wall counter=${drive[11]}`);
+  });
+
+test('all three mirrored-back original tracks spawn on a road facing its clear direction',
+  { skip: !['beach_I01', 'beach_I02', 'village_R01'].every(
+    name => existsSync(new URL(`../web-preview/assets/usd/${name}/collision.ktrk`, import.meta.url))) }, () => {
+    for (const [name, x, y, heading, axis, direction] of [
+      ['beach_I01', 120, 98, Math.PI, 0, -1],
+      ['beach_I02', 70, 64, Math.PI, 0, -1],
+      ['village_R01', 14.5, 49, Math.PI / 2, 1, 1],
+    ]) {
+      const { api, state } = create();
+      const statePointer = state.byteOffset;
+      const bytes = readFileSync(new URL(`../web-preview/assets/usd/${name}/collision.ktrk`, import.meta.url));
+      const pointer = api.demo_track_alloc(bytes.length);
+      new Uint8Array(api.memory.buffer, pointer, bytes.length).set(bytes);
+      assert.ok(api.demo_track_load(pointer, bytes.length) > 1000, name);
+      api.demo_track_free_buffer(pointer);
+      const height = api.demo_track_ground_height(x, y, 80);
+      assert.ok(Number.isFinite(height), name);
+      assert.equal(api.demo_track_enable(x, y, height, heading), 1, name);
+      const drive = new Float32Array(api.memory.buffer, statePointer, 40);
+      for (let step = 0; step < 100; step++) api.demo_step(16, 1, 0, 0, 0, 0);
+      assert.ok((drive[axis] - (axis ? y : x)) * direction > 10,
+        `${name}: x=${drive[0]}, y=${drive[1]}`);
+      assert.equal(drive[11], 0, `${name}: unexpected launch collision`);
+    }
   });

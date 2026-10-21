@@ -1,4 +1,4 @@
-import { createPreviewRenderer } from './render3d.js?v=24';
+import { createPreviewRenderer } from './render3d.js?v=25';
 import { interpolatePreviewState } from './frame-interpolation.mjs';
 
 const $ = (selector) => document.querySelector(selector);
@@ -13,15 +13,18 @@ const characterChoice = $('#character-choice');
 const trackChoice = $('#track-choice');
 const trackNames = { beach_I01: '비치 I01', beach_I02: '비치 I02', village_R01: '빌리지 R01' };
 const spawns = {
-  beach_I01: [-120, 98, 0],
-  beach_I02: [-65, 55, Math.PI],
-  village_R01: [-20, 70, 0],
+  beach_I01: [120, 98, Math.PI],
+  beach_I02: [70, 64, Math.PI],
+  village_R01: [14.5, 49, Math.PI / 2],
 };
 let wasm, statePointer, current, previous, visual;
 let active = 'lobby';
 let lastFrame = 0;
 let accumulator = 0;
 let requestId = 0;
+let itemType = 'kart';
+let selectedTrack = trackChoice.value;
+let signedIn = false;
 const controls = { throttle: false, brake: false, left: false, right: false, drift: false, boost: false };
 const keyMap = {
   ArrowUp: 'throttle', Numpad8: 'throttle', KeyW: 'throttle',
@@ -35,20 +38,27 @@ const keyMap = {
 async function refreshAccount() {
   try {
     const response = await fetch('/api/auth/me', { credentials: 'same-origin', cache: 'no-store' });
-    if (!response.ok || !response.headers.get('content-type')?.includes('application/json')) return;
+    if (!response.ok || !response.headers.get('content-type')?.includes('application/json')) {
+      location.replace('login.html');
+      return;
+    }
     const { user } = await response.json();
-    accountState.textContent = user ? user.handle : '게스트';
-    accountLink.textContent = user ? '로그아웃' : '로그인';
-    accountLink.href = user ? '#' : 'login.html';
-    accountLink.dataset.loggedIn = user ? 'true' : 'false';
-  } catch { /* Static-only preview can still be played as a guest. */ }
+    if (!user) { location.replace('login.html'); return; }
+    signedIn = true;
+    accountState.textContent = user.handle;
+    $('#menu-account').textContent = user.handle;
+    $('#race-rider-name').textContent = user.handle;
+    accountLink.textContent = '로그아웃';
+    accountLink.href = '#';
+    accountLink.dataset.loggedIn = 'true';
+  } catch { location.replace('login.html'); }
 }
 
 accountLink.addEventListener('click', async (event) => {
   if (accountLink.dataset.loggedIn !== 'true') return;
   event.preventDefault();
   await fetch('/api/auth/logout', { method: 'POST', credentials: 'same-origin' });
-  await refreshAccount();
+  location.replace('login.html');
 });
 refreshAccount();
 
@@ -73,6 +83,8 @@ async function loadSelectedTrack() {
   $('#track-card').src = `./assets/tracks/${name}/xt_trackCard.png`;
   $('#minimap').src = `./assets/tracks/${name}/xt_minimap.png`;
   $('#track-name').textContent = $('#map-label').textContent = trackNames[name];
+  $('#setup-track-name').textContent = trackNames[name];
+  $('#setup-track-image').src = `./assets/tracks/${name}/xt_trackCard.png`;
   status.textContent = `${trackNames[name]} 메시 로딩 중…`;
   await view.setTrackDrive(name);
   const response = await fetch(`./assets/usd/${name}/collision.ktrk`);
@@ -94,6 +106,7 @@ async function loadSelectedTrack() {
     view.setLobbyMode(true);
     status.textContent = `원본 3D 트랙 · ${triangles.toLocaleString()}개 충돌 후보 삼각형`;
     $('#start').disabled = false;
+    $('#setup-start').disabled = false;
   } finally {
     wasm.demo_track_free_buffer(pointer);
   }
@@ -105,19 +118,22 @@ async function changeModel(kind) {
   try {
     if (kind === 'kart') await view.setKart(name);
     else await view.setCharacter(name);
+    view.renderPreview($('#setup-model'));
+    view.renderPreview($('#items-model'));
   } catch (error) {
     showError(error);
   }
 }
 
 function startRace() {
-  if (!wasm || $('#start').disabled) return;
+  if (!wasm || !signedIn || $('#start').disabled) return;
   wasm.demo_start_race();
   wasm.demo_set_steer_angle(Number(localStorage.getItem('demo-steer-angle')) || 10);
   syncState();
   view.setLobbyMode(false);
   $('#lobby-backdrop').classList.add('hidden');
   $('#selection-panel').classList.add('hidden');
+  closeAllDialogs();
   lobby.classList.add('hidden');
   raceUi.classList.remove('hidden');
   active = 'race';
@@ -133,6 +149,71 @@ function goLobby() {
   $('#lobby-backdrop').classList.remove('hidden');
   raceUi.classList.add('hidden');
   lobby.classList.remove('hidden');
+  $('#single-setup').classList.remove('hidden');
+}
+
+function closeAllDialogs() {
+  for (const id of ['single-setup', 'items-dialog', 'tracks-dialog', 'nexon-menu']) {
+    document.getElementById(id).classList.add('hidden');
+  }
+}
+
+function openSetup() {
+  closeAllDialogs();
+  $('#single-setup').classList.remove('hidden');
+  view.renderPreview($('#setup-model'));
+}
+
+function openItems() {
+  $('#nexon-menu').classList.add('hidden');
+  $('#items-dialog').classList.remove('hidden');
+  renderItems();
+  view.renderPreview($('#items-model'));
+}
+
+function renderItems() {
+  const select = itemType === 'kart' ? kartChoice : characterChoice;
+  $('#item-cards').replaceChildren(...[...select.options].map((option) => {
+    const button = document.createElement('button');
+    button.className = `item-card ${select.value === option.value ? 'selected' : ''}`;
+    button.textContent = option.textContent;
+    button.addEventListener('click', async () => {
+      select.value = option.value;
+      await changeModel(itemType);
+      $('#setup-kart-name').textContent = kartChoice.selectedOptions[0].textContent;
+      $('#items-current-name').textContent = option.textContent;
+      renderItems();
+      view.renderPreview($('#items-model'));
+    });
+    return button;
+  }));
+  $('#items-current-name').textContent = select.selectedOptions[0].textContent;
+}
+
+function openTracks() {
+  $('#nexon-menu').classList.add('hidden');
+  $('#tracks-dialog').classList.remove('hidden');
+  selectedTrack = trackChoice.value;
+  renderTracks();
+}
+
+function renderTracks() {
+  const search = $('#track-search').value.trim();
+  const theme = $('.track-themes .active').dataset.theme;
+  $('#track-cards').replaceChildren(...[...trackChoice.options]
+    .filter((option) => (theme === 'all' || option.value.startsWith(theme)) && option.textContent.includes(search))
+    .map((option) => {
+      const button = document.createElement('button');
+      button.className = `track-card-button ${selectedTrack === option.value ? 'selected' : ''}`;
+      const image = document.createElement('img');
+      image.src = `./assets/tracks/${option.value}/xt_trackCard.png`;
+      image.alt = '';
+      const label = document.createElement('span');
+      label.textContent = option.textContent;
+      button.append(image, label);
+      button.addEventListener('click', () => { selectedTrack = option.value; renderTracks(); });
+      return button;
+    }));
 }
 
 function formatTime(seconds) {
@@ -160,7 +241,7 @@ function draw(state, frameMs) {
   if (active !== 'race') return;
   const speed = Math.max(0, Math.round(state[6] * 3.6));
   const speedText = String(Math.min(speed, 999)).padStart(3, '0');
-  renderSpriteDigits($('#speed'), speedText, 'speed-digit', 38, 10);
+  $('#speed').textContent = speed;
   $('#speed').setAttribute('aria-label', `속도 ${speed} km/h`);
   $('#gauge').style.width = `${Math.min(100, Math.max(0, state[7]))}%`;
   const nitroCount = Math.max(0, Math.floor(state[32]));
@@ -168,6 +249,9 @@ function draw(state, frameMs) {
   $('.nitro-inventory').classList.toggle('has-nitro', nitroCount > 0);
   const timeText = formatTime(state[23]);
   renderSpriteDigits($('#timer'), timeText, 'time-digit', 18, 11);
+  $('#race-time').textContent = timeText;
+  $('#lap-number').textContent = Math.max(1, Math.round(state[21]));
+  $('#collision-count').textContent = Math.round(state[11]);
   $('#timer').setAttribute('aria-label', `주행 시간 ${timeText}`);
   const countdown = state[19] === 1 && state[20] <= 3 ? Math.ceil(state[20]) : 0;
   $('#countdown').classList.toggle('visible', Boolean(countdown));
@@ -226,14 +310,47 @@ kartChoice.addEventListener('change', () => changeModel('kart'));
 characterChoice.addEventListener('change', () => changeModel('character'));
 trackChoice.addEventListener('change', () => loadSelectedTrack().catch(showError));
 $('#start').addEventListener('click', startRace);
-$('#mode-speed').addEventListener('click', startRace);
+$('#setup-start').addEventListener('click', startRace);
+$('#mode-speed').addEventListener('click', openSetup);
+$('#setup-items').addEventListener('click', openItems);
+$('#setup-tracks').addEventListener('click', openTracks);
+$('#items-confirm').addEventListener('click', () => $('#items-dialog').classList.add('hidden'));
+$('#tracks-confirm').addEventListener('click', () => {
+  trackChoice.value = selectedTrack;
+  loadSelectedTrack().catch(showError);
+  $('#tracks-dialog').classList.add('hidden');
+});
+$('#track-search').addEventListener('input', renderTracks);
+for (const button of document.querySelectorAll('[data-item-type]')) button.addEventListener('click', () => {
+  itemType = button.dataset.itemType;
+  for (const tab of document.querySelectorAll('[data-item-type]')) tab.classList.toggle('active', tab === button);
+  renderItems();
+});
+for (const button of document.querySelectorAll('[data-theme]')) button.addEventListener('click', () => {
+  for (const tab of document.querySelectorAll('[data-theme]')) tab.classList.toggle('active', tab === button);
+  renderTracks();
+});
+for (const button of document.querySelectorAll('[data-close]')) button.addEventListener('click', () => {
+  document.getElementById(button.dataset.close).classList.add('hidden');
+});
+for (const button of document.querySelectorAll('[data-menu-action]')) button.addEventListener('click', async () => {
+  const action = button.dataset.menuAction;
+  if (action === 'single') openSetup();
+  if (action === 'items') openItems();
+  if (action === 'tracks') openTracks();
+  if (action === 'logout') {
+    await fetch('/api/auth/logout', { method: 'POST', credentials: 'same-origin' });
+    location.replace('login.html');
+  }
+});
 for (const item of document.querySelectorAll('[data-lobby-action]')) {
   item.addEventListener('click', () => {
     const action = item.dataset.lobbyAction;
-    if (action === 'home') $('#selection-panel').classList.add('hidden');
-    else $('#selection-panel').classList.remove('hidden');
-    if (action === 'kart') kartChoice.focus();
-    if (action === 'character') characterChoice.focus();
+    if (action === 'home') closeAllDialogs();
+    if (action === 'menu') $('#nexon-menu').classList.toggle('hidden');
+    if (action === 'select') openSetup();
+    if (action === 'kart') { itemType = 'kart'; openItems(); }
+    if (action === 'character') { itemType = 'character'; openItems(); }
   });
 }
 $('#close-selection').addEventListener('click', () => $('#selection-panel').classList.add('hidden'));

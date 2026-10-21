@@ -57,6 +57,30 @@ def texture_for(prim, source, output_dir, rho_root=None):
     return None
 
 
+def material_flags(prim, source, output_dir):
+    flags = {"alphaBlend": False, "alphaTest": False, "alphaTexture": None}
+    parent = prim
+    while parent and parent.IsValid():
+        flags["alphaBlend"] = flags["alphaBlend"] or bool(parent.GetCustomDataByKey("kart_alphaBlend"))
+        flags["alphaTest"] = flags["alphaTest"] or bool(parent.GetCustomDataByKey("kart_alphaTest"))
+        parent = parent.GetParent()
+    binding = prim.GetRelationship("material:binding")
+    targets = binding.GetTargets() if binding else []
+    material = prim.GetStage().GetPrimAtPath(targets[0]) if targets else None
+    if material is None:
+        bound = UsdShade.MaterialBindingAPI(prim).ComputeBoundMaterial()[0]
+        material = bound.GetPrim() if bound else None
+    if material:
+        raw = material.GetCustomDataByKey("kart_alphaTexture")
+        if raw:
+            name = Path(str(raw)).name
+            file = source.parent / name
+            if file.is_file():
+                shutil.copy2(file, output_dir / name)
+                flags["alphaTexture"] = name
+    return flags
+
+
 def collision_candidate(part):
     # The supplied USDA does not retain the original property/road tag.
     # Exclude obvious non-solid backdrop/water; remaining meshes are an
@@ -65,7 +89,8 @@ def collision_candidate(part):
     if any(word in label for word in ("skydome", "water", "sea0", "bird", "transparency")):
         return False
     if not any(word in label for word in (
-        "road", "bridge", "side", "tile", "sand", "grass", "cement"
+        "road", "bridge", "side", "tile", "sand", "grass", "cement",
+        "fence", "rail", "wall", "barrier"
     )):
         return False
     values = part["positions"]
@@ -82,7 +107,9 @@ def write_ktrk(path, parts):
     coordinates = [[], [], []]
     for part in selected:
         p = part["positions"]
-        coordinates[0].extend(p[0::3])
+        # The demo loader mirrors KTRK X. Store the opposite sign so the
+        # collision world matches the unmirrored original USD render mesh.
+        coordinates[0].extend(-value for value in p[0::3])
         coordinates[1].extend(-value for value in p[2::3])
         coordinates[2].extend(p[1::3])
     with path.open("wb") as file:
@@ -93,12 +120,25 @@ def write_ktrk(path, parts):
             def field(value):
                 return value.encode("utf-8")[:96].ljust(96, b"\0")
 
-            p, uv, indices = part["positions"], part["uvs"], part["indices"]
+            p, uv, indices = part["positions"], part["uvs"], list(part["indices"])
+            # The USDA export has mixed winding on drivable horizontal faces.
+            # Ground queries in the recovered C engine intentionally trust the
+            # face normal; normalize only this provisional web collision mesh.
+            for tri in range(0, len(indices), 3):
+                ia, ib, ic = indices[tri:tri + 3]
+                ax, ay, az = -p[ia * 3], -p[ia * 3 + 2], p[ia * 3 + 1]
+                bx, by, bz = -p[ib * 3], -p[ib * 3 + 2], p[ib * 3 + 1]
+                cx, cy, cz = -p[ic * 3], -p[ic * 3 + 2], p[ic * 3 + 1]
+                nx = (by - ay) * (cz - az) - (bz - az) * (cy - ay)
+                ny = (bz - az) * (cx - ax) - (bx - ax) * (cz - az)
+                nz = (bx - ax) * (cy - ay) - (by - ay) * (cx - ax)
+                if nz < 0 and abs(nz) > (nx * nx + ny * ny) ** 0.5 * 0.86:
+                    indices[tri + 1], indices[tri + 2] = indices[tri + 2], indices[tri + 1]
             file.write(field(part["name"]))
             file.write(field(part.get("texture") or ""))
             file.write(struct.pack("<III", 1, len(p) // 3, len(indices)))
             for i in range(0, len(p), 3):
-                file.write(struct.pack("<5f", p[i], -p[i + 2], p[i + 1],
+                file.write(struct.pack("<5f", -p[i], -p[i + 2], p[i + 1],
                                        uv[i // 3 * 2], uv[i // 3 * 2 + 1]))
             file.write(struct.pack(f"<{len(indices)}I", *indices))
     print(f"KTRK collision candidates: {len(selected)} meshes / {triangles} triangles -> {path}")
@@ -144,7 +184,9 @@ def export(source, output, scale, ktrk=None, rho_root=None):
                     uv_index = 0
                 if uv_values is not None and uv_index < len(uv_values):
                     uv = uv_values[uv_index]
-                    uvs.extend((round(float(uv[0]), 5), round(1 - float(uv[1]), 5)))
+                    # Three.TextureLoader flips PNG Y on upload. Preserve USD
+                    # UVs here; flipping both made every texture upside down.
+                    uvs.extend((round(float(uv[0]), 5), round(float(uv[1]), 5)))
                 else:
                     uvs.extend((0, 0))
                 face.append(len(positions) // 3 - 1)
@@ -156,6 +198,7 @@ def export(source, output, scale, ktrk=None, rho_root=None):
         parts.append({
             "name": str(prim.GetPath()), "positions": positions, "uvs": uvs,
             "indices": triangles, "texture": texture_for(prim, source, output.parent, rho_root),
+            **material_flags(prim, source, output.parent),
         })
     if not parts:
         raise ValueError(f"No meshes in {source}")

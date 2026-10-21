@@ -21,7 +21,7 @@ foreach ($name in @('btn_speedIndi_1.png', 'btn_speedTeam_1.png')) {
 
 # Preserve the original stage namespaces: the same basename can have a
 # different graphic in the base stage and Korean locale override.
-foreach ($relative in @('stage\mainMenu', 'zeta\kr\stage\mainMenu', 'stage\speedIndiGame', 'stage\logo', 'stage\common', 'gui\monocoque', 'gui\window\menu', 'gui\tablet', 'myRoom\2022_Facelift_main')) {
+foreach ($relative in @('stage\mainMenu', 'zeta\kr\stage\mainMenu', 'stage\speedIndiGame', 'stage\timeAttackReady', 'stage\logo', 'stage\common', 'dialog\garageDialog', 'dialog2\selectTrackEx', 'dialog2\userReport', 'gui\monocoque', 'gui\window\menu', 'gui\tachometer\v1', 'gui\tablet', 'myRoom\2022_Facelift_main')) {
   $folder = Join-Path $AssetRoot $relative
   if (-not (Test-Path -LiteralPath $folder -PathType Container)) {
     throw "Original GUI folder missing: $folder"
@@ -44,3 +44,7 @@ foreach ($name in @('NotoSansCJKkr-Medium.otf', 'NotoSansCJKkr-Bold.otf')) {
     Copy-Item -LiteralPath $font -Destination (Join-Path $fontTarget $name) -Force
   }
 }
+$slotSource = Join-Path $AssetRoot 'item\slot\slot_v1.png'
+$slotTarget = Join-Path $target 'item\slot'
+New-Item -ItemType Directory -Force -Path $slotTarget | Out-Null
+Copy-Item -LiteralPath $slotSource -Destination (Join-Path $slotTarget 'slot_v1.png') -Force

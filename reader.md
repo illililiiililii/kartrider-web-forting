@@ -1,12 +1,13 @@
 # Remaining work and exact boundaries
 
-Update 2026-10-21: `/` is a provisional game-facing lobby/HUD and `/debug.html` is
+Update 2026-10-22: `/` is a game-facing lobby/HUD and `/debug.html` is
 the old physics test UI. The new page drives on local KTRK triangles generated
 from the supplied USDA `beach_I01`, `beach_I02`, and `village_R01` scenes.
 `tools/convert-usd-local.py` chooses collision candidates by mesh/texture
 names; these are **not verified original collision meshes**. Track-specific
 route/checkpoint/lap data are not wired, so the UI correctly says practice.
-The Three.js renderer now mirrors X like `kart_track_scene_world_vertex`,
+The Three.js renderer now leaves original USD X unmirrored while the KTRK
+exporter cancels `kart_track_scene_world_vertex`'s internal X mirror,
 tests camera occlusion, scales the character by 0.42 times the new 0.72 kart
 display calibration, alpha-tests PNG foliage,
 and hides kart USD `mod*` nodes except White Knight's attached `mod1b*` panels;
@@ -36,18 +37,31 @@ not permanent removal. Other opaque/transparent material mismatches may remain.
   coefficient. The formula itself is not recovered from either the 2004 EXE
   or P5136. The original demo's 7-second countdown and ±100 ms start-boost
   press window are linked. These remain demo behavior, not asserted P5136 formulas.
-- The camera pose and FOV come from `kart_camera.c`; the new renderer adds
-  raycast occlusion avoidance on track meshes. This is not proven P5136 camera
-  behavior, and some scene pieces may still intrude into the view.
+- `kart_camera.c` still updates in Wasm and supplies the speed/boost FOV,
+  but the main renderer currently computes a closer body-relative chase pose
+  for the scaled P5136 mesh, widens portrait FOV, and raycasts selected track
+  meshes for occlusion. It is not the unchanged demo camera pose or proven
+  P5136 camera behavior; some scenery may still intrude into the view.
 - Local USD conversion now supplies actual White Knight V1/Saber V1 karts,
   Dao/Bazzi characters, three textured track scenes, and a dashboard sprite.
   The USD hierarchy was exported to browser JSON with UVs; skeleton weights,
   animation, seat attachment alignment, verified track drive surfaces, and material
   nuances are not integrated. The race kart/driver display calibration is
-  0.22 (lobby 0.85), but the demo collision body is still
-  the source preset geometry; their exact overlap is unverified. Kart
+  0.50 (lobby kart 0.75, standing character 0.80), while the bridge sets
+  0.42 m half-width and 0.62 m half-length for the provisional kart body.
+  Exact original wheel/body overlap is still unverified. Kart
   front-wheel steering for USD meshes still needs visual verification. Do not
   commit extracted models or textures without verified redistribution rights.
+- The source Beach I01 USD `Scene_Root/Object49s0` and
+  `Object274363279s0` with `bc_br_002.png` export as uncollidable opaque
+  green cards across the starting lane. The renderer hides only these two
+  placements. Next: inspect their original scene transform/material binding
+  in `track/beach_I01/track.1s` or runtime and restore correctly.
+- The main-page three-track spawn poses are locally validated for an initial
+  1.6-second straight drive, not a complete route. P5136 V1 automatic N₂O
+  charge above a speed threshold is reported but not implemented: neither
+  threshold nor rate was established. Next: extract V1 KartSpec/BodyParam or
+  record exact speed/gauge samples before adding a separate V1-only charger.
 - Original `track/beach_I01`, `track/beach_I02`, and `track/village_R01`
   `xt_trackCard.png`/`xt_minimap.png` are now locally copied and shown by
   `tools/prepare-local-tracks.ps1`. The new game also loads converted USDA

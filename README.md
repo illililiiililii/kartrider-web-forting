@@ -3,12 +3,13 @@
 Main game: [http://127.0.0.1:4173/](http://127.0.0.1:4173/).
 Physics/telemetry test page: [http://127.0.0.1:4173/debug.html](http://127.0.0.1:4173/debug.html).
 The main page now composes unchanged P5136 GUI PNGs according to the supplied
-1280×720 lobby screenshot and `stage/mainMenu`, `stage/logo`, and
-`stage/speedIndiGame` XML layouts. Its mountain/clock-tower/roof backdrop and
+lobby/race screenshots and `stage/mainMenu`, `stage/timeAttackReady`,
+`dialog/garageDialog`, `dialog2/selectTrackEx`, and `stage/speedIndiGame`
+layouts. Its mountain/clock-tower/roof backdrop and
 decorative riders come from `myRoom/2022_Facelift_main`, and its white bottom
 taskbar comes from `gui/window/menu`. It uses
 the supplied kart/character/track meshes, track cards, minimap, speed-number
-sheet, timer-number sheet, N₂O gauge, and taskbar icons. Dynamic labels and
+sheet, timer-number sheet, V1 N₂O slot/gauge and tachometer, and taskbar icons. Dynamic labels and
 native account fields are text, not newly drawn UI art. The account-entry
 layout remains provisional because an original account-login screen was not
 found in the extracted files.
@@ -54,6 +55,7 @@ user's unpacked original files (the script default points at the supplied
 .\tools\prepare-local-tracks.ps1
 .\tools\prepare-local-ui.ps1
 .\tools\prepare-local-audio.ps1
+# Needed only if the local work/usd-python runtime is unavailable:
 python -m pip install usd-core==25.5.1
 .\tools\prepare-local-usd.ps1
 ```
@@ -122,9 +124,9 @@ so this evidence applies to non-drift steering only.
 node --test tools\test-auth-server.mjs tools\test-demo-physics.mjs tools\test-frame-interpolation.mjs tools\test-local-ui-assets.mjs
 ```
 
-The current local test run passed 15 checks, including original GUI asset
+The current local test run passed 17 checks, including original GUI asset
 hash verification, imported track
-collision, speed-dependent steering, demo gauge/countdown/input/course
+collision, clear launch directions on all three tracks, speed-dependent steering, demo gauge/countdown/input/course
 behavior, and register/login/logout.
 In direct Wasm tests, the default
 demo kart accelerated to about 156 km/h after 1.6 seconds on the flat test world; with
