@@ -1,5 +1,21 @@
 # P5136 web port — development progress
 
+## 2026-10-21 idle collision and original localized textures
+
+- Reproduced ~37 m of idle creep over eight simulated minutes on the imported
+  Beach I01 collision proxy. A bridge-only sub-0.15 m/s grounded/no-input
+  deadzone now holds the kart in place without changing upstream demo C.
+  Added a 480-second local-track regression; all 14 automated tests pass.
+- Reduced the original kart/driver presentation scale from 0.72 to 0.55 after
+  visual comparison against the imported Beach I01 roadway. This does not
+  change the demo's collision body and still needs original unit verification.
+- Found Village R01's six previously missing dynamic ad images in the
+  original `_rhoOut/zeta/kr/ppl/ingame/hangul/village/` folder. The local
+  converter resolves them by exact filename and theme; no generated image or
+  cross-theme substitution is used. Beach's equivalent files remain missing.
+- Original collision tags and source GUI/login layout are still unverified;
+  no new speculative UI was added in this update.
+
 ## 2026-10-21 demo C integration, model calibration, and account server
 
 - Kept the upstream demo C dynamics/simulation/camera/track code unmodified and

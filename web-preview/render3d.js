@@ -92,7 +92,7 @@ export function createPreviewRenderer(canvas) {
   // The supplied kart USDA and track USDA were authored in different units.
   // Keep the demo's physical dimensions untouched; calibrate only presentation
   // against the 6.5-unit original road mesh while P5136 BodyParam is pending.
-  const kartVisualScale = 0.72;
+  const kartVisualScale = 0.55;
   const shell = material(0x33b6e4, 0.32, 0.32);
   const dark = material(0x192936, 0.18, 0.6);
   const rubber = material(0x161a21);

@@ -44,6 +44,12 @@ def texture_for(prim, source, output_dir, rho_root=None):
             candidate = rho_root / category / asset / name
             if candidate.is_file():
                 file = candidate
+            if not file.is_file() and category == "track" and name.startswith("ad_"):
+                theme = asset.split("_")[0]
+                localized = (rho_root / "zeta" / "kr" / "ppl" / "ingame"
+                             / "hangul" / theme / name)
+                if localized.is_file():
+                    file = localized
         if not file.is_file():
             continue
         shutil.copy2(file, output_dir / name)

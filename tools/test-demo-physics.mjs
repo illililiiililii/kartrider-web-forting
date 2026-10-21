@@ -145,3 +145,23 @@ test('local original track collision loads and keeps the practice timer separate
     assert.ok(trackState[23] > 0);
     assert.equal(trackState[21], 1);
   });
+
+test('idle kart does not creep across an imported near-flat original track',
+  { skip: !existsSync(localTrack) }, () => {
+    const { api, state } = create();
+    const statePointer = state.byteOffset;
+    const bytes = readFileSync(localTrack);
+    const pointer = api.demo_track_alloc(bytes.length);
+    new Uint8Array(api.memory.buffer, pointer, bytes.length).set(bytes);
+    assert.ok(api.demo_track_load(pointer, bytes.length) > 1000);
+    api.demo_track_free_buffer(pointer);
+    const trackState = new Float32Array(api.memory.buffer, statePointer, 40);
+    const height = api.demo_track_ground_height(-120, 98, 80);
+    assert.ok(Math.abs(api.demo_track_ground_normal(-120, 98, 80, 0)) < 0.02);
+    assert.equal(api.demo_track_enable(-120, 98, height, 0), 1);
+    api.demo_start_race();
+    for (let i = 0; i < 30000; i++) api.demo_step(16, 0, 0, 0, 0, 0);
+    assert.ok(Math.abs(trackState[0] + 120) < 0.5, `idle x=${trackState[0]}`);
+    assert.ok(Math.abs(trackState[1] - 98) < 0.5, `idle y=${trackState[1]}`);
+    assert.ok(trackState[6] < 0.1, `idle speed=${trackState[6]}`);
+  });

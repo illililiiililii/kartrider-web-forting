@@ -333,6 +333,17 @@ __attribute__((export_name("demo_track_ground_height"))) float demo_track_ground
         ? hit.point.z : NAN;
 }
 
+__attribute__((export_name("demo_track_ground_normal"))) float demo_track_ground_normal(
+    float x, float y, float top, unsigned int axis) {
+    if (track_scene.mesh_count == 0 || axis > 2u) return NAN;
+    KartGroundHit hit;
+    const KartVec3 start = {x, y, top};
+    const KartVec3 down = {0.0f, 0.0f, -100.0f};
+    if (!kart_track_scene_query_ground(&track_scene, &track_spec, start, down, &hit))
+        return NAN;
+    return axis == 0 ? hit.normal.x : axis == 1 ? hit.normal.y : hit.normal.z;
+}
+
 __attribute__((export_name("demo_track_enable"))) unsigned int demo_track_enable(
     float x, float y, float z, float heading) {
     if (track_scene.mesh_count == 0 || !isfinite(x) || !isfinite(y) ||
@@ -378,6 +389,17 @@ __attribute__((export_name("demo_step"))) void demo_step(
     previous_throttle = throttle_pressed;
     previous_boost = boost_pressed;
     KartSimulationStepResult step = kart_simulate_milliseconds(&kart, &controls, &world, elapsed_ms);
+    /* The imported P5136 collision proxy contains nearly-flat triangles
+       with small normal errors. The demo has no static-friction branch, so an
+       unattended kart slowly creeps for minutes. Keep this compatibility
+       deadzone outside the unmodified demo source and only on proxy tracks. */
+    if (track_enabled && kart.grounded && !throttle && !brake &&
+        steer == 0.0f && !drift &&
+        kart.linear_velocity.x * kart.linear_velocity.x +
+        kart.linear_velocity.y * kart.linear_velocity.y < 0.15f * 0.15f) {
+        kart.linear_velocity.x = 0.0f;
+        kart.linear_velocity.y = 0.0f;
+    }
     /* The demo collision callback resolves velocity, while this temporary
        square test world's positional boundary keeps the body inside it. */
     if (!track_enabled) {

@@ -23,6 +23,12 @@ not permanent removal. Other opaque/transparent material mismatches may remain.
   `KartSimulationWorld` ground/body callbacks. The original slope, jump, wall
   tags and checkpoint/recovery data are still unverified. Next: inspect the
   original track data and replace name-based classification.
+- On imported proxy tracks only, the bridge zeros horizontal velocity below
+  0.15 m/s when grounded with no controls. This is a compatibility deadzone,
+  **not an upstream demo formula**: nearly-flat extracted triangles otherwise
+  moved an idle kart about 37 m in eight minutes. The regression test covers
+  480 simulated seconds. Remove/reassess it when original collision geometry
+  and static friction are identified.
 - The drift gauge now calls the demo's own `kart_gauge_update` with its
   **hypothesis** `4 * |speed| * |rearSlip| * dt`, 200-unit capacity, two-slot
   storage, and handoff on drift exit. `demo_set_gauge_factor` exposes its
@@ -36,7 +42,7 @@ not permanent removal. Other opaque/transparent material mismatches may remain.
   Dao/Bazzi characters, three textured track scenes, and a dashboard sprite.
   The USD hierarchy was exported to browser JSON with UVs; skeleton weights,
   animation, seat attachment alignment, verified track drive surfaces, and material
-  nuances are not integrated. The displayed kart/driver are scaled to 0.72
+  nuances are not integrated. The displayed kart/driver are scaled to 0.55
   relative to the previous browser view, but the demo collision body is still
   the source preset geometry; their exact overlap is unverified. Kart
   front-wheel steering for USD meshes still needs visual verification. Do not
@@ -63,12 +69,14 @@ not permanent removal. Other opaque/transparent material mismatches may remain.
   mq_window@kr.xml` does establish original lobby panel and mode coordinates.
 - Missing USDA track art includes `ad_board_a.png`, `ad_board_b.png`,
   `ad_fence_a/b/c.png`, `ad_start.png` on Beach I01; these are referenced by
-  the supplied USDA but absent from its sibling texture folder and exact
-  `_rhoOut/track/beach_I01` path. Same-named assets in other themes are not
-  substituted. Source converter: `tools/convert-usd-local.py`, material lookup
-  `texture_for`. Next: trace their runtime zeta/theme selection or inspect
-  original P5136 resource-load calls. Native REA code search was unavailable
-  this run because Ghidra/IDA provider was not configured.
+  the supplied USDA but absent from its sibling texture folder, exact
+  `_rhoOut/track/beach_I01` path, and same-theme localized PPL folder.
+  Village R01's six missing advertisement images *were* found at
+  `_rhoOut/zeta/kr/ppl/ingame/hangul/village/` and are now selected by the
+  local converter, bringing that scene to zero missing textures. Same-named
+  assets in unrelated themes are not substituted. Next: trace Beach's runtime
+  theme selection or inspect original P5136 resource-load calls. Native REA
+  code search was unavailable because Ghidra/IDA was not configured.
 - The demo repository snapshot has no visible `LICENSE`/`COPYING` file. This
   repository does not distribute its source or generated Wasm. Local users must
   supply it and run `tools/build-demo-physics.ps1`. Publishing a compiled build
