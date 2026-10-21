@@ -18,3 +18,19 @@ foreach ($name in @('btn_speedIndi_1.png', 'btn_speedTeam_1.png')) {
     Copy-Item -LiteralPath $sprite -Destination (Join-Path $target $name) -Force
   }
 }
+
+# Preserve the original stage namespaces: the same basename can have a
+# different graphic in the base stage and Korean locale override.
+foreach ($relative in @('stage\mainMenu', 'zeta\kr\stage\mainMenu', 'stage\speedIndiGame')) {
+  $folder = Join-Path $AssetRoot $relative
+  if (-not (Test-Path -LiteralPath $folder -PathType Container)) {
+    throw "Original GUI folder missing: $folder"
+  }
+  $destination = Join-Path $target $relative
+  New-Item -ItemType Directory -Force -Path $destination | Out-Null
+  $images = Get-ChildItem -LiteralPath $folder -File -Filter '*.png'
+  foreach ($image in $images) {
+    Copy-Item -LiteralPath $image.FullName -Destination (Join-Path $destination $image.Name) -Force
+  }
+  Write-Host "Prepared $($images.Count) original GUI sprites from $relative"
+}

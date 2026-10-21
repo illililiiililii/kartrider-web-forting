@@ -17,6 +17,10 @@
   cross-theme substitution is used. Beach's equivalent files remain missing.
 - Original collision tags and source GUI/login layout are still unverified;
   no new speculative UI was added in this update.
+- Inspected `stage/mainMenu/mq_window@kr.xml` and prepared its original base
+  and Korean override sprite namespaces plus `stage/speedIndiGame` locally:
+  404 + 984 + 92 PNGs. These are ignored local assets; the current provisional
+  page has **not** yet been replaced by the XML-derived layout.
 
 ## 2026-10-21 demo C integration, model calibration, and account server
 
