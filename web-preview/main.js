@@ -1,4 +1,5 @@
 import { createPreviewRenderer } from './render3d.js';
+import { interpolatePreviewState } from './frame-interpolation.mjs';
 
 const canvas = document.querySelector('#track');
 const view = createPreviewRenderer(canvas);
@@ -26,7 +27,7 @@ const keyMap = {
 for (const type of ['keydown', 'keyup']) {
   window.addEventListener(type, (event) => {
     if (event.code === 'KeyR' && type === 'keydown') {
-      if (wasm && statePointer) wasm.p5136_preview_reset(statePointer);
+      resetPreview();
       return;
     }
     const control = keyMap[event.code];
@@ -36,7 +37,7 @@ for (const type of ['keydown', 'keyup']) {
   });
 }
 window.addEventListener('blur', () => Object.keys(controls).forEach((key) => { controls[key] = false; }));
-document.querySelector('#reset').addEventListener('click', () => wasm?.p5136_preview_reset(statePointer));
+document.querySelector('#reset').addEventListener('click', resetPreview);
 document.querySelector('#camera').addEventListener('click', (event) => {
   event.currentTarget.textContent = view.toggleCamera() ? '카메라: 위에서 보기' : '카메라: 추적 시점';
 });
@@ -51,11 +52,22 @@ let wasm;
 let statePointer = 0;
 let previousTime = 0;
 let accumulator = 0;
+let previousState;
+let currentState;
+let visualState;
+function resetPreview() {
+  if (!wasm || !statePointer) return;
+  wasm.p5136_preview_reset(statePointer);
+  currentState.set(new Float32Array(wasm.memory.buffer, statePointer, 19));
+  previousState.set(currentState);
+  visualState.set(currentState);
+  view.resetCamera();
+}
 const telemetry = Object.fromEntries(['speed', 'gear', 'heading', 'yaw', 'drift', 'slip', 'linger', 'gauge', 'boost', 'exceed', 'hits'].map((id) => [id, document.getElementById(id)]));
 
-function draw(state) {
+function draw(state, visual, frameDeltaMs) {
   const [, , heading, vx, vy, yawRate, speed, gauge, boost, drifting, , hits, linger, , , slip] = state;
-  view.render(state);
+  view.render(visual, frameDeltaMs);
   const signedSpeed = vx * Math.cos(heading) + vy * Math.sin(heading);
   telemetry.speed.textContent = Math.round(speed * 3.6);
   telemetry.gear.textContent = signedSpeed < -0.5 ? 'R · 후진' : 'D · 전진';
@@ -72,14 +84,18 @@ function draw(state) {
 
 function frame(time) {
   if (!previousTime) previousTime = time;
-  accumulator = Math.min(accumulator + Math.min(time - previousTime, 100), 100);
+  const frameDeltaMs = Math.min(Math.max(time - previousTime, 0), 100);
+  accumulator = Math.min(accumulator + frameDeltaMs, 100);
   previousTime = time;
   while (accumulator >= 16) {
+    previousState.set(currentState);
     wasm.p5136_preview_step_v2(statePointer, 16, +controls.throttle, +controls.brake,
       (+controls.left) - (+controls.right), +controls.drift, +controls.boost, +controls.exceed);
+    currentState.set(new Float32Array(wasm.memory.buffer, statePointer, 19));
     accumulator -= 16;
   }
-  draw(new Float32Array(wasm.memory.buffer, statePointer, 19));
+  interpolatePreviewState(previousState, currentState, accumulator / 16, visualState);
+  draw(currentState, visualState, frameDeltaMs);
   requestAnimationFrame(frame);
 }
 
@@ -90,6 +106,9 @@ try {
   wasm = result.instance.exports;
   statePointer = wasm.p5136_preview_new();
   if (!statePointer) throw new Error('Wasm 상태 생성 실패');
+  currentState = new Float32Array(new Float32Array(wasm.memory.buffer, statePointer, 19));
+  previousState = new Float32Array(currentState);
+  visualState = new Float32Array(currentState);
   status.textContent = '3D / Wasm 실행 중';
   requestAnimationFrame(frame);
 } catch (error) {

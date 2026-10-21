@@ -1,0 +1,9 @@
+// Rendering-only interpolation. Never feed this smoothed state back to Wasm.
+export function interpolatePreviewState(previous, current, alpha, output) {
+  output.set(current);
+  const t = Math.max(0, Math.min(1, alpha));
+  for (const index of [0, 1, 2, 3, 4, 6]) {
+    output[index] = previous[index] + (current[index] - previous[index]) * t;
+  }
+  return output;
+}

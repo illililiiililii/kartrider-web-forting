@@ -4,6 +4,8 @@ This is a new, from-scratch browser port based on the supplied Korean KartRider 
 
 The repository is still at the physics-evidence gate. The temporary 3D browser prototype below is for input, rendering, and Wasm smoke testing, **not** a playable P5136 port or original-physics validation.
 
+The [2004 demo C physics implementation](https://github.com/overjoy1008/KartriderDemoPhysics) was inspected as requested. Its 5 ms scheduler and recovered force pipeline are useful reference evidence, but its source has no visible redistribution license and it is not yet integrated. See [`docs/demo-physics-integration.md`](docs/demo-physics-integration.md). The preview now interpolates fixed-step Wasm states for rendering and smooths camera position and aim together; this only changes presentation, not driving physics.
+
 ## Try the temporary 3D prototype
 
 The local server is currently available at [http://127.0.0.1:4173/](http://127.0.0.1:4173/) on this computer. To rebuild and restart later, run these commands in this repository:
@@ -47,6 +49,7 @@ $env:PATH = "$env:CARGO_HOME\bin;$env:PATH"
 
 cargo test --target-dir '..\..\work\kart-web-target'
 cargo build --target wasm32-unknown-unknown --release --target-dir '..\..\work\kart-web-target'
+node --test tools/test-frame-interpolation.mjs
 ```
 
 The verified release artifact is:

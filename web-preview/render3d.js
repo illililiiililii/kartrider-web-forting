@@ -125,8 +125,9 @@ export function createPreviewRenderer(canvas) {
   let firstFrame = true;
   const desired = new THREE.Vector3();
   const look = new THREE.Vector3();
+  const targetLook = new THREE.Vector3();
 
-  function render(state) {
+  function render(state, frameDeltaMs = 16) {
     const [x, y, heading, vx, vy, , speed, , boost, drifting] = state;
     const width = Math.max(canvas.clientWidth, 1);
     const height = Math.max(canvas.clientHeight, 1);
@@ -140,17 +141,29 @@ export function createPreviewRenderer(canvas) {
     kart.rotation.y = heading;
     shell.color.setHex(boost > 0 ? 0xffcd4f : drifting ? 0xf779a8 : 0x33b6e4);
     const localSpeed = vx * Math.cos(heading) + vy * Math.sin(heading);
-    for (const wheel of wheels) wheel.rotation.z -= localSpeed * 0.016 / 0.43;
+    for (const wheel of wheels) wheel.rotation.z -= localSpeed * Math.min(frameDeltaMs, 50) / 1000 / 0.43;
 
     if (overhead) desired.set(x, 28, -y + 0.01);
     else desired.set(x - Math.cos(heading) * 8.8, 5.3, -y + Math.sin(heading) * 8.8);
-    if (firstFrame) { camera.position.copy(desired); firstFrame = false; }
-    else camera.position.lerp(desired, overhead ? 0.12 : 0.09);
-    look.set(x + Math.cos(heading) * (overhead ? 0 : 3.2), 0.8,
+    targetLook.set(x + Math.cos(heading) * (overhead ? 0 : 3.2), 0.8,
       -y - Math.sin(heading) * (overhead ? 0 : 3.2));
+    if (firstFrame) {
+      camera.position.copy(desired);
+      look.copy(targetLook);
+      firstFrame = false;
+    } else {
+      const follow = 1 - Math.exp(-Math.min(frameDeltaMs, 50) / (overhead ? 90 : 115));
+      camera.position.lerp(desired, follow);
+      look.lerp(targetLook, follow);
+    }
     camera.lookAt(look);
     renderer.render(scene, camera);
   }
 
-  return { render, setKart, toggleCamera: () => { overhead = !overhead; firstFrame = true; return overhead; } };
+  return {
+    render,
+    setKart,
+    resetCamera: () => { firstFrame = true; },
+    toggleCamera: () => { overhead = !overhead; firstFrame = true; return overhead; },
+  };
 }
