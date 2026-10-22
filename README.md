@@ -29,8 +29,9 @@ and an adapter for heuristic original-track triangle collision. The demo's
 7-second countdown, start-boost window, steering-key ownership, gauge's
 200-unit/two-slot hypothesis, course-gate graph, warp, recovery, and sound
 driving laws are linked. This is **2004 demo physics**, not verified P5136
-physics. The visible chase-camera position is currently a web-specific follow
-camera, although the demo camera C output is computed in Wasm. The P5136
+physics. The rendered chase camera now consumes the C position, forward/up vectors and
+full 75–110 degree FOV; C performs the follow smoothing. Web occlusion may
+shorten its position. Lobby and top-down presentation remain separate. The P5136
 kart's render scale and matching collision footprint also differ from the
 demo's `cotten5` body. These are known differences, not claimed parity.
 Its Windows renderer/playback and experimental multi-gear sound are
@@ -41,32 +42,32 @@ is preserved in [`OLD_PYS`](OLD_PYS/README.md) and is not loaded in the browser.
 
 ## Build and play locally (Windows)
 
-1. Obtain the demo source in a separate directory. This project was tested
-   against commit `a9eade1f343764b10fb6dce5fec3828756fad2e6`. By
-   default the builder uses the user's supplied
-   `C:\Users\user\Downloads\KartriderDemoPhysics-main\KartriderDemoPhysics-main`
-   when present; `-DemoSource` overrides it. The key C and gauge files in
-   that folder match the tested checkout after line-ending normalization.
-2. Obtain Zig 0.13.0 from the [official downloads](https://ziglang.org/download/0.13.0/)
-   and extract it outside this repository.
-3. Run the local-only builder, passing paths if they differ from the supplied
-   Downloads demo and sibling `work` Zig defaults. The builder also requires the supplied
-   unpacked 5136 `_rhoOut` folder; override it with `-RhoRoot` if needed:
+The tested demo C sources are now included at `third_party/KartriderDemoPhysics`
+(revision and hashes in `SOURCE.json`); no Downloads checkout is needed.
+Install Node.js (with `node:sqlite`; Node 22.13+ or newer) and, for original course/model conversion, Python 3.
+From a fresh checkout:
 
 ```powershell
-.\tools\build-demo-physics.ps1 -DemoSource 'C:\path\to\KartriderDemoPhysics' -ZigExe 'C:\path\to\zig.exe'
+.\tools\build-demo-physics.ps1 -Bootstrap
 node server.mjs
 ```
 
+`-Bootstrap` downloads Zig 0.13.0 into ignored `.tools/` and verifies its official
+SHA-256. Existing Zig can be supplied with `-ZigExe`. Without game assets,
+`/debug.html` runs standalone physics; the original game/lobby needs local assets.
+The builder emits no 5136 gates when resources are absent and rejects partial
+three-track inputs. It never substitutes the demo's 2004 gates for 5136 tracks.
+Original files go in [`local-assets/`](local-assets/README.md); all prepare scripts
+default there. Empty inputs report `WAITING` without scanning former Downloads.
+
 Before starting the server, prepare the track cards and minimaps from the
-user's unpacked original files (the script default points at the supplied
-`C:\Users\user\Downloads\kart web` folder):
+user's unpacked original files in `local-assets/rhoOut/`:
 
 ```powershell
 .\tools\prepare-local-tracks.ps1
 .\tools\prepare-local-ui.ps1
 .\tools\prepare-local-audio.ps1
-# Needed only if the local work/usd-python runtime is unavailable:
+# Required for model conversion (not for standalone debug physics):
 python -m pip install usd-core==25.5.1
 .\tools\prepare-local-usd.ps1
 ```
@@ -82,15 +83,15 @@ and its C body remain the same size. This deliberately changes the prototype
 world scale; it is **not** a claim about original 5136 physical metres. The
 original-scale start heights had agreed with KTRK within 0.005 m before this
 uniform enlargement. The square test course
-remains on `/debug.html`. The supplied converted models are USDA, not FBX.
+remains on `/debug.html`. Model inputs are detected by signature (USD ASCII/binary or FBX); FBX uses
+Blender before the existing USD converter. Full FBX conversion awaits input files.
 See [`DEVELOPMENT_PROGRESS.md`](DEVELOPMENT_PROGRESS.md).
 
 Open [http://127.0.0.1:4173/](http://127.0.0.1:4173/). The generated
 `web-preview/demo_physics.wasm` is ignored by Git and must be built locally.
-The demo repository snapshot inspected here has no visible redistribution
-license. Neither its C source nor a compiled derivative is committed here.
-The bridge and build recipe alone cannot make a fresh public checkout playable
-until the user provides a locally obtained demo source and builds its Wasm.
+The pinned upstream snapshot has no license file; its notices and provenance
+are preserved in [`third_party/README.md`](third_party/README.md). Original game
+assets and generated Wasm/course tables remain ignored.
 
 Controls: arrows or numpad 8/2/4/6 (W/A/S/D also work), Shift drift, Ctrl
 booster after a full gauge is banked at drift end, R reset. On `/debug.html`, use the slider to set the demo's
@@ -149,10 +150,12 @@ so this evidence applies to non-drift steering only.
 ```powershell
 .\tools\build-demo-physics.ps1
 .\tools\test-5136-course.ps1
-node --test tools\test-auth-server.mjs tools\test-demo-physics.mjs tools\test-frame-interpolation.mjs tools\test-local-ui-assets.mjs
+node --test tools\test-auth-server.mjs tools\test-demo-physics.mjs tools\test-frame-interpolation.mjs tools\test-local-ui-assets.mjs tools\test-recovery.mjs
 ```
 
-The current local test run passed 22 Node checks plus native synthetic traversal
+The recovery run passes 17 Node checks and one Python format check; eight
+asset-dependent checks are skipped. Zig bootstrap and identical offline rebuilds
+are verified. The historical asset-backed run passed 22 Node checks plus native synthetic traversal
 of all three complete original routes. These checks include V1 speed-threshold
 charging, original GUI asset
 hash verification, imported track

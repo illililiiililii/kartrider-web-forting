@@ -1,8 +1,10 @@
-import { createPreviewRenderer } from './render3d.js?v=27';
+import { createPreviewRenderer } from './render3d.js?v=28';
+import { createLiveMinimap } from './live-minimap.mjs';
 import { interpolatePreviewState } from './frame-interpolation.mjs';
 
 const $ = (selector) => document.querySelector(selector);
 const view = createPreviewRenderer($('#world'));
+const liveMinimap = createLiveMinimap($('#minimap'));
 const lobby = $('#lobby');
 const raceUi = $('#race-ui');
 const status = $('#load-status');
@@ -61,7 +63,7 @@ accountLink.addEventListener('click', async (event) => {
 refreshAccount();
 
 function syncState() {
-  current.set(new Float32Array(wasm.memory.buffer, statePointer, 40));
+  current.set(new Float32Array(wasm.memory.buffer, statePointer, 43));
   previous.set(current);
   visual.set(current);
   view.resetCamera();
@@ -96,6 +98,7 @@ async function loadSelectedTrack() {
     new Uint8Array(wasm.memory.buffer, pointer, binary.byteLength).set(binary);
     const triangles = wasm.demo_track_load(pointer, binary.byteLength);
     if (!triangles) throw new Error('트랙 충돌 메시 파싱 실패');
+    liveMinimap.load(binary);
     // The original ToRoad course supplies the actual spawn immediately below.
     // Enable the already-loaded triangle scene without an obsolete manual pose.
     if (!wasm.demo_track_enable(0, 0, 0, 0)) throw new Error('트랙 활성화 실패');
@@ -240,6 +243,7 @@ function renderSpriteDigits(element, value, className, glyphWidth, columns) {
 
 function draw(state, frameMs) {
   view.render(visual, frameMs);
+  if (active === 'race') liveMinimap.draw(visual);
   if (active !== 'race') return;
   const speed = Math.max(0, Math.round(state[6] * 3.6));
   const speedText = String(Math.min(speed, 999)).padStart(3, '0');
@@ -281,7 +285,7 @@ function frame(time) {
         -wasm.demo_steering_value() + (+controls.left) - (+controls.right)));
       wasm.demo_step(16, +controls.throttle, +controls.brake,
         steer, +controls.drift, +controls.boost);
-      current.set(new Float32Array(wasm.memory.buffer, statePointer, 40));
+      current.set(new Float32Array(wasm.memory.buffer, statePointer, 43));
       accumulator -= 16;
     }
     interpolatePreviewState(previous, current, accumulator / 16, visual);
@@ -389,9 +393,9 @@ try {
   // Both currently supported kart bodies are V1. These provisional charger
   // parameters are isolated from the recovered demo's drift gauge formula.
   wasm.demo_configure_v1_charger(1, 25, 2);
-  current = new Float32Array(40);
-  previous = new Float32Array(40);
-  visual = new Float32Array(40);
+  current = new Float32Array(43);
+  previous = new Float32Array(43);
+  visual = new Float32Array(43);
   syncState();
   await Promise.all([view.setKart(kartChoice.value), view.setCharacter(characterChoice.value)]);
   await loadSelectedTrack();

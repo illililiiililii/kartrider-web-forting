@@ -1,4 +1,5 @@
 import * as THREE from './vendor/three.module.js';
+import { readChasePose } from './camera-pose.mjs';
 
 // Rendering only: position and heading come from the C/Wasm demo state.
 export function createPreviewRenderer(canvas) {
@@ -473,16 +474,15 @@ export function createPreviewRenderer(canvas) {
       desired.y += viewHeight * 0.12;
       targetLook.y += viewHeight * 0.12;
     } else if (overhead) {
-      desired.set(x, 28, -y + 0.01);
-      targetLook.set(x, 0, -y);
+      desired.set(x, (state[14] || 0) + 28, -y + 0.01);
+      targetLook.set(x, state[14] || 0, -y);
     } else {
-      // The demo camera coordinates use its original kart scale. The converted
-      // P5136 mesh is much smaller, so keep the demo speed/FOV response but
-      // calibrate follow distance and height to the rendered body.
-      const followDistance = 4.8 + Math.min(speed / 90, 1) * 1.0;
-      desired.set(x - Math.cos(heading) * followDistance,
-        (state[14] || 0) + 1.45 + Math.min(speed / 90, 1) * 0.2,
-        -y + Math.sin(heading) * followDistance);
+      // C already smooths orientation, speed, height and FOV. Map Z-up to Y-up.
+      const pose = readChasePose(state);
+      desired.fromArray(pose.position);
+      cameraDirection.fromArray(pose.forward).normalize();
+      targetLook.copy(desired).add(cameraDirection);
+      camera.up.fromArray(pose.up).normalize();
       if (trackDrive && originalTrack) {
         const origin = new THREE.Vector3(x, (state[14] || 0) + 0.4, -y);
         cameraDirection.subVectors(desired, origin);
@@ -497,13 +497,13 @@ export function createPreviewRenderer(canvas) {
           }
         }
       }
-      targetLook.set(x + Math.cos(heading) * 3.2,
-        (state[14] || 0) + 0.38,
-        -y - Math.sin(heading) * 3.2);
-      camera.fov = fittedFov(Math.max(65, Math.min(78, state[31] || 70)));
+      // Occlusion may move position, but preserves the C orientation.
+      targetLook.set(desired.x + state[28], desired.y + state[30], desired.z - state[29]);
+      camera.fov = pose.fov;
       camera.updateProjectionMatrix();
     }
-    const follow = firstFrame || lobbyMode || trackPreview ? 1 : 1 - Math.exp(-Math.min(frameDeltaMs, 50) / 110);
+    if (lobbyMode || trackPreview || overhead) camera.up.set(0, 1, 0);
+    const follow = 1; // Interpolation is done on telemetry; never smooth C chase twice.
     camera.position.lerp(desired, follow);
     smoothedLook.lerp(targetLook, follow);
     look.copy(smoothedLook);

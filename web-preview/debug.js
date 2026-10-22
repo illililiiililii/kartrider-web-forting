@@ -1,4 +1,4 @@
-import { createPreviewRenderer } from './render3d.js?v=14';
+import { createPreviewRenderer } from './render3d.js?v=recovery43';
 import { interpolatePreviewState } from './frame-interpolation.mjs';
 
 const canvas = document.querySelector('#track');
@@ -143,7 +143,7 @@ document.querySelector('#start-race').addEventListener('click', () => {
   if (!wasm || !statePointer) return;
   wasm.demo_start_race();
   wasm.demo_set_steer_angle(Number(steerAngle.value));
-  currentState.set(new Float32Array(wasm.memory.buffer, statePointer, 32));
+  currentState.set(new Float32Array(wasm.memory.buffer, statePointer, 43));
   previousState.set(currentState);
   visualState.set(currentState);
   view.resetCamera();
@@ -172,7 +172,7 @@ function resetPreview() {
   resetVisualState();
 }
 function resetVisualState() {
-  currentState.set(new Float32Array(wasm.memory.buffer, statePointer, 32));
+  currentState.set(new Float32Array(wasm.memory.buffer, statePointer, 43));
   previousState.set(currentState);
   visualState.set(currentState);
   view.resetCamera();
@@ -223,7 +223,7 @@ function frame(time) {
     previousState.set(currentState);
     wasm.demo_step(16, +controls.throttle, +controls.brake,
       (+controls.left) - (+controls.right), +controls.drift, +controls.boost);
-    currentState.set(new Float32Array(wasm.memory.buffer, statePointer, 32));
+    currentState.set(new Float32Array(wasm.memory.buffer, statePointer, 43));
     accumulator -= 16;
   }
   interpolatePreviewState(previousState, currentState, accumulator / 16, visualState);
@@ -241,7 +241,7 @@ try {
   statePointer = wasm.demo_new();
   if (!statePointer) throw new Error('Wasm 상태 생성 실패');
   wasm.demo_set_steer_angle(Number(steerAngle.value));
-  currentState = new Float32Array(new Float32Array(wasm.memory.buffer, statePointer, 32));
+  currentState = new Float32Array(new Float32Array(wasm.memory.buffer, statePointer, 43));
   previousState = new Float32Array(currentState);
   visualState = new Float32Array(currentState);
   status.textContent = '데모 C 물리 / Wasm 실행 중';

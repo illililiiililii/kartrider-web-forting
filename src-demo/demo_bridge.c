@@ -1,6 +1,5 @@
 /* Local WebAssembly adapter. The driving and camera computations are linked
- * directly from the user's separate KartriderDemoPhysics checkout. No upstream
- * source or derived binary is distributed with this repository. */
+ * from the pinned third_party/KartriderDemoPhysics sources. */
 #include "kart_simulation.h"
 #include "kart_camera.h"
 #include "kart_demo_data.h"
@@ -19,7 +18,7 @@
 static KartSimulationState kart;
 static KartChaseCameraFollow chase;
 static KartSimulationWorld world;
-static float telemetry[40];
+static float telemetry[43];
 static KartGaugeState gauge;
 static KartGaugeConfig gauge_config;
 /* V1's passive charger is a 5136-era feature absent from the 2004 demo.
@@ -255,6 +254,9 @@ static void publish(unsigned int elapsed_ms, KartSimulationStepResult step) {
     telemetry[29] = cam.forward.y;
     telemetry[30] = cam.forward.z;
     telemetry[31] = cam.field_of_view_degrees;
+    telemetry[40] = cam.up.x;
+    telemetry[41] = cam.up.y;
+    telemetry[42] = cam.up.z;
     telemetry[32] = (float)gauge.boosters;
     telemetry[33] = gauge.rate;
     telemetry[34] = gauge.contact_weight;

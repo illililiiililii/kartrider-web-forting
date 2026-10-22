@@ -96,7 +96,7 @@ canvas{position:relative;z-index:1;display:block;width:100%;height:100%}
 .recording{position:absolute;right:0;top:118px;width:54px;height:19px;background:url('./assets/ui/stage/common/녹화중@zz.png') 0 0/162px 19px no-repeat}
 .race-actions{position:absolute;right:23px;top:166px;display:flex;gap:8px}
 .map-panel{position:absolute;right:16px;bottom:107px;width:147px;height:148px;background:url('./assets/ui/gui/monocoque/minimaP_box.png') 0 0/147px 148px no-repeat;padding:8px}
-.map-panel #minimap{width:131px;height:132px;object-fit:contain}
+.map-panel #minimap,.map-panel #live-minimap{width:131px;height:132px;object-fit:contain}
 .dashboard{position:absolute;inset:auto 0 0;height:95px}
 .speed-digits{position:absolute;right:38px;bottom:45px;display:flex;height:44px}
 .speed-digits .speed-digit{display:block;width:38px;height:44px;background-image:url('./assets/ui/stage/speedIndiGame/속도_num.png')}
@@ -194,7 +194,7 @@ canvas{position:relative;z-index:1;display:block;width:100%;height:100%}
 .lap-readout span{font-size:40px;color:#e9eef2}
 .time-line{display:flex;justify-content:space-between;gap:10px;font-size:20px;font-weight:700;line-height:24px}
 .map-panel{right:24px;bottom:35%;width:250px;height:265px;background:#15212b99;padding:5px}
-.map-panel #minimap{width:240px;height:228px;object-fit:contain;opacity:.8}
+.map-panel #minimap,.map-panel #live-minimap{width:240px;height:228px;object-fit:contain;opacity:.8}
 .map-marker{position:absolute;left:7px;top:3px;z-index:1;font-size:16px}
 .map-footer{position:absolute;left:0;right:0;bottom:0;height:26px;padding:4px 7px;background:#142233bb;font-size:14px}
 .dashboard{bottom:7px;height:144px;pointer-events:none}

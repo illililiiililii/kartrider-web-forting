@@ -1,3 +1,12 @@
+# Recovery status — 2026-10-22
+
+The latest recovery entry in `DEVELOPMENT_PROGRESS.md` supersedes historical
+camera/source-path/minimap notes below. Use `local-assets/README.md` for inputs.
+Pinned physics sources and build bootstrap are tracked; standalone debug physics
+builds without game assets. C chase pose/up/FOV now drive rendering. The live map
+uses loaded 5136 geometry; original bitmap registration, real audio mixing and
+original-track/GUI/FBX visual verification await local assets.
+
 # Remaining work and exact boundaries
 
 Update 2026-10-22: `/` is a game-facing lobby/HUD and `/debug.html` is

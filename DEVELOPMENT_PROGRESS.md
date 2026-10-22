@@ -1,3 +1,14 @@
+## 2026-10-22 format recovery (current status)
+
+- Restored the GitHub history without replacing local code (local/remote code differed only by line endings before these edits).
+- Added ignored `local-assets/{rhoOut,track,kart,character}` with tracked placeholders/instructions. Prepare scripts use these defaults and report empty inputs once. USD/FBX signatures are detected; FBX routes through Blender into the existing USD pipeline without modifying originals.
+- Vendored the tested demo revision `a9eade1f343764b10fb6dce5fec3828756fad2e6`: 13 C modules, headers, gauge, ToRoad parser and inspected Win32 minimap/sound references. SHA-256 manifest, compiler version check and checksum-verified Zig bootstrap make debug physics rebuildable from Git alone. No upstream license file was present; provenance/notices retained without adding a license grant.
+- Missing 5136 resources now produce an explicit debug-only build, overwriting stale gate tables; partial track inputs fail. 2004 course tables remain separate and are never used for 5136 tracks.
+- Chase renderer now applies C position, forward/up (including roll), full FOV and C smoothing. Existing web obstruction adjustment remains; lobby composition is preserved. Top-down height now follows actual vehicle altitude.
+- Inspected upstream `kart_minimap_win32.c`: it does contain Win32 projection/ToMinimap mappings, but those constants belong to 2004 tracks. Web fallback adapts its world-to-panel axis convention using the actually loaded 5136 KTRK geometry and live vehicle position/heading; it does not apply those old bitmap mappings. Accurate original 5136 bitmap registration awaits `ToMinimap` metadata/assets.
+- Already connected C dynamics/drift/boost/collision/suspension, input/countdown/start boost, gauge/speed and course/recovery are retained. C engine pitch/volume/crash laws are computed, but main-game playback, Win32 audio mixer, skid marks and exact original minimap camera are not restored; sound samples and verified 5136 mapping remain pending.
+- Verified: checksum-checked `-Bootstrap` install and full 13-module Wasm build; repeat offline build has identical SHA-256; Node 17 passed / 8 asset-dependent skipped; Python signature test passed; PowerShell/JS syntax and empty-input preparation passed. HTTP-served Wasm executes, C camera vectors/FOV reach Three camera math, synthetic KTRK projection is tested. Actual original-model/Blender FBX conversion, GUI hashes, 5136 route traversal and browser visual QA await missing resources. No GUI redesign or extracted asset upload.
+
 # P5136 web port — development progress
 
 ## 2026-10-22 race framing, mirrored track correction, original setup GUI
