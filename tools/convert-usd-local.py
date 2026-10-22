@@ -7,78 +7,19 @@ script copies only referenced textures; all outputs are ignored by Git.
 import argparse
 import json
 import math
-import shutil
 import struct
 from pathlib import Path
 
-from pxr import Gf, Usd, UsdGeom, UsdShade
+from pxr import Gf, Usd, UsdGeom
+from usd_materials import material_info
 
 
 def texture_for(prim, source, output_dir, rho_root=None):
-    # USD bindings can be inherited from a parent Xform. Resolve the bound
-    # material rather than assuming every mesh owns material:binding itself.
-    binding = prim.GetRelationship("material:binding")
-    targets = binding.GetTargets() if binding else []
-    if targets:
-        material = prim.GetStage().GetPrimAtPath(targets[0])
-    else:
-        bound = UsdShade.MaterialBindingAPI(prim).ComputeBoundMaterial()[0]
-        if not bound:
-            return None
-        material = bound.GetPrim()
-    for child in Usd.PrimRange(material):
-        if not child.IsA(UsdShade.Shader):
-            continue
-        value = child.GetAttribute("inputs:file").Get()
-        if value is None:
-            continue
-        name = Path(str(value).strip("@")).name
-        if Path(name).suffix.lower() not in (".png", ".jpg", ".jpeg"):
-            continue
-        file = source.parent / name
-        if not file.is_file() and rho_root is not None:
-            # Only the exact source category/name may satisfy a missing USDA
-            # reference. A same-named image from another track is not evidence.
-            category = source.parent.parent.name
-            asset = source.stem.split("_demo")[0]
-            candidate = rho_root / category / asset / name
-            if candidate.is_file():
-                file = candidate
-            if not file.is_file() and category == "track" and name.startswith("ad_"):
-                theme = asset.split("_")[0]
-                localized = (rho_root / "zeta" / "kr" / "ppl" / "ingame"
-                             / "hangul" / theme / name)
-                if localized.is_file():
-                    file = localized
-        if not file.is_file():
-            continue
-        shutil.copy2(file, output_dir / name)
-        return name
-    return None
+    return material_info(prim, source, output_dir, rho_root)["texture"]
 
 
-def material_flags(prim, source, output_dir):
-    flags = {"alphaBlend": False, "alphaTest": False, "alphaTexture": None}
-    parent = prim
-    while parent and parent.IsValid():
-        flags["alphaBlend"] = flags["alphaBlend"] or bool(parent.GetCustomDataByKey("kart_alphaBlend"))
-        flags["alphaTest"] = flags["alphaTest"] or bool(parent.GetCustomDataByKey("kart_alphaTest"))
-        parent = parent.GetParent()
-    binding = prim.GetRelationship("material:binding")
-    targets = binding.GetTargets() if binding else []
-    material = prim.GetStage().GetPrimAtPath(targets[0]) if targets else None
-    if material is None:
-        bound = UsdShade.MaterialBindingAPI(prim).ComputeBoundMaterial()[0]
-        material = bound.GetPrim() if bound else None
-    if material:
-        raw = material.GetCustomDataByKey("kart_alphaTexture")
-        if raw:
-            name = Path(str(raw)).name
-            file = source.parent / name
-            if file.is_file():
-                shutil.copy2(file, output_dir / name)
-                flags["alphaTexture"] = name
-    return flags
+def material_flags(prim, source, output_dir, rho_root=None):
+    return material_info(prim, source, output_dir, rho_root)
 
 
 def collision_candidate(part):
@@ -151,19 +92,22 @@ def export(source, output, scale, ktrk=None, rho_root=None):
     if stage is None:
         raise ValueError(f"Cannot open USDA: {source}")
     output.parent.mkdir(parents=True, exist_ok=True)
-    cache = UsdGeom.XformCache(Usd.TimeCode.Default())
+    # Time-sampled transforms can have no default value. Default time then
+    # becomes identity and detaches whole animated parent hierarchies.
+    time = Usd.TimeCode(stage.GetStartTimeCode())
+    cache = UsdGeom.XformCache(time)
     parts = []
     for prim in stage.Traverse():
         if not prim.IsA(UsdGeom.Mesh):
             continue
         mesh = UsdGeom.Mesh(prim)
-        points = mesh.GetPointsAttr().Get()
+        points = mesh.GetPointsAttr().Get(time)
         counts = mesh.GetFaceVertexCountsAttr().Get()
         indices = mesh.GetFaceVertexIndicesAttr().Get()
         if not points or not counts or not indices:
             continue
         uv_primvar = UsdGeom.PrimvarsAPI(mesh).GetPrimvar("st")
-        uv_values = uv_primvar.ComputeFlattened() if uv_primvar else None
+        uv_values = uv_primvar.ComputeFlattened(time) if uv_primvar else None
         interpolation = uv_primvar.GetInterpolation() if uv_primvar else None
         transform = cache.GetLocalToWorldTransform(prim)
         positions, uvs, triangles = [], [], []
@@ -182,6 +126,8 @@ def export(source, output, scale, ktrk=None, rho_root=None):
                     raise ValueError(f"Non-finite vertex in {prim.GetPath()}")
                 positions.extend(round(value, 5) for value in xyz)
                 uv_index = offset + corner if interpolation == "faceVarying" else vertex_index
+                if interpolation == "uniform":
+                    uv_index = face_index
                 if interpolation == "constant":
                     uv_index = 0
                 if uv_values is not None and uv_index < len(uv_values):
@@ -195,12 +141,18 @@ def export(source, output, scale, ktrk=None, rho_root=None):
             for corner in range(1, count - 1):
                 triangles.extend((face[0], face[corner], face[corner + 1]))
             offset += count
+        # Baking an orientation-reversing parent must also preserve face winding.
+        mirrored = transform.GetDeterminant() < 0
+        left_handed = mesh.GetOrientationAttr().Get() == "leftHanded"
+        if mirrored != left_handed:
+            for i in range(0, len(triangles), 3):
+                triangles[i + 1], triangles[i + 2] = triangles[i + 2], triangles[i + 1]
         if not triangles:
             continue
         parts.append({
             "name": str(prim.GetPath()), "positions": positions, "uvs": uvs,
             "indices": triangles, "texture": texture_for(prim, source, output.parent, rho_root),
-            **material_flags(prim, source, output.parent),
+            **material_flags(prim, source, output.parent, rho_root),
         })
     if not parts:
         raise ValueError(f"No meshes in {source}")

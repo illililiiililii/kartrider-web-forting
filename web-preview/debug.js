@@ -1,4 +1,4 @@
-import { createPreviewRenderer } from './render3d.js?v=recovery43';
+import { createPreviewRenderer } from './render3d.js?v=source-fixes';
 import { interpolatePreviewState } from './frame-interpolation.mjs';
 
 const canvas = document.querySelector('#track');
@@ -151,6 +151,10 @@ document.querySelector('#start-race').addEventListener('click', () => {
 document.querySelector('#camera').addEventListener('click', (event) => {
   event.currentTarget.textContent = view.toggleCamera() ? '카메라: 위에서 보기' : '카메라: 추적 시점';
 });
+document.querySelector('#collision-wireframe').addEventListener('click', async (event) => {
+  try { event.currentTarget.textContent = await view.toggleCollision() ? '충돌 메시: 표시' : '충돌 메시: 숨김'; }
+  catch (error) { document.querySelector('#status').textContent = error.message; }
+});
 for (const button of document.querySelectorAll('[data-key]')) {
   const key = button.dataset.key;
   const set = (pressed) => { controls[key] = pressed; button.classList.toggle('active', pressed); };
@@ -222,7 +226,7 @@ function frame(time) {
   while (accumulator >= 16) {
     previousState.set(currentState);
     wasm.demo_step(16, +controls.throttle, +controls.brake,
-      (+controls.left) - (+controls.right), +controls.drift, +controls.boost);
+      (+controls.right) - (+controls.left), +controls.drift, +controls.boost);
     currentState.set(new Float32Array(wasm.memory.buffer, statePointer, 43));
     accumulator -= 16;
   }

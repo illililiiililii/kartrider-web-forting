@@ -24,3 +24,5 @@ __pycache__/
 !/local-assets/character/.gitkeep
 /.tools/
 /KartriderDemoPhysics-main/
+/tools/native-collision-exporter/bin/
+/tools/native-collision-exporter/obj/

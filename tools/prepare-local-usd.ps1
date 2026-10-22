@@ -69,7 +69,12 @@ foreach ($item in $items) {
   # Models/collision body/ToRoad coordinates retain their existing calibration.
   $scale = if ($item[0] -eq 'track') { $item[3] * $TrackSourceScale } else { $item[3] }
   $options = @('--scale',$scale.ToString('R', [Globalization.CultureInfo]::InvariantCulture),'--rho-root',$RhoRoot)
-  if ($item[0] -eq 'track') { $options += @('--ktrk',(Join-Path (Split-Path -Parent $target) 'collision.ktrk')) }
+
   & $PythonExe (Join-Path $PSScriptRoot 'convert-usd-local.py') $source $target @options
   if ($LASTEXITCODE -ne 0) { throw "Model conversion failed: $source" }
 }
+
+# The original .1s property/road tags decide collision membership, not labels.
+$nativeTracks=@(@('beach_I01','beach_I02','village_R01') | Where-Object { Test-Path -LiteralPath (Join-Path $RhoRoot "track\$_\track.1s") })
+if ($nativeTracks.Count -eq 3) { & (Join-Path $PSScriptRoot 'prepare-local-collision.ps1') -RhoRoot $RhoRoot -PythonExe $PythonExe }
+else { Write-Warning 'Original collision metadata unavailable; driving collision remains unverified.' }

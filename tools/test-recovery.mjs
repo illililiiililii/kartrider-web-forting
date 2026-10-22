@@ -44,7 +44,7 @@ test('render camera follows actual C position/orientation and preserves boost FO
 test('5136 live map uses loaded KTRK coordinates and matching heading axes', () => {
   const bytes=new Uint8Array(44+204+60+12), d=new DataView(bytes.buffer);
   d.setUint32(0,0x4b52544b,true); d.setUint32(4,2,true); d.setUint32(8,1,true);
-  d.setUint32(44+196,3,true); d.setUint32(44+200,3,true);
+  d.setUint32(44+192,1,true); d.setUint32(44+196,3,true); d.setUint32(44+200,3,true);
   const points=[[-10,20,0],[-30,20,0],[-10,40,0]];
   points.forEach((p,i)=>p.forEach((v,k)=>d.setFloat32(248+i*20+k*4,v,true)));
   [0,1,2].forEach((v,i)=>d.setUint32(308+i*4,v,true));

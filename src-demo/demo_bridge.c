@@ -488,73 +488,18 @@ __attribute__((export_name("demo_step"))) void demo_step(
         !kart.timed_boost.active && kart_gauge_take_booster(&gauge);
     previous_throttle = throttle_pressed;
     previous_boost = boost_pressed;
-    const KartVec3 prior_position = kart.position;
-    const KartVec3 prior_velocity = kart.linear_velocity;
-    const bool prior_grounded = kart.grounded;
-    const float prior_vertical_speed = kart.linear_velocity.z;
-    KartGroundHit prior_road;
-    const KartVec3 prior_probe = {prior_position.x, prior_position.y,
-                                  prior_position.z + 1.5f};
-    const KartVec3 prior_down = {0.0f, 0.0f, -4.0f};
-    const bool prior_supported = track_enabled &&
-        ground_query(NULL, prior_probe, prior_down, &prior_road) &&
-        prior_road.normal.z > 0.65f;
     KartSimulationStepResult step = kart_simulate_milliseconds(&kart, &controls, &world, elapsed_ms);
-    if (track_enabled) {
-        KartGroundHit ahead;
-        const KartVec3 probe = {kart.position.x, kart.position.y, prior_position.z + 1.5f};
-        const KartVec3 down = {0.0f, 0.0f, -4.0f};
-        const bool center_supported = ground_query(NULL, probe, down, &ahead) &&
-                                      ahead.normal.z > 0.65f;
-        const float travelled = hypotf(kart.position.x - prior_position.x,
-                                        kart.position.y - prior_position.y);
-        const float permitted_rise = 0.45f + 0.35f * travelled;
-        const bool climbed_obstacle = prior_grounded && prior_supported &&
-            prior_vertical_speed < 0.5f && center_supported &&
-            ahead.point.z - prior_road.point.z > permitted_rise;
-        const bool unsupported_edge = !center_supported && prior_grounded &&
-            prior_vertical_speed < 1.0f &&
-            kart.position.z <= prior_position.z + 0.25f;
-        if (climbed_obstacle || unsupported_edge) {
-            /* The provisional USDA->KTRK proxy can label a fence top as road.
-               A sudden height discontinuity is not a driveable ramp. Rewind
-               only that adapter-induced step; genuine airborne jumps are left
-               to the upstream demo's suspension and gravity. */
-            const float impact = hypotf(prior_velocity.x, prior_velocity.y);
-            kart.position = prior_position;
-            kart.linear_velocity.x = -0.32f * prior_velocity.x;
-            kart.linear_velocity.y = -0.32f * prior_velocity.y;
-            kart.linear_velocity.z = 0.0f;
-            kart.angular_velocity.z *= 0.4f;
-            step.wall_impact_speed = fmaxf(step.wall_impact_speed, impact);
-        } else if (center_supported && kart.grounded &&
-                   kart.position.z < ahead.point.z + 0.45f) {
-            /* Only patch a small seam error, never lift the kart onto a wall. */
-            kart.position.z = ahead.point.z + 0.45f;
-            kart.linear_velocity.z = fmaxf(0.0f, kart.linear_velocity.z);
+    /* Original road-tagged triangles now supply ground/walls. Never rewind a
+       natural fall/jump, teleport chassis height, or add a static-friction law. */
+    if (track_enabled && kart.grounded && race_phase == 2.0f &&
+        clock_ms - last_fallback_mark_ms >= 2000u) {
+        const float dx = kart.position.x - fallback_respawn_position.x;
+        const float dy = kart.position.y - fallback_respawn_position.y;
+        if (dx*dx + dy*dy >= 100.0f) {
+            fallback_respawn_position = kart.position;
+            fallback_respawn_orientation = kart.orientation;
+            last_fallback_mark_ms = clock_ms;
         }
-        if (center_supported && kart.grounded &&
-            kart.position.z >= ahead.point.z + 0.35f) {
-            const float dx = kart.position.x - fallback_respawn_position.x;
-            const float dy = kart.position.y - fallback_respawn_position.y;
-            if (race_phase == 2.0f && clock_ms - last_fallback_mark_ms >= 2000u &&
-                dx*dx + dy*dy >= 100.0f) {
-                fallback_respawn_position = kart.position;
-                fallback_respawn_orientation = kart.orientation;
-                last_fallback_mark_ms = clock_ms;
-            }
-        }
-    }
-    /* The imported P5136 collision proxy contains nearly-flat triangles
-       with small normal errors. The demo has no static-friction branch, so an
-       unattended kart slowly creeps for minutes. Keep this compatibility
-       deadzone outside the unmodified demo source and only on proxy tracks. */
-    if (track_enabled && kart.grounded && !throttle && !brake &&
-        steer == 0.0f && !drift &&
-        kart.linear_velocity.x * kart.linear_velocity.x +
-        kart.linear_velocity.y * kart.linear_velocity.y < 0.15f * 0.15f) {
-        kart.linear_velocity.x = 0.0f;
-        kart.linear_velocity.y = 0.0f;
     }
     /* The demo collision callback resolves velocity, while this temporary
        square test world's positional boundary keeps the body inside it. */

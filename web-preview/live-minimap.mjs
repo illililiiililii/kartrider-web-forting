@@ -1,4 +1,4 @@
-// Web schematic from the loaded 5136 collision proxy, not recovered demo UI.
+// Web schematic from loaded road-tagged 5136 geometry, not recovered demo UI.
 export function readMapTriangles(bytes) {
   const data = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
   if (data.byteLength < 44 || data.getUint32(0, true) !== 0x4b52544b || data.getUint32(4, true) !== 2) throw new Error('Expected local KTRK v2');
@@ -6,11 +6,13 @@ export function readMapTriangles(bytes) {
   let offset = 44;
   for (let mesh = 0; mesh < data.getUint32(8, true); mesh++) {
     if (offset + 204 > data.byteLength) throw new Error('Truncated KTRK mesh');
+    const collidable = data.getUint32(offset + 192, true) & 1;
     const count = data.getUint32(offset + 196, true), indices = data.getUint32(offset + 200, true);
     offset += 204;
     const vertices = offset, faces = vertices + count * 20;
     offset = faces + indices * 4;
     if (offset > data.byteLength || indices % 3) throw new Error('Invalid KTRK geometry');
+    if (!collidable) continue;
     for (let i = 0; i < indices; i += 3) {
       const tri = [];
       for (let j = 0; j < 3; j++) {

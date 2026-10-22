@@ -35,6 +35,7 @@
     "demo/kart_minimap_win32.c": "98bdb042c67fed2fd56248b070d7d905faa23b2fde411a9a14a895fa2ec2794d",
     "demo/kart_minimap_win32.h": "c4263526c583b349bfde04cc4e9c238e106f07b37f43fedf79f3943c743044d5",
     "demo/kart_sound_win32.h": "b6041cec22bb76af86191b1d8e55f0c2a14f1e6601ac2e8cdf57483e98306449",
-    "demo/kart_audio_win32.h": "cb54a3db56808fb54c6b2bab13b8a5cc53f797836e398525062f959c5138ce28"
+    "demo/kart_audio_win32.h": "cb54a3db56808fb54c6b2bab13b8a5cc53f797836e398525062f959c5138ce28",
+    "asset_tools/track-mesh-exporter/Program.cs": "61ee553a3886472692cb693a974bc530b11c5eebbfe5ca7bb82af51469043072"
   }
 }

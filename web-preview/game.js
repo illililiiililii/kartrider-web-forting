@@ -1,4 +1,4 @@
-import { createPreviewRenderer } from './render3d.js?v=28';
+import { createPreviewRenderer } from './render3d.js?v=source-fixes';
 import { createLiveMinimap } from './live-minimap.mjs';
 import { createRaceAudio } from './race-audio.mjs';
 import { interpolatePreviewState } from './frame-interpolation.mjs';
@@ -109,7 +109,7 @@ async function loadSelectedTrack() {
     wasm.demo_set_steer_angle(Number(localStorage.getItem('demo-steer-angle')) || 10);
     syncState();
     view.setLobbyMode(true);
-    status.textContent = `원본 3D 트랙 · ${triangles.toLocaleString()}개 충돌 후보 삼각형 · 체크포인트 ${gates}개`;
+    status.textContent = `원본 3D 트랙 · ${triangles.toLocaleString()}개 트랙 삼각형 · 체크포인트 ${gates}개`;
     $('#start').disabled = false;
     $('#setup-start').disabled = false;
   } finally {
@@ -251,8 +251,15 @@ function draw(state, frameMs) {
   if (active === 'race') liveMinimap.draw(visual);
   if (active !== 'race') return;
   const speed = Math.max(0, Math.round(state[6] * 3.6));
-  const speedText = String(Math.min(speed, 999)).padStart(3, '0');
-  $('#speed').textContent = speed;
+  const speedNode = $('#speed');
+  if (speedNode.dataset.value !== String(speed)) speedNode.replaceChildren(...String(Math.min(speed,999)).split('').map(digit => {
+    const glyph=document.createElement('span');
+    glyph.className='v1-speed-digit';
+    // Original tacho.xml fontStr="1234567890", fontSize="36 43".
+    glyph.style.backgroundPositionX=`-${((Number(digit)+9)%10)*36}px`;
+    return glyph;
+  }));
+  speedNode.dataset.value = String(speed);
   $('#speed').setAttribute('aria-label', `속도 ${speed} km/h`);
   $('#gauge').style.width = `${Math.min(100, Math.max(0, state[7]))}%`;
   const nitroCount = Math.max(0, Math.floor(state[32]));
@@ -287,7 +294,7 @@ function frame(time) {
     while (accumulator >= 16) {
       previous.set(current);
       const steer = Math.max(-1, Math.min(1,
-        -wasm.demo_steering_value() + (+controls.left) - (+controls.right)));
+        wasm.demo_steering_value() + (+controls.right) - (+controls.left)));
       wasm.demo_step(16, +controls.throttle, +controls.brake,
         steer, +controls.drift, +controls.boost);
       current.set(new Float32Array(wasm.memory.buffer, statePointer, 43));
@@ -301,6 +308,9 @@ function frame(time) {
 
 for (const type of ['keydown', 'keyup']) {
   window.addEventListener(type, (event) => {
+    if (type === 'keydown' && event.code === 'F3') {
+      event.preventDefault(); view.toggleCollision().catch(showError); return;
+    }
     if (active !== 'race') return;
     if (type === 'keydown' && event.code === 'KeyR') {
       wasm.demo_request_reset();

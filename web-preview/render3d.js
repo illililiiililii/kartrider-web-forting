@@ -1,5 +1,7 @@
 import * as THREE from './vendor/three.module.js';
 import { readChasePose } from './camera-pose.mjs';
+import { mountWheel } from './wheel-basis.mjs';
+import { collisionPositions } from './collision-wireframe.mjs';
 
 // Rendering only: position and heading come from the C/Wasm demo state.
 export function createPreviewRenderer(canvas) {
@@ -142,15 +144,8 @@ export function createPreviewRenderer(canvas) {
     const nextWheels = [];
     const textures = new Map();
     for (const part of data.parts) {
-      // The converted USD includes dynamic advertisement materials whose PNGs
-      // are absent from this P5136 extract. Do not render them as opaque grey
-      // geometry; their original artwork must be resolved before displaying.
-      if (type === 'track' && !part.texture) continue;
-      // The two Beach I01 Object49/Object274363279 bridge cards export across
-      // the drive lane without matching collision. Hide only these broken
-      // placements until their original scene transform is recovered.
-      if (type === 'track' && name === 'beach_I01' &&
-          part.texture === 'bc_br_002.png') continue;
+      // Missing referenced artwork is not replaced with unrelated images.
+      if (part.missingTexture) continue;
       const partName = part.name.split('/').at(-2) || part.name;
       // Detachable/animated "mod" nodes have no verified bind transform in
       // this static export. White Knight's attached mod1b side panels are the
@@ -171,7 +166,12 @@ export function createPreviewRenderer(canvas) {
         }
         texture = textures.get(part.texture);
       }
-      if (texture) texture.colorSpace = THREE.SRGBColorSpace;
+      if (texture) {
+        texture.colorSpace = THREE.SRGBColorSpace;
+        const wrap = value => value === 'clamp' ? THREE.ClampToEdgeWrapping :
+          value === 'mirror' ? THREE.MirroredRepeatWrapping : THREE.RepeatWrapping;
+        texture.wrapS = wrap(part.wrapS); texture.wrapT = wrap(part.wrapT);
+      }
       let alphaMap = null;
       if (part.alphaTexture) {
         if (!textures.has(part.alphaTexture)) {
@@ -187,27 +187,19 @@ export function createPreviewRenderer(canvas) {
         ? name === 'dao' ? 0x42b8ff : name === 'bazzi' ? 0xffbb52 : 0xffffff
         : null;
       const mesh = new THREE.Mesh(geometry, new THREE.MeshStandardMaterial({
-        color: characterTint ?? (texture ? 0xffffff : color), map: texture, alphaMap,
-        side: THREE.DoubleSide, transparent: Boolean(part.alphaBlend && !part.alphaTest),
-        depthWrite: !part.alphaBlend,
-        roughness: 0.8, metalness: 0.08,
-        // Original foliage/fences use PNG alpha. Without alphaTest, their
-        // transparent pixels render as opaque square cards.
-        alphaTest: part.alphaTest ? 0.08 : texture && !part.alphaBlend ? 0.35 :
-          texture ? 0.08 : 0,
+        color: characterTint ?? (part.baseColor ? new THREE.Color(...part.baseColor) : texture ? 0xffffff : color), map: texture, alphaMap,
+        side: part.doubleSided ? THREE.DoubleSide : THREE.FrontSide,
+        transparent: Boolean(part.alphaBlend), depthWrite: !part.alphaBlend,
+        opacity: part.opacity ?? 1,
+        roughness: part.roughness ?? 0.8, metalness: part.metalness ?? 0.08,
+        alphaTest: part.alphaTest ? (part.alphaRef ?? 0) / 255 : 0,
       }));
       mesh.userData.sourceName = part.name;
       mesh.userData.textureName = part.texture || '';
       if (type === 'kart' && partName.startsWith('wheel')) {
-        geometry.computeBoundingBox();
-        const center = new THREE.Vector3();
-        geometry.boundingBox.getCenter(center);
-        geometry.translate(-center.x, -center.y, -center.z);
-        const pivot = new THREE.Group();
-        pivot.position.copy(center);
-        pivot.add(mesh);
-        group.add(pivot);
-        nextWheels.push({ pivot, mesh, front: usd ? center.z > 0 : center.x > 0 });
+        const wheel = mountWheel(mesh);
+        group.add(wheel.pivot);
+        nextWheels.push(wheel);
       } else group.add(mesh);
     }
     if (usd && type !== 'track') group.rotation.y = Math.PI / 2;
@@ -249,6 +241,22 @@ export function createPreviewRenderer(canvas) {
     if (lobbyMode) setLobbyMode(true);
   }
 
+  let collisionOverlay;
+  async function toggleCollision() {
+    if (!originalTrack) return false;
+    if (collisionOverlay?.userData.trackName !== originalTrack.userData.trackName) {
+      if (collisionOverlay) { scene.remove(collisionOverlay); collisionOverlay.geometry.dispose(); collisionOverlay.material.dispose(); }
+      const response = await fetch(`./assets/usd/${originalTrack.userData.trackName}/collision.ktrk`);
+      if (!response.ok) throw new Error('원본 충돌 메시가 없습니다');
+      const geometry=new THREE.BufferGeometry();
+      geometry.setAttribute('position',new THREE.BufferAttribute(collisionPositions(new Uint8Array(await response.arrayBuffer())),3));
+      collisionOverlay=new THREE.Mesh(geometry,new THREE.MeshBasicMaterial({color:0x00ffcc,wireframe:true,transparent:true,opacity:0.35,depthWrite:false,side:THREE.DoubleSide}));
+      collisionOverlay.userData.trackName=originalTrack.userData.trackName;
+      collisionOverlay.visible=false;scene.add(collisionOverlay);
+    }
+    collisionOverlay.visible=!collisionOverlay.visible;
+    return collisionOverlay.visible;
+  }
   async function loadTrack(name) {
     if (originalTrack?.userData.trackName === name) return;
     const { group } = await loadAsset(name, 'track');
@@ -258,6 +266,7 @@ export function createPreviewRenderer(canvas) {
         if (node.isMesh) { node.geometry.dispose(); node.material.dispose(); }
       });
     }
+    if (collisionOverlay) collisionOverlay.visible=false;
     originalTrack = group;
     originalTrack.userData.trackName = name;
     // The local KTRK exporter cancels the demo loader's X mirror; visible
@@ -273,10 +282,7 @@ export function createPreviewRenderer(canvas) {
       const box = node.geometry.boundingBox;
       const size = box.getSize(new THREE.Vector3());
       const tag = `${node.userData.sourceName} ${node.userData.textureName}`.toLowerCase();
-      if (Math.max(size.x, size.y, size.z) > 5000 ||
-          /skydome|water|sea0|bird|transparency/.test(tag)) {
-        node.visible = false;
-      } else if (Math.max(size.x, size.z) < 700 && box.getCenter(new THREE.Vector3()).y > 100) {
+      if (Math.max(size.x, size.z) < 700 && box.getCenter(new THREE.Vector3()).y > 100) {
         trackFocus.union(box);
       }
       // A camera obstruction must be solid scenery, not a bird, sign, or
@@ -429,9 +435,10 @@ export function createPreviewRenderer(canvas) {
       camera.aspect = width / height;
       camera.updateProjectionMatrix();
     }
-    // Body centre is 0.5 m above contact. The model local minimum is aligned
-    // by originalBase, so wheels no longer clip below a sloped road.
-    kart.position.set(x, (state[14] || 0) - 0.5, -y);
+    // Native suspension equilibrates at road height (four contacts each at
+    // 0.5 compression), not at the initial airborne spawn height of +0.5.
+    // originalBase already mounts the visual wheel bottoms at that origin.
+    kart.position.set(x, state[14] || 0, -y);
     kart.rotation.y = heading + (lobbyMode ? Math.PI / 2 : 0);
     if (originalCharacter && !lobbyMode) {
       // Pose the imported original mesh as a single rigid rider until its
@@ -445,7 +452,7 @@ export function createPreviewRenderer(canvas) {
     for (const wheel of wheels) wheel.rotation.z -= localSpeed * Math.min(frameDeltaMs, 50) / 1000 / 0.43;
     for (const wheel of originalWheels) {
       wheel.mesh.rotation.z -= localSpeed * Math.min(frameDeltaMs, 50) / 1000 /
-        (0.2 * kartVisualScale);
+        (wheel.radius * kartVisualScale);
       wheel.pivot.rotation.y = wheel.front ? state[13] : 0;
     }
 
@@ -520,6 +527,7 @@ export function createPreviewRenderer(canvas) {
     setLobbyMode,
     renderPreview,
     toggleTrackPreview,
+    toggleCollision,
     resetCamera: () => { firstFrame = true; },
     toggleCamera: () => { overhead = !overhead; firstFrame = true; return overhead; },
   };

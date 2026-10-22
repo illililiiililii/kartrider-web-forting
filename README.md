@@ -13,8 +13,8 @@ sheet, timer-number sheet, V1 N₂O slot/gauge and tachometer, and taskbar icons
 native account fields are text, not newly drawn UI art. The account-entry
 layout remains provisional because an original account-login screen was not
 found in the extracted files.
-All three converted original tracks can be driven with experimental collision
-triangles. Their original `.1s` ToRoad checkpoint routes, lap counts and a
+All three converted original tracks use original `.1s` road-tagged collision
+triangles. Full wall-contact stability remains under investigation. Their original `.1s` ToRoad checkpoint routes, lap counts and a
 basic finish result are connected to C/Wasm. Multiplayer is not implemented.
 
 The browser game now links the **unmodified** `kart_dynamics.c`,
@@ -25,7 +25,7 @@ plus `kart_demo_data.c`, `kart_track_texture.c` and `demo/kart_gauge.h` into Web
 wheel contacts, suspension, longitudinal and lateral/drift force pipeline,
 drag, pose integration, collision response, and chase-camera update. Our
 `src-demo/demo_bridge.c` supplies a temporary flat debug test world, square walls,
-and an adapter for heuristic original-track triangle collision. The demo's
+and an adapter for original `.1s` road-tagged triangle collision. The demo's
 7-second countdown, start-boost window, steering-key ownership, gauge's
 200-unit/two-slot hypothesis, course-gate graph, warp, recovery, and sound
 driving laws are linked. This is **2004 demo physics**, not verified P5136
@@ -68,14 +68,15 @@ user's unpacked original files in `local-assets/rhoOut/`:
 .\tools\prepare-local-ui.ps1
 .\tools\prepare-local-audio.ps1
 # Required for model conversion (not for standalone debug physics):
-python -m pip install usd-core==25.5.1
+python -m pip install usd-core==25.5.1 Pillow
+# Native collision conversion additionally requires the .NET 8 SDK and Git.
 .\tools\prepare-local-usd.ps1
 ```
 
-The locally copied artwork, 5136-derived C gate table, and collision candidates
+The locally copied artwork, 5136-derived C gate table, and collision outputs
 are Git-ignored. The new
 main page drives on `beach_I01`, `beach_I02`, and `village_R01` visual meshes
-with heuristic KTRK collision candidates. Its checkpoint gates are decoded
+with KTRK collision selected by original inherited `property/road` metadata. Its checkpoint gates are decoded
 from those tracks' original `.1s` ToRoad records and use 3/3/2 laps
 respectively. The web track, collision triangles, and `.1s` gates are all
 enlarged tenfold relative to the earlier prototype while the kart/character
@@ -94,7 +95,7 @@ are preserved in [`third_party/README.md`](third_party/README.md). Original game
 assets and generated Wasm/course tables remain ignored.
 
 Controls: arrows or numpad 8/2/4/6 (W/A/S/D also work), Shift drift, Ctrl
-booster after a full gauge is banked at drift end, R reset. On `/debug.html`, use the slider to set the demo's
+booster after a full gauge is banked at drift end, R reset, F3 collision wireframe. On `/debug.html`, use the slider to set the demo's
 `max_steer_angle_deg` from 1° to 30° in 0.1° increments; the adjacent number
 box accepts an exact value and the setting is saved locally. The source
 default is 10°. `Space`/Exceed is disabled until later P5136 integration.
@@ -133,8 +134,8 @@ If those ignored local meshes are absent, the 3D renderer shows a temporary
 geometric kart. Converted kart wheels now steer/spin from the C physics state,
 and timed boost shows a basic exhaust effect. The newer USD path additionally
 loads original kart/character textures and three original track scenes. The
-main page drives on heuristic collision triangles; skeletal animation and
-verified original collision remain missing. After changing track conversion
+main page uses original collision metadata; skeletal animation and
+full wall-contact stability remain unfinished. After changing track conversion
 scale, rerun `prepare-local-usd.ps1` and `build-demo-physics.ps1` together so
 visual road, KTRK hitboxes and ToRoad checkpoint gates stay aligned.
 
@@ -150,7 +151,9 @@ so this evidence applies to non-drift steering only.
 ```powershell
 .\tools\build-demo-physics.ps1
 .\tools\test-5136-course.ps1
-node --test tools\test-auth-server.mjs tools\test-demo-physics.mjs tools\test-frame-interpolation.mjs tools\test-local-ui-assets.mjs tools\test-recovery.mjs
+.\tools\test-physics-parity.ps1
+python tools/test-usd-conversion.py
+node --test tools\test-auth-server.mjs tools\test-demo-physics.mjs tools\test-frame-interpolation.mjs tools\test-local-ui-assets.mjs tools\test-recovery.mjs tools\test-wheel-basis.mjs tools\test-track-collision.mjs tools\test-local-models.mjs
 ```
 
 The recovery run passes 17 Node checks and one Python format check; eight
@@ -168,6 +171,6 @@ changes. Browser QA confirmed Wasm loading, the actual `.1s` kart, the slider,
 and the race countdown; browser QA also confirmed Beach I01's corrected
 original start-line direction. Native traversal tests feed the gate quads
 directly and do **not** establish that a human can drive full laps through
-the provisional collision mesh. Full human-driven lap completion and original-client
+every original collision route. Full human-driven lap completion and original-client
 trajectory equivalence are **not** verified. See [`reader.md`](reader.md) for
 remaining work and limitations.

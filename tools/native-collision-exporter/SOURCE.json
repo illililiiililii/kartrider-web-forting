@@ -1,0 +1,10 @@
+{
+  "exporter": "../../third_party/KartriderDemoPhysics/asset_tools/track-mesh-exporter/Program.cs",
+  "exporterChanges": "none; hash is in the demo SOURCE.json",
+  "readerRepository": "https://github.com/xpoi5010/Kartrider-File-Reader",
+  "readerRevision": "37fab6415360afa83e8034f8cedb2cc6766d2fe0",
+  "readerLicense": "GPL-3.0; upstream LICENSE retained in downloaded checkout",
+  "readerPatchFile": "src/KartriderLibrary/Game/Engine/Properities/TexProperty.cs",
+  "readerPatch": "Expose existing private BinaryXmlTag tmpTag with public BinaryXmlTag? Additional => tmpTag;",
+  "build": ".NET 8 SDK; TargetFramework=net8.0; prepare-local-collision.ps1"
+}
