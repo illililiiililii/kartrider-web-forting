@@ -1,8 +1,10 @@
 param(
-  [string]$AssetRoot = (Join-Path $PSScriptRoot '..\local-assets\rhoOut')
+  [string]$AssetRoot
 )
 
 $ErrorActionPreference = 'Stop'
+. (Join-Path $PSScriptRoot 'local-asset-paths.ps1')
+$AssetRoot = Resolve-LocalRhoRoot $AssetRoot
 if (-not (Get-ChildItem -LiteralPath $AssetRoot -Force | Where-Object Name -ne '.gitkeep' | Select-Object -First 1)) {
   Write-Output 'WAITING: put original P5136 resources in local-assets/rhoOut.'
   return

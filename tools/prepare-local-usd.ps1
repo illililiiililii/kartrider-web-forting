@@ -1,12 +1,25 @@
 param(
   [string]$ConvertedRoot = (Join-Path $PSScriptRoot '..\local-assets'),
-  [string]$RhoRoot = (Join-Path $PSScriptRoot '..\local-assets\rhoOut'),
+  [string]$RhoRoot,
   [string]$PythonExe = 'python',
-  [string]$BlenderExe = 'blender'
+  [string]$BlenderExe = 'blender',
+  [double]$TrackSourceScale = 1.0
 )
 $ErrorActionPreference = 'Stop'
+. (Join-Path $PSScriptRoot 'local-asset-paths.ps1')
+$RhoRoot = Resolve-LocalRhoRoot $RhoRoot
 $root = Split-Path -Parent $PSScriptRoot
+$config = Join-Path $root 'local-data\asset-paths.json'
+if (-not $PSBoundParameters.ContainsKey('TrackSourceScale') -and (Test-Path -LiteralPath $config)) {
+  $settings = Get-Content -LiteralPath $config -Raw | ConvertFrom-Json
+  if ($settings.trackSourceScale) { $TrackSourceScale = [double]$settings.trackSourceScale }
+}
+if ($TrackSourceScale -le 0) { throw 'TrackSourceScale must be positive' }
 $output = Join-Path $root 'web-preview\assets\usd'
+$localUsd = Join-Path $root '.tools\usd-python'
+if (Test-Path -LiteralPath (Join-Path $localUsd 'pxr')) {
+  $env:PYTHONPATH = "$localUsd$([IO.Path]::PathSeparator)$env:PYTHONPATH"
+}
 $items = @(
   @('kart','whiteKnightV1','whiteKnightV1_demo.usda',0.01),
   @('kart','saberV1','saberV1_demo.usda',0.01),
@@ -22,6 +35,8 @@ foreach ($item in $items) {
   $folders = @(if (Test-Path -LiteralPath $category) {
     Get-ChildItem -LiteralPath $category -Directory | Where-Object { $_.Name -eq $item[1] -or $_.Name.StartsWith($item[1] + '_') }
   })
+  $exact = @($folders | Where-Object Name -eq $item[1])
+  if ($exact.Count) { $folders = $exact }
   if ($folders.Count -gt 1) { throw "Ambiguous model directories: $($item[1])" }
   $folder = if ($folders.Count) { $folders[0].FullName } else { $category }
   $source = Join-Path $folder $item[2]
@@ -50,7 +65,10 @@ foreach ($item in $items) {
     $source = $intermediate
   }
   $target = Join-Path (Join-Path $output $item[1]) 'model.mesh.json'
-  $options = @('--scale',$item[3],'--rho-root',$RhoRoot)
+  # Normalize source-export units before applying the established 0.01 web scale.
+  # Models/collision body/ToRoad coordinates retain their existing calibration.
+  $scale = if ($item[0] -eq 'track') { $item[3] * $TrackSourceScale } else { $item[3] }
+  $options = @('--scale',$scale.ToString('R', [Globalization.CultureInfo]::InvariantCulture),'--rho-root',$RhoRoot)
   if ($item[0] -eq 'track') { $options += @('--ktrk',(Join-Path (Split-Path -Parent $target) 'collision.ktrk')) }
   & $PythonExe (Join-Path $PSScriptRoot 'convert-usd-local.py') $source $target @options
   if ($LASTEXITCODE -ne 0) { throw "Model conversion failed: $source" }

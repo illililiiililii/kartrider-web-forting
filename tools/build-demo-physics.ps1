@@ -1,11 +1,13 @@
 param(
   [string]$DemoSource,
   [string]$ZigExe,
-  [string]$RhoRoot = (Join-Path $PSScriptRoot '..\local-assets\rhoOut'),
+  [string]$RhoRoot,
   [string]$PythonExe = 'python',
   [switch]$Bootstrap
 )
 $ErrorActionPreference = 'Stop'
+. (Join-Path $PSScriptRoot 'local-asset-paths.ps1')
+$RhoRoot = Resolve-LocalRhoRoot $RhoRoot
 . (Join-Path $PSScriptRoot 'resolve-demo-build.ps1')
 $generatedCourse = Join-Path $root 'src-demo\generated_5136_course.c'
 $tracks = @('beach_I01', 'beach_I02', 'village_R01')

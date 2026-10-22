@@ -1,10 +1,12 @@
 import { createPreviewRenderer } from './render3d.js?v=28';
 import { createLiveMinimap } from './live-minimap.mjs';
+import { createRaceAudio } from './race-audio.mjs';
 import { interpolatePreviewState } from './frame-interpolation.mjs';
 
 const $ = (selector) => document.querySelector(selector);
 const view = createPreviewRenderer($('#world'));
 const liveMinimap = createLiveMinimap($('#minimap'));
+const raceAudio = createRaceAudio();
 const lobby = $('#lobby');
 const raceUi = $('#race-ui');
 const status = $('#load-status');
@@ -130,6 +132,7 @@ async function changeModel(kind) {
 
 function startRace() {
   if (!wasm || !signedIn || $('#start').disabled) return;
+  raceAudio.start(trackChoice.value);
   wasm.demo_start_race();
   wasm.demo_set_steer_angle(Number(localStorage.getItem('demo-steer-angle')) || 10);
   syncState();
@@ -144,6 +147,7 @@ function startRace() {
 }
 
 function goLobby() {
+  raceAudio.stop();
   active = 'lobby';
   Object.keys(controls).forEach((key) => { controls[key] = false; });
   wasm.demo_steering_clear();
@@ -243,6 +247,7 @@ function renderSpriteDigits(element, value, className, glyphWidth, columns) {
 
 function draw(state, frameMs) {
   view.render(visual, frameMs);
+  if (active === 'race') raceAudio.update(state);
   if (active === 'race') liveMinimap.draw(visual);
   if (active !== 'race') return;
   const speed = Math.max(0, Math.round(state[6] * 3.6));

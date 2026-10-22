@@ -5,8 +5,9 @@ import { join, resolve } from 'node:path';
 import { test } from 'node:test';
 
 const project = resolve(import.meta.dirname, '..');
-const original = process.env.KART_ASSET_ROOT ||
-  join(project, 'local-assets', 'rhoOut', 'gui', '..');
+const configPath = join(project, 'local-data', 'asset-paths.json');
+const config = existsSync(configPath) ? JSON.parse(readFileSync(configPath, 'utf8').replace(/^\uFEFF/, '')) : {};
+const original = process.env.KART_ASSET_ROOT || config.rhoRoot || join(project, 'local-assets', 'rhoOut');
 const preview = join(project, 'web-preview');
 
 test('game/login UI references unchanged original P5136 GUI assets', { skip: !existsSync(join(original, 'gui', 'tachometer', 'default', 'tachometer.png')) }, () => {
