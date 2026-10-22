@@ -21,7 +21,7 @@ The browser game now links the **unmodified** `kart_dynamics.c`,
 `kart_simulation.c`, `kart_camera.c`, `kart_countdown.c`, `kart_course.c`,
 `kart_course_data.c`, `kart_engine_sound.c`, `kart_input.c`, and track C modules from
 [KartriderDemoPhysics](https://github.com/overjoy1008/KartriderDemoPhysics)
-plus `kart_demo_data.c` and `demo/kart_gauge.h` into WebAssembly. Its simulation uses the demo's 5ms maximum substep, four
+plus `kart_demo_data.c`, `kart_track_texture.c` and `demo/kart_gauge.h` into WebAssembly. The local builder compiles all 13 C files in the supplied `src` directory, including the KTEX/KTXZ texture reader, and rejects an unreviewed source-count change. Its simulation uses the demo's 5ms maximum substep, four
 wheel contacts, suspension, longitudinal and lateral/drift force pipeline,
 drag, pose integration, collision response, and chase-camera update. Our
 `src-demo/demo_bridge.c` supplies a temporary flat debug test world, square walls,
@@ -29,7 +29,11 @@ and an adapter for heuristic original-track triangle collision. The demo's
 7-second countdown, start-boost window, steering-key ownership, gauge's
 200-unit/two-slot hypothesis, course-gate graph, warp, recovery, and sound
 driving laws are linked. This is **2004 demo physics**, not verified P5136
-physics. Its Windows renderer/playback and experimental multi-gear sound are
+physics. The visible chase-camera position is currently a web-specific follow
+camera, although the demo camera C output is computed in Wasm. The P5136
+kart's render scale and matching collision footprint also differ from the
+demo's `cotten5` body. These are known differences, not claimed parity.
+Its Windows renderer/playback and experimental multi-gear sound are
 not part of the physics Wasm. The demo's 2004 course tables are not silently
 applied to the 5136 tracks: local 5136 ToRoad gates are decoded separately
 from the supplied `track.1s`. The former Rust physics investigation
@@ -148,7 +152,7 @@ so this evidence applies to non-drift steering only.
 node --test tools\test-auth-server.mjs tools\test-demo-physics.mjs tools\test-frame-interpolation.mjs tools\test-local-ui-assets.mjs
 ```
 
-The current local test run passed 21 Node checks plus native synthetic traversal
+The current local test run passed 22 Node checks plus native synthetic traversal
 of all three complete original routes. These checks include V1 speed-threshold
 charging, original GUI asset
 hash verification, imported track

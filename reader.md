@@ -146,3 +146,12 @@ not permanent removal. Other opaque/transparent material mismatches may remain.
   repository does not distribute its source or generated Wasm. Local users must
   supply it and run `tools/build-demo-physics.ps1`. Publishing a compiled build
   requires permission or a compatible license from the source author.
+- All 13 C files under the supplied demo `src` now compile into local Wasm.
+  `kart_track_texture.c` is exercised with KTEX, but browser texture drawing
+  still uses converted PNGs; demo Win32 drawing, sky, skid-mark and sound
+  playback code outside `src` is not integrated. The web follow camera is
+  separate from `kart_camera.c` telemetry, and the P5136 kart collider uses
+  a web-specific 2.08×3.04 m footprint instead of demo `cotten5` geometry.
+  Track collision remains a heuristic USDA proxy. Next analysis point:
+  inspect `demo/kart_win32.c` renderer and compare P5136 road/fence tags
+  against the converted KTRK triangles before claiming full demo behavior.

@@ -11,6 +11,7 @@
 #include "kart_engine_sound.h"
 #include "kart_gauge.h"
 #include "kart_input.h"
+#include "kart_track_texture.h"
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
@@ -43,7 +44,6 @@ static float race_phase, countdown, lap, next_gate, race_time, finish_time;
 static float wall_hits;
 static bool wall_contact;
 static unsigned int last_wall_hit_ms;
-static KartVec3 stable_ground_position;
 static KartVec3 fallback_respawn_position;
 static KartQuat fallback_respawn_orientation;
 static unsigned int last_fallback_mark_ms;
@@ -96,17 +96,15 @@ static unsigned int body_query(void *unused, const KartSimulationState *state,
 static void reset_at(float x, float y, float heading) {
     const KartDemoKartSpec *spec = kart_demo_kart_at(preset_index);
     KartSimulationGeometry web_geometry = spec ? spec->geometry : (KartSimulationGeometry){0};
-    /* The rendered P5136 kart is 0.83 m wide at 0.50 visual scale; this
-       0.84 m-wide C body matches it. The track mesh, collision and ToRoad
-       gates are enlarged together, not the kart or this hitbox. */
+    /* The converted P5136 kart is about 1.66 m wide and 2.43 m long at
+       scale 1.0. Keep its collidable footprint aligned with the 1.25x mesh. */
     if (track_enabled) {
-        web_geometry.half_width = 0.42f;
-        web_geometry.half_length = 0.62f;
+        web_geometry.half_width = 1.04f;
+        web_geometry.half_length = 1.52f;
     }
     kart_simulation_init(&kart, spec ? &spec->dynamics : NULL,
                          &web_geometry);
     kart.position = (KartVec3){x, y, track_enabled ? spawn_z + 0.5f : 0.5f};
-    stable_ground_position = kart.position;
     /* Identity faces world -Y; +pi/2 rotates the forward axis to +X. */
     const float angle = heading + 1.5707963267948966f;
     kart.orientation = (KartQuat){cosf(angle * 0.5f), 0.0f, 0.0f, sinf(angle * 0.5f)};
@@ -396,6 +394,23 @@ __attribute__((export_name("demo_track_free_buffer"))) void demo_track_free_buff
     free(buffer);
 }
 
+/* Use the demo's own KTEX/KTXZ reader at the browser boundary as well. The
+   current Three.js renderer still consumes converted PNGs; this validates
+   packed source textures without moving decode logic into JavaScript. */
+__attribute__((export_name("demo_texture_image_count"))) unsigned int demo_texture_image_count(
+    const void *data, unsigned int size) {
+    KartTrackTextureTable table = {0};
+    if (!data || size < 12u || size > 32u * 1024u * 1024u) return 0u;
+    const unsigned char *bytes = (const unsigned char *)data;
+    const bool compressed = memcmp(bytes, "KTXZ", 4) == 0;
+    const bool loaded = compressed ?
+        kart_track_texture_load_compressed(&table, data, size) :
+        kart_track_texture_load_memory(&table, data, size);
+    const unsigned int count = loaded ? table.image_count : 0u;
+    kart_track_texture_free(&table);
+    return count;
+}
+
 __attribute__((export_name("demo_track_load"))) unsigned int demo_track_load(
     const void *data, unsigned int size) {
     track_enabled = false;
@@ -472,8 +487,16 @@ __attribute__((export_name("demo_step"))) void demo_step(
     previous_throttle = throttle_pressed;
     previous_boost = boost_pressed;
     const KartVec3 prior_position = kart.position;
+    const KartVec3 prior_velocity = kart.linear_velocity;
     const bool prior_grounded = kart.grounded;
     const float prior_vertical_speed = kart.linear_velocity.z;
+    KartGroundHit prior_road;
+    const KartVec3 prior_probe = {prior_position.x, prior_position.y,
+                                  prior_position.z + 1.5f};
+    const KartVec3 prior_down = {0.0f, 0.0f, -4.0f};
+    const bool prior_supported = track_enabled &&
+        ground_query(NULL, prior_probe, prior_down, &prior_road) &&
+        prior_road.normal.z > 0.65f;
     KartSimulationStepResult step = kart_simulate_milliseconds(&kart, &controls, &world, elapsed_ms);
     if (track_enabled) {
         KartGroundHit ahead;
@@ -481,29 +504,35 @@ __attribute__((export_name("demo_step"))) void demo_step(
         const KartVec3 down = {0.0f, 0.0f, -4.0f};
         const bool center_supported = ground_query(NULL, probe, down, &ahead) &&
                                       ahead.normal.z > 0.65f;
-        if (!center_supported && prior_grounded && prior_vertical_speed < 1.0f &&
-            kart.position.z <= prior_position.z + 0.25f) {
-            /* This provisional KTRK lacks some original fence collision.
-               Rebound at a flat road's missing edge; rising jump trajectories
-               remain governed by the upstream suspension and gravity. */
-            const float impact = sqrtf(kart.linear_velocity.x * kart.linear_velocity.x +
-                                       kart.linear_velocity.y * kart.linear_velocity.y);
-            kart.position = stable_ground_position;
-            kart.linear_velocity.x *= -0.32f;
-            kart.linear_velocity.y *= -0.32f;
+        const float travelled = hypotf(kart.position.x - prior_position.x,
+                                        kart.position.y - prior_position.y);
+        const float permitted_rise = 0.45f + 0.35f * travelled;
+        const bool climbed_obstacle = prior_grounded && prior_supported &&
+            prior_vertical_speed < 0.5f && center_supported &&
+            ahead.point.z - prior_road.point.z > permitted_rise;
+        const bool unsupported_edge = !center_supported && prior_grounded &&
+            prior_vertical_speed < 1.0f &&
+            kart.position.z <= prior_position.z + 0.25f;
+        if (climbed_obstacle || unsupported_edge) {
+            /* The provisional USDA->KTRK proxy can label a fence top as road.
+               A sudden height discontinuity is not a driveable ramp. Rewind
+               only that adapter-induced step; genuine airborne jumps are left
+               to the upstream demo's suspension and gravity. */
+            const float impact = hypotf(prior_velocity.x, prior_velocity.y);
+            kart.position = prior_position;
+            kart.linear_velocity.x = -0.32f * prior_velocity.x;
+            kart.linear_velocity.y = -0.32f * prior_velocity.y;
             kart.linear_velocity.z = 0.0f;
             kart.angular_velocity.z *= 0.4f;
             step.wall_impact_speed = fmaxf(step.wall_impact_speed, impact);
         } else if (center_supported && kart.grounded &&
                    kart.position.z < ahead.point.z + 0.45f) {
-            /* Four wheel samples can straddle a mesh seam while the body
-               slips below the road surface. Bound this proxy-import error. */
+            /* Only patch a small seam error, never lift the kart onto a wall. */
             kart.position.z = ahead.point.z + 0.45f;
             kart.linear_velocity.z = fmaxf(0.0f, kart.linear_velocity.z);
         }
         if (center_supported && kart.grounded &&
             kart.position.z >= ahead.point.z + 0.35f) {
-            stable_ground_position = kart.position;
             const float dx = kart.position.x - fallback_respawn_position.x;
             const float dy = kart.position.y - fallback_respawn_position.y;
             if (race_phase == 2.0f && clock_ms - last_fallback_mark_ms >= 2000u &&
@@ -551,7 +580,6 @@ __attribute__((export_name("demo_step"))) void demo_step(
             previous_x = position.x;
             previous_y = position.y;
             kart_chase_camera_follow_reset(&chase);
-            stable_ground_position = position;
         }
         respawn_arm_ms = 0;
     }

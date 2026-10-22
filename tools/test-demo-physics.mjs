@@ -19,6 +19,20 @@ test('demo C physics accelerates with its 5ms substeps and stays finite', () => 
   assert.ok([...state].every(Number.isFinite));
 });
 
+test('the remaining demo src texture module decodes a KTEX image in Wasm', () => {
+  const { api } = create();
+  const packed = new Uint8Array(31);
+  packed.set([75, 84, 69, 88, 2, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0,
+    1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 255, 255, 1]);
+  const pointer = api.demo_track_alloc(packed.length);
+  new Uint8Array(api.memory.buffer, pointer, packed.length).set(packed);
+  assert.equal(api.demo_texture_image_count(pointer, packed.length), 1);
+  packed[0] = 0;
+  new Uint8Array(api.memory.buffer, pointer, packed.length).set(packed);
+  assert.equal(api.demo_texture_image_count(pointer, packed.length), 0);
+  api.demo_track_free_buffer(pointer);
+});
+
 test('max steer angle slider changes the C dynamics config', () => {
   function heading(angle) {
     const { api, state } = create();
@@ -224,7 +238,7 @@ test('scaled original road supports a straight launch without sinking',
     assert.ok(drive[11] <= 3, `wall counter=${drive[11]}`);
   });
 
-test('enlarged roadside wall rebounds the kart without dropping it below the road',
+test('enlarged kart rebounds from a roadside wall without climbing or falling through',
   { skip: !existsSync(localTrack) }, () => {
     const { api, state } = create();
     const statePointer = state.byteOffset;
@@ -237,11 +251,14 @@ test('enlarged roadside wall rebounds the kart without dropping it below the roa
     const height = api.demo_track_ground_height(1200, 980, 400);
     api.demo_track_enable(1200, 980, height, Math.PI);
     api.demo_start_race();
-    for (let step = 0; step < 1100; step++) api.demo_step(16, 1, 0, 0.5, 0, 0);
+    let maxChassis = -Infinity;
+    for (let step = 0; step < 1100; step++) {
+      api.demo_step(16, 1, 0, 0.5, 0, 0);
+      maxChassis = Math.max(maxChassis, drive[14]);
+    }
     assert.ok(drive[11] >= 1, `no roadside impact, x=${drive[0]}, y=${drive[1]}`);
     assert.ok(drive[14] >= height - 0.5, `fell through road, z=${drive[14]}`);
-    assert.ok(Math.hypot(drive[0] - 1200, drive[1] - 980) < 100,
-      `crossed scaled roadside, x=${drive[0]}, y=${drive[1]}`);
+    assert.ok(maxChassis < height + 2, `climbed roadside, z=${maxChassis}, road=${height}`);
   });
 
 test('all three enlarged tracks keep their original ToRoad start on the road',

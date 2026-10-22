@@ -281,3 +281,25 @@ and local build instructions are tracked.
   remains visible, and the original start stripe/course still align. Added
   a side-wall steering collision regression alongside ground, spawn and gate
   tests. Full manual racing on all three enlarged tracks remains to verify.
+
+## 2026-10-22: demo source completeness and kart size follow-up
+
+- The local Wasm builder now compiles all 13 supplied demo `src/*.c` files;
+  `kart_track_texture.c` was previously absent. A KTEX decode test exercises
+  the added C module through a Wasm bridge. This does not mean the browser
+  renderer uses the demo's Windows texture pipeline; it still loads converted
+  original PNGs with Three.js.
+- Race kart and mounted character renders are 2.5× their immediately prior
+  size. The P5136 kart body footprint changed from 0.84×1.24 m to 2.08×3.04 m
+  to match the visible model; the web camera was repositioned for the larger
+  kart. This hitbox override is deliberately outside the unmodified demo C.
+- The proxy-track adapter now rejects sudden upward ground-height steps and
+  no longer lifts the kart onto fence tops through its seam correction.
+  The roadside regression checks collision, no fall-through, and maximum
+  vertical climb. Legitimate jumps still follow demo suspension/gravity.
+- The demo's 2004 kart dynamics C is in use, but the selected kart dimensions,
+  heuristic P5136 KTRK collision, provisional V1 charger, and visible web
+  camera are concrete remaining differences from the demo desktop sample.
+  Browser QA confirmed a proportionate kart at Beach I01 start, original HUD,
+  and no console errors. Automated suite: 22 Node checks plus native course
+  traversal pass; full wall coverage on every original track remains open.

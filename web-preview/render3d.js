@@ -86,7 +86,7 @@ export function createPreviewRenderer(canvas) {
   let originalWheels = [];
   // The track is expanded tenfold during local conversion, including KTRK and
   // ToRoad gates. This kart scale still matches the C body footprint below.
-  const kartVisualScale = 0.50;
+  const kartVisualScale = 1.25;
   const lobbyVisualScale = 0.75;
   let originalBase = 0;
   const shell = material(0x33b6e4, 0.32, 0.32);
@@ -479,9 +479,9 @@ export function createPreviewRenderer(canvas) {
       // The demo camera coordinates use its original kart scale. The converted
       // P5136 mesh is much smaller, so keep the demo speed/FOV response but
       // calibrate follow distance and height to the rendered body.
-      const followDistance = 3.2 + Math.min(speed / 90, 1) * 1.0;
+      const followDistance = 4.8 + Math.min(speed / 90, 1) * 1.0;
       desired.set(x - Math.cos(heading) * followDistance,
-        (state[14] || 0) + 1.05 + Math.min(speed / 90, 1) * 0.2,
+        (state[14] || 0) + 1.45 + Math.min(speed / 90, 1) * 0.2,
         -y + Math.sin(heading) * followDistance);
       if (trackDrive && originalTrack) {
         const origin = new THREE.Vector3(x, (state[14] || 0) + 0.4, -y);
