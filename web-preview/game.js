@@ -1,4 +1,4 @@
-import { createPreviewRenderer } from './render3d.js?v=25';
+import { createPreviewRenderer } from './render3d.js?v=26';
 import { interpolatePreviewState } from './frame-interpolation.mjs';
 
 const $ = (selector) => document.querySelector(selector);
@@ -15,11 +15,6 @@ const trackNames = { beach_I01: '비치 I01', beach_I02: '비치 I02', village_R
 // _rhoOut/track/common/track@zz.xml: item tracks have three laps; R01 has two.
 const trackLaps = { beach_I01: 3, beach_I02: 3, village_R01: 2 };
 const courseIndices = { beach_I01: 0, beach_I02: 1, village_R01: 2 };
-const spawns = {
-  beach_I01: [120, 98, Math.PI],
-  beach_I02: [70, 64, Math.PI],
-  village_R01: [14.5, 49, Math.PI / 2],
-};
 let wasm, statePointer, current, previous, visual;
 let active = 'lobby';
 let lastFrame = 0;
@@ -101,10 +96,9 @@ async function loadSelectedTrack() {
     new Uint8Array(wasm.memory.buffer, pointer, binary.byteLength).set(binary);
     const triangles = wasm.demo_track_load(pointer, binary.byteLength);
     if (!triangles) throw new Error('트랙 충돌 메시 파싱 실패');
-    const [x, y, heading] = spawns[name];
-    const height = wasm.demo_track_ground_height(x, y, 80);
-    if (!Number.isFinite(height)) throw new Error('시작 지점의 바닥을 찾지 못함');
-    if (!wasm.demo_track_enable(x, y, height, heading)) throw new Error('트랙 활성화 실패');
+    // The original ToRoad course supplies the actual spawn immediately below.
+    // Enable the already-loaded triangle scene without an obsolete manual pose.
+    if (!wasm.demo_track_enable(0, 0, 0, 0)) throw new Error('트랙 활성화 실패');
     const gates = wasm.demo_set_5136_course(courseIndices[name]);
     if (!gates) throw new Error(`${name} 원본 체크포인트 그래프를 생성하지 못함`);
     wasm.demo_set_steer_angle(Number(localStorage.getItem('demo-steer-angle')) || 10);

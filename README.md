@@ -38,11 +38,15 @@ is preserved in [`OLD_PYS`](OLD_PYS/README.md) and is not loaded in the browser.
 ## Build and play locally (Windows)
 
 1. Obtain the demo source in a separate directory. This project was tested
-   against commit `a9eade1f343764b10fb6dce5fec3828756fad2e6`.
+   against commit `a9eade1f343764b10fb6dce5fec3828756fad2e6`. By
+   default the builder uses the user's supplied
+   `C:\Users\user\Downloads\KartriderDemoPhysics-main\KartriderDemoPhysics-main`
+   when present; `-DemoSource` overrides it. The key C and gauge files in
+   that folder match the tested checkout after line-ending normalization.
 2. Obtain Zig 0.13.0 from the [official downloads](https://ziglang.org/download/0.13.0/)
    and extract it outside this repository.
-3. Run the local-only builder, passing the actual paths if they differ from
-   the sibling `work` defaults. The builder also requires the supplied
+3. Run the local-only builder, passing paths if they differ from the supplied
+   Downloads demo and sibling `work` Zig defaults. The builder also requires the supplied
    unpacked 5136 `_rhoOut` folder; override it with `-RhoRoot` if needed:
 
 ```powershell
@@ -68,8 +72,12 @@ are Git-ignored. The new
 main page drives on `beach_I01`, `beach_I02`, and `village_R01` visual meshes
 with heuristic KTRK collision candidates. Its checkpoint gates are decoded
 from those tracks' original `.1s` ToRoad records and use 3/3/2 laps
-respectively. Source coordinates scale by 0.1 into the converted scene; all
-three original start heights agree with KTRK within 0.005 m. The square test course
+respectively. The web track, collision triangles, and `.1s` gates are all
+enlarged tenfold relative to the earlier prototype while the kart/character
+and its C body remain the same size. This deliberately changes the prototype
+world scale; it is **not** a claim about original 5136 physical metres. The
+original-scale start heights had agreed with KTRK within 0.005 m before this
+uniform enlargement. The square test course
 remains on `/debug.html`. The supplied converted models are USDA, not FBX.
 See [`DEVELOPMENT_PROGRESS.md`](DEVELOPMENT_PROGRESS.md).
 
@@ -121,7 +129,9 @@ geometric kart. Converted kart wheels now steer/spin from the C physics state,
 and timed boost shows a basic exhaust effect. The newer USD path additionally
 loads original kart/character textures and three original track scenes. The
 main page drives on heuristic collision triangles; skeletal animation and
-verified original collision remain missing.
+verified original collision remain missing. After changing track conversion
+scale, rerun `prepare-local-usd.ps1` and `build-demo-physics.ps1` together so
+visual road, KTRK hitboxes and ToRoad checkpoint gates stay aligned.
 
 ## Verification
 
@@ -138,7 +148,7 @@ so this evidence applies to non-drift steering only.
 node --test tools\test-auth-server.mjs tools\test-demo-physics.mjs tools\test-frame-interpolation.mjs tools\test-local-ui-assets.mjs
 ```
 
-The current local test run passed 20 Node checks plus native synthetic traversal
+The current local test run passed 21 Node checks plus native synthetic traversal
 of all three complete original routes. These checks include V1 speed-threshold
 charging, original GUI asset
 hash verification, imported track

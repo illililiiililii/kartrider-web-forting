@@ -5,7 +5,14 @@ param(
 $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $PSScriptRoot
 $workspaceWork = Join-Path (Resolve-Path (Join-Path $root '..\..')) 'work'
-if (-not $DemoSource) { $DemoSource = Join-Path $workspaceWork 'reference-demo-physics' }
+if (-not $DemoSource) {
+  $suppliedDemo = 'C:\Users\user\Downloads\KartriderDemoPhysics-main\KartriderDemoPhysics-main'
+  $DemoSource = if (Test-Path -LiteralPath $suppliedDemo -PathType Container) {
+    $suppliedDemo
+  } else {
+    Join-Path $workspaceWork 'reference-demo-physics'
+  }
+}
 if (-not $ZigExe) { $ZigExe = Join-Path $workspaceWork 'zig-windows-x86_64-0.13.0\zig.exe' }
 $generated = Join-Path $root 'src-demo\generated_5136_course.c'
 if (-not (Test-Path -LiteralPath $generated)) {

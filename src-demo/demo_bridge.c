@@ -52,8 +52,8 @@ static unsigned int preset_index = 10; /* cotten5, demo simulator default */
 static KartTrackScene track_scene;
 static KartDemoTrackSpec track_spec = {
     .asset_name = "p5136-local-usd", .display_name = "P5136 local USD",
-    .minimum = {-1000.0f, -1000.0f, -1000.0f},
-    .maximum = {1000.0f, 1000.0f, 1000.0f},
+    .minimum = {-10000.0f, -10000.0f, -10000.0f},
+    .maximum = {10000.0f, 10000.0f, 10000.0f},
     .has_scene = true, .start_kind = KART_TRACK_START_CONFIRMED,
     .start_line = {0.0f, 0.0f, 0.0f},
 };
@@ -96,9 +96,9 @@ static unsigned int body_query(void *unused, const KartSimulationState *state,
 static void reset_at(float x, float y, float heading) {
     const KartDemoKartSpec *spec = kart_demo_kart_at(preset_index);
     KartSimulationGeometry web_geometry = spec ? spec->geometry : (KartSimulationGeometry){0};
-    /* Converted P5136 kart mesh is rendered at 0.50 USDA units. Keep wheel
-       and wall probes near that visual footprint instead of the demo's
-       full-size 1.75 x 2.28 m preset. Dynamics remain upstream demo code. */
+    /* The rendered P5136 kart is 0.83 m wide at 0.50 visual scale; this
+       0.84 m-wide C body matches it. The track mesh, collision and ToRoad
+       gates are enlarged together, not the kart or this hitbox. */
     if (track_enabled) {
         web_geometry.half_width = 0.42f;
         web_geometry.half_length = 0.62f;

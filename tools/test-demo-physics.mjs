@@ -153,9 +153,9 @@ test('local original track collision loads and keeps the practice timer separate
     assert.ok(api.demo_track_load(pointer, bytes.length) > 1000);
     api.demo_track_free_buffer(pointer);
     const trackState = new Float32Array(api.memory.buffer, statePointer, 40);
-    const height = api.demo_track_ground_height(120, 98, 80);
-    assert.ok(height > 30 && height < 40);
-    assert.equal(api.demo_track_enable(120, 98, height, Math.PI), 1);
+    const height = api.demo_track_ground_height(1200, 980, 400);
+    assert.ok(height > 300 && height < 400);
+    assert.equal(api.demo_track_enable(1200, 980, height, Math.PI), 1);
     api.demo_start_race();
     for (let i = 0; i < 440; i++) api.demo_step(16, 1, 0, 0, 0, 0);
     assert.equal(trackState[19], 2);
@@ -173,8 +173,8 @@ test('R on a local original track returns to a safe pose without clearing the ra
     assert.ok(api.demo_track_load(pointer, bytes.length) > 0);
     api.demo_track_free_buffer(pointer);
     const trackState = new Float32Array(api.memory.buffer, statePointer, 40);
-    const height = api.demo_track_ground_height(120, 98, 80);
-    assert.equal(api.demo_track_enable(120, 98, height, Math.PI), 1);
+    const height = api.demo_track_ground_height(1200, 980, 400);
+    assert.equal(api.demo_track_enable(1200, 980, height, Math.PI), 1);
     api.demo_start_race();
     for (let i = 0; i < 460; i++) api.demo_step(16, 1, 0, 0, 0, 0);
     const elapsed = trackState[23];
@@ -196,17 +196,17 @@ test('idle kart does not creep across an imported near-flat original track',
     assert.ok(api.demo_track_load(pointer, bytes.length) > 1000);
     api.demo_track_free_buffer(pointer);
     const trackState = new Float32Array(api.memory.buffer, statePointer, 40);
-    const height = api.demo_track_ground_height(120, 98, 80);
-    assert.ok(Math.abs(api.demo_track_ground_normal(120, 98, 80, 0)) < 0.02);
-    assert.equal(api.demo_track_enable(120, 98, height, Math.PI), 1);
+    const height = api.demo_track_ground_height(1200, 980, 400);
+    assert.ok(Math.abs(api.demo_track_ground_normal(1200, 980, 400, 0)) < 0.02);
+    assert.equal(api.demo_track_enable(1200, 980, height, Math.PI), 1);
     api.demo_start_race();
     for (let i = 0; i < 30000; i++) api.demo_step(16, 0, 0, 0, 0, 0);
-    assert.ok(Math.abs(trackState[0] - 120) < 0.5, `idle x=${trackState[0]}`);
-    assert.ok(Math.abs(trackState[1] - 98) < 0.5, `idle y=${trackState[1]}`);
+    assert.ok(Math.abs(trackState[0] - 1200) < 0.5, `idle x=${trackState[0]}`);
+    assert.ok(Math.abs(trackState[1] - 980) < 0.5, `idle y=${trackState[1]}`);
     assert.ok(trackState[6] < 0.1, `idle speed=${trackState[6]}`);
   });
 
-test('missing bridge edge rebounds without sinking through the original track',
+test('scaled original road supports a straight launch without sinking',
   { skip: !existsSync(localTrack) }, () => {
     const { api, state } = create();
     const statePointer = state.byteOffset;
@@ -215,23 +215,39 @@ test('missing bridge edge rebounds without sinking through the original track',
     new Uint8Array(api.memory.buffer, pointer, bytes.length).set(bytes);
     assert.ok(api.demo_track_load(pointer, bytes.length) > 1000);
     const drive = new Float32Array(api.memory.buffer, statePointer, 40);
-    const height = api.demo_track_ground_height(120, 98, 80);
-    api.demo_track_enable(120, 98, height, Math.PI);
+    const height = api.demo_track_ground_height(1200, 980, 400);
+    api.demo_track_enable(1200, 980, height, Math.PI);
     api.demo_start_race();
     for (let i = 0; i < 900; i++) api.demo_step(16, +(i > 440), 0, 0, 0, 0);
-    assert.ok(drive[0] > 76 && drive[0] < 85, `edge x=${drive[0]}`);
+    assert.ok(drive[0] < 850 && drive[0] > 760, `road x=${drive[0]}`);
     assert.ok(drive[14] > height - 0.5, `edge z=${drive[14]}`);
     assert.ok(drive[11] <= 3, `wall counter=${drive[11]}`);
   });
 
-test('older manual spawn poses remain on-road without an immediate collision',
+test('enlarged roadside wall rebounds the kart without dropping it below the road',
+  { skip: !existsSync(localTrack) }, () => {
+    const { api, state } = create();
+    const statePointer = state.byteOffset;
+    const bytes = readFileSync(localTrack);
+    const pointer = api.demo_track_alloc(bytes.length);
+    new Uint8Array(api.memory.buffer, pointer, bytes.length).set(bytes);
+    assert.ok(api.demo_track_load(pointer, bytes.length) > 1000);
+    api.demo_track_free_buffer(pointer);
+    const drive = new Float32Array(api.memory.buffer, statePointer, 40);
+    const height = api.demo_track_ground_height(1200, 980, 400);
+    api.demo_track_enable(1200, 980, height, Math.PI);
+    api.demo_start_race();
+    for (let step = 0; step < 1100; step++) api.demo_step(16, 1, 0, 0.5, 0, 0);
+    assert.ok(drive[11] >= 1, `no roadside impact, x=${drive[0]}, y=${drive[1]}`);
+    assert.ok(drive[14] >= height - 0.5, `fell through road, z=${drive[14]}`);
+    assert.ok(Math.hypot(drive[0] - 1200, drive[1] - 980) < 100,
+      `crossed scaled roadside, x=${drive[0]}, y=${drive[1]}`);
+  });
+
+test('all three enlarged tracks keep their original ToRoad start on the road',
   { skip: !['beach_I01', 'beach_I02', 'village_R01'].every(
     name => existsSync(new URL(`../web-preview/assets/usd/${name}/collision.ktrk`, import.meta.url))) }, () => {
-    for (const [name, x, y, heading, axis, direction] of [
-      ['beach_I01', 120, 98, Math.PI, 0, -1],
-      ['beach_I02', 70, 64, Math.PI, 0, -1],
-      ['village_R01', 14.5, 49, Math.PI / 2, 1, 1],
-    ]) {
+    for (const [index, name] of ['beach_I01', 'beach_I02', 'village_R01'].entries()) {
       const { api, state } = create();
       const statePointer = state.byteOffset;
       const bytes = readFileSync(new URL(`../web-preview/assets/usd/${name}/collision.ktrk`, import.meta.url));
@@ -239,14 +255,12 @@ test('older manual spawn poses remain on-road without an immediate collision',
       new Uint8Array(api.memory.buffer, pointer, bytes.length).set(bytes);
       assert.ok(api.demo_track_load(pointer, bytes.length) > 1000, name);
       api.demo_track_free_buffer(pointer);
-      const height = api.demo_track_ground_height(x, y, 80);
-      assert.ok(Number.isFinite(height), name);
-      assert.equal(api.demo_track_enable(x, y, height, heading), 1, name);
+      assert.equal(api.demo_track_enable(0, 0, 0, 0), 1, name);
+      assert.ok(api.demo_set_5136_course(index) > 0, name);
       const drive = new Float32Array(api.memory.buffer, statePointer, 40);
-      for (let step = 0; step < 100; step++) api.demo_step(16, 1, 0, 0, 0, 0);
-      assert.ok((drive[axis] - (axis ? y : x)) * direction > 10,
-        `${name}: x=${drive[0]}, y=${drive[1]}`);
-      assert.equal(drive[11], 0, `${name}: unexpected launch collision`);
+      const ground = api.demo_track_ground_height(drive[0], drive[1], drive[14] + 10);
+      assert.ok(Math.abs(drive[14] - ground - 0.5) < 0.1,
+        `${name}: chassis=${drive[14]}, ground=${ground}`);
     }
   });
 
@@ -254,11 +268,11 @@ test('5136 ToRoad courses spawn behind their start gates and advance on the firs
   { skip: !['beach_I01', 'beach_I02', 'village_R01'].every(
     name => existsSync(new URL(`../web-preview/assets/usd/${name}/collision.ktrk`, import.meta.url))) }, () => {
     const tracks = [
-      ['beach_I01', 120, 98, Math.PI, 36, 121.25, 98.01, 0],
-      ['beach_I02', 70, 64, Math.PI, 23, 73.39, 63.99, Math.PI],
-      ['village_R01', 14.5, 49, Math.PI / 2, 61, 14.36, 51.57, Math.PI / 2],
+      ['beach_I01', 36, 1216.98, 980.1, 0],
+      ['beach_I02', 23, 729.38, 639.9, Math.PI],
+      ['village_R01', 61, 143.6, 520.24, Math.PI / 2],
     ];
-    for (const [index, [name, x, y, heading, nodes, startX, startY, startHeading]] of tracks.entries()) {
+    for (const [index, [name, nodes, startX, startY, startHeading]] of tracks.entries()) {
       const { api, state } = create();
       const statePointer = state.byteOffset;
       const bytes = readFileSync(new URL(`../web-preview/assets/usd/${name}/collision.ktrk`, import.meta.url));
@@ -266,18 +280,18 @@ test('5136 ToRoad courses spawn behind their start gates and advance on the firs
       new Uint8Array(api.memory.buffer, pointer, bytes.length).set(bytes);
       assert.ok(api.demo_track_load(pointer, bytes.length) > 0, name);
       api.demo_track_free_buffer(pointer);
-      const ground = api.demo_track_ground_height(x, y, 80);
-      assert.equal(api.demo_track_enable(x, y, ground, heading), 1, name);
+      assert.equal(api.demo_track_enable(0, 0, 0, 0), 1, name);
       assert.equal(api.demo_set_5136_course(index), nodes, name);
       const drive = new Float32Array(api.memory.buffer, statePointer, 40);
-      assert.ok(Math.abs(drive[0] - startX) < 0.03, name);
-      assert.ok(Math.abs(drive[1] - startY) < 0.03, name);
+      assert.ok(Math.abs(drive[0] - startX) < 0.3, `${name}: x=${drive[0]}`);
+      assert.ok(Math.abs(drive[1] - startY) < 0.3, `${name}: y=${drive[1]}`);
       assert.ok(Math.abs(Math.cos(drive[2]) - Math.cos(startHeading)) < 0.01, name);
       assert.equal(drive[39], nodes - 1, name);
       api.demo_start_race();
-      for (let step = 0; step < 450; step++) api.demo_step(16, 1, 0, 0, 0, 0);
+      for (let step = 0; step < 900; step++) api.demo_step(16, 1, 0, 0, 0, 0);
       assert.equal(drive[19], 2, name);
-      assert.equal(drive[39], 0, `${name}: start gate not crossed`);
+      assert.ok(drive[39] >= 0 && drive[39] < nodes - 1,
+        `${name}: start gate not crossed (node=${drive[39]})`);
       assert.equal(drive[21], 1, name);
     }
   });

@@ -6,7 +6,14 @@ param(
 $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $PSScriptRoot
 $workspaceWork = Join-Path (Resolve-Path (Join-Path $root '..\..')) 'work'
-if (-not $DemoSource) { $DemoSource = Join-Path $workspaceWork 'reference-demo-physics' }
+if (-not $DemoSource) {
+    $suppliedDemo = 'C:\Users\user\Downloads\KartriderDemoPhysics-main\KartriderDemoPhysics-main'
+    $DemoSource = if (Test-Path -LiteralPath $suppliedDemo -PathType Container) {
+        $suppliedDemo
+    } else {
+        Join-Path $workspaceWork 'reference-demo-physics'
+    }
+}
 if (-not $ZigExe) { $ZigExe = Join-Path $workspaceWork 'zig-windows-x86_64-0.13.0\zig.exe' }
 $required = @('include\kart_simulation.h', 'include\kart_dynamics.h', 'include\kart_camera.h',
     'src\kart_dynamics.c', 'src\kart_simulation.c', 'src\kart_camera.c',
@@ -25,6 +32,7 @@ foreach ($part in $required) {
     }
 }
 if (-not (Test-Path -LiteralPath $ZigExe)) { throw "Zig compiler not found: $ZigExe" }
+Write-Output "Demo source: $DemoSource"
 $expectedRevision = 'a9eade1f343764b10fb6dce5fec3828756fad2e6'
 if (Test-Path -LiteralPath (Join-Path $DemoSource '.git')) {
     $revision = (& git -C $DemoSource rev-parse HEAD).Trim()

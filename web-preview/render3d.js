@@ -84,8 +84,8 @@ export function createPreviewRenderer(canvas) {
   let trackRadius = 100;
   let trackMeshes = [];
   let originalWheels = [];
-  // The supplied kart USDA and track USDA were authored in different units.
-  // The bridge uses matching collision extents for the default race scale.
+  // The track is expanded tenfold during local conversion, including KTRK and
+  // ToRoad gates. This kart scale still matches the C body footprint below.
   const kartVisualScale = 0.50;
   const lobbyVisualScale = 0.75;
   let originalBase = 0;
@@ -272,17 +272,17 @@ export function createPreviewRenderer(canvas) {
       const box = node.geometry.boundingBox;
       const size = box.getSize(new THREE.Vector3());
       const tag = `${node.userData.sourceName} ${node.userData.textureName}`.toLowerCase();
-      if (Math.max(size.x, size.y, size.z) > 500 ||
+      if (Math.max(size.x, size.y, size.z) > 5000 ||
           /skydome|water|sea0|bird|transparency/.test(tag)) {
         node.visible = false;
-      } else if (Math.max(size.x, size.z) < 70 && box.getCenter(new THREE.Vector3()).y > 10) {
+      } else if (Math.max(size.x, size.z) < 700 && box.getCenter(new THREE.Vector3()).y > 100) {
         trackFocus.union(box);
       }
       // A camera obstruction must be solid scenery, not a bird, sign, or
       // alpha card that happens to cross the kart-to-camera ray.
       if (node.visible &&
           /(road|bridge|side|tile|sand|grass|cement)/.test(tag) &&
-          Math.max(size.x, size.z) < 200) trackMeshes.push(node);
+          Math.max(size.x, size.z) < 2000) trackMeshes.push(node);
     });
     const bounds = new THREE.Box3().setFromObject(group);
     const focus = trackFocus.isEmpty() ? bounds : trackFocus;

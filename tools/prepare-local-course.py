@@ -2,8 +2,9 @@
 
 The separately obtained KartriderDemoPhysics parser supplies the ToRoad format
 and C table emitter. Generated geometry is ignored by Git, like the local USD
-meshes and Wasm binary. The converted 5136 scene uses 0.1 source units per
-physics metre, confirmed against the original start-line and road heights.
+meshes and Wasm binary. The web scene deliberately enlarges track coordinates
+tenfold relative to the original-size conversion, so the same scale must be
+applied to the source checkpoints and to the KTRK/rendered track together.
 """
 
 import argparse
@@ -17,7 +18,7 @@ TRACKS = ("beach_I01", "beach_I02", "village_R01")
 class P5136Space:
     @staticmethod
     def point(value):
-        return tuple(component * 0.1 for component in value)
+        return tuple(value)
 
     @staticmethod
     def direction(value):

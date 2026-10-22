@@ -10,11 +10,35 @@ Complete human-driven lap/finish through the provisional collision mesh is
 not yet verified.
 The Three.js renderer now leaves original USD X unmirrored while the KTRK
 exporter cancels `kart_track_scene_world_vertex`'s internal X mirror,
-tests camera occlusion, scales the character by 0.42 times the new 0.72 kart
+tests camera occlusion, scales the character by 0.42 times the 0.50 kart
 display calibration, alpha-tests PNG foliage,
 and hides kart USD `mod*` nodes except White Knight's attached `mod1b*` panels;
 the other static transforms leave pieces detached. These nodes need original bind/animation transforms,
 not permanent removal. Other opaque/transparent material mismatches may remain.
+
+- User-requested prototype scale correction: `tools/prepare-local-usd.ps1`
+  now exports all three track scenes and KTRK triangles at `0.01` instead of
+  `0.001`; `tools/prepare-local-course.py` applies the same 10× change to
+  `.1s` ToRoad positions. The kart, character and C body stay at their old
+  size, making them one-tenth as large relative to the road. The C body width
+  is 0.84 world units versus the rendered White Knight's ~0.83; collision is
+  not merely a visual shrink. The demo C collision solver retains its fixed
+  vertical body extent; high jumps, ramps and all wall meshes still need
+  manual QA. This chosen web scale is intentionally different from recovered
+  P5136 world units, and speed/route duration may feel slower.
+
+- Demo reuse audit: the supplied Downloads demo folder and the previously
+  tested separate checkout have identical `kart_dynamics.c`,
+  `kart_simulation.c`, `kart_camera.c`, `kart_engine_sound.c`, `kart_gauge.h`
+  and ToRoad parser after line-ending normalization. The local builder now
+  prefers the user's Downloads folder. This does **not** mean all Win32 demo
+  features are in the browser: the main renderer substitutes a camera follow
+  pose instead of using the returned demo camera position, the minimap is a
+  static original image without a live kart marker, local P5136 texture/model
+  conversion replaces the demo's Win32 rendering pipeline, skydome meshes are
+  hidden, no skid marks are drawn, and the main game does not play the demo
+  booster sounds. The debug page alone plays local boost/drift audio files.
+  Demo C engine-sound *state* is calculated in Wasm, not yet mixed to output.
 
 - Active driving calls the unmodified C demo source (pinned commit in README),
   but this is the **2004 demo**. KartRider P5136 `BodyParam`, `KartSpec`, S0–S8,

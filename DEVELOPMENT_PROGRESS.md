@@ -268,3 +268,16 @@ and local build instructions are tracked.
   Node/Wasm tests pass 20 checks including original spawn/first gate. Browser
   QA confirmed the Beach I01 start stripe is ahead of the kart. A complete
   human-driven lap still needs collision/route QA and is not claimed here.
+
+## 2026-10-22: tenfold track-to-kart scale correction
+
+- Regenerated all three local original 3D tracks and their KTRK collision
+  meshes at 10× the previous conversion size. Their original `.1s` ToRoad
+  course positions receive the identical 10× transform in generated C/Wasm.
+  The imported kart/character, physical kart footprint and chase-camera
+  distance stay at their prior size, so the body is now one-tenth as large
+  relative to the track instead of merely looking smaller.
+- Browser QA at Beach I01 confirms the full road fills the view while the kart
+  remains visible, and the original start stripe/course still align. Added
+  a side-wall steering collision regression alongside ground, spawn and gate
+  tests. Full manual racing on all three enlarged tracks remains to verify.

@@ -95,7 +95,9 @@ def collision_candidate(part):
         return False
     values = part["positions"]
     xs, zs = values[0::3], values[2::3]
-    return max(max(xs) - min(xs), max(zs) - min(zs)) < 200
+    # Track export now uses ten times the previous world scale. Retain the
+    # same source meshes in the collision proxy after that scale change.
+    return max(max(xs) - min(xs), max(zs) - min(zs)) < 2000
 
 
 def write_ktrk(path, parts):

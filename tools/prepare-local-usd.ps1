@@ -19,9 +19,11 @@ $items = @(
   @('kart', 'saberV1', 'saberV1_demo.usda', 0.01),
   @('character', 'dao', 'dao.usda', 0.01),
   @('character', 'bazzi', 'bazzi_f00.usda', 0.01),
-  @('track', 'beach_I01', 'beach_I01.usda', 0.001),
-  @('track', 'beach_I02', 'beach_I02.usda', 0.001),
-  @('track', 'village_R01', 'village_R01.usda', 0.001)
+  # Kart and character retain their 0.01 conversion. The exported tracks
+  # were ten times too small relative to them; KTRK shares this scale.
+  @('track', 'beach_I01', 'beach_I01.usda', 0.01),
+  @('track', 'beach_I02', 'beach_I02.usda', 0.01),
+  @('track', 'village_R01', 'village_R01.usda', 0.01)
 )
 foreach ($item in $items) {
   $categoryRoot = Join-Path $ConvertedRoot $item[0]
