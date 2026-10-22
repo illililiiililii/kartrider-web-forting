@@ -1,61 +1,38 @@
 param(
-    [string]$DemoSource,
-    [string]$ZigExe,
-    [string]$RhoRoot = 'C:\Users\user\Downloads\kart web\KartRider_5136_01_UNPACK\KartRider_5136_01_UNPACK\_rhoOut'
+  [string]$DemoSource,
+  [string]$ZigExe,
+  [string]$RhoRoot = (Join-Path $PSScriptRoot '..\local-assets\rhoOut'),
+  [string]$PythonExe = 'python',
+  [switch]$Bootstrap
 )
 $ErrorActionPreference = 'Stop'
-$root = Split-Path -Parent $PSScriptRoot
-$workspaceWork = Join-Path (Resolve-Path (Join-Path $root '..\..')) 'work'
-if (-not $DemoSource) {
-    $suppliedDemo = 'C:\Users\user\Downloads\KartriderDemoPhysics-main\KartriderDemoPhysics-main'
-    $DemoSource = if (Test-Path -LiteralPath $suppliedDemo -PathType Container) {
-        $suppliedDemo
-    } else {
-        Join-Path $workspaceWork 'reference-demo-physics'
-    }
-}
-if (-not $ZigExe) { $ZigExe = Join-Path $workspaceWork 'zig-windows-x86_64-0.13.0\zig.exe' }
-$required = @('include\kart_simulation.h', 'include\kart_dynamics.h', 'include\kart_camera.h',
-    'src\kart_dynamics.c', 'src\kart_simulation.c', 'src\kart_camera.c',
-    'include\kart_demo_data.h', 'src\kart_demo_data.c',
-    'include\kart_track_scene.h', 'src\kart_track_scene.c',
-    'include\kart_track_collision.h', 'src\kart_track_collision.c',
-    'src\kart_inflate.c',
-    'include\kart_countdown.h', 'src\kart_countdown.c',
-    'include\kart_course.h', 'src\kart_course.c', 'src\kart_course_data.c',
-    'include\kart_engine_sound.h', 'src\kart_engine_sound.c',
-    'include\kart_input.h', 'src\kart_input.c',
-    'include\kart_track_texture.h', 'src\kart_track_texture.c',
-    'demo\kart_gauge.h')
-foreach ($part in $required) {
-    if (-not (Test-Path -LiteralPath (Join-Path $DemoSource $part))) {
-        throw "Missing demo source: $part in $DemoSource"
-    }
-}
-if (-not (Test-Path -LiteralPath $ZigExe)) { throw "Zig compiler not found: $ZigExe" }
-Write-Output "Demo source: $DemoSource"
-$expectedRevision = 'a9eade1f343764b10fb6dce5fec3828756fad2e6'
-if (Test-Path -LiteralPath (Join-Path $DemoSource '.git')) {
-    $revision = (& git -C $DemoSource rev-parse HEAD).Trim()
-    if ($revision -ne $expectedRevision) {
-        Write-Warning "Demo revision $revision differs from tested $expectedRevision; behavior may differ."
-    }
-}
-$output = Join-Path $root 'web-preview\demo_physics.wasm'
+. (Join-Path $PSScriptRoot 'resolve-demo-build.ps1')
 $generatedCourse = Join-Path $root 'src-demo\generated_5136_course.c'
-& python (Join-Path $PSScriptRoot 'prepare-local-course.py') `
-    --demo-source $DemoSource --rho-root $RhoRoot --output $generatedCourse
-if ($LASTEXITCODE -ne 0) { throw 'P5136 local course extraction failed' }
-$demoModules = @(Get-ChildItem -LiteralPath (Join-Path $DemoSource 'src') -Filter '*.c' -File |
-    Sort-Object Name | ForEach-Object FullName)
-if ($demoModules.Count -ne 13) {
-    throw "Expected all 13 reviewed demo src modules; found $($demoModules.Count). Review new or missing modules before building."
-}
-Write-Output "Compiling all $($demoModules.Count) demo src C modules."
-& $ZigExe cc -target wasm32-wasi -O2 '-Wl,--no-entry' '-Wl,--export-memory' `
-    '-Wl,-z,stack-size=1048576' -I (Join-Path $DemoSource 'include') -I (Join-Path $DemoSource 'demo') `
-    $demoModules `
-    $generatedCourse `
-    (Join-Path $root 'src-demo\demo_bridge.c') -lm -o $output
+$tracks = @('beach_I01', 'beach_I02', 'village_R01')
+$available = @($tracks | Where-Object { Test-Path -LiteralPath (Join-Path $RhoRoot "track\$_\track.1s") })
+if ($available.Count -eq 3) {
+  & $PythonExe (Join-Path $PSScriptRoot 'prepare-local-course.py') --demo-source $DemoSource --rho-root $RhoRoot --output $generatedCourse
+  if ($LASTEXITCODE -ne 0) { throw 'P5136 course extraction failed' }
+  $courseMode = 'original-5136'
+} elseif ($available.Count -eq 0) {
+  # Always overwrite any stale generated tables when original resources are absent.
+  @'
+/* NO_5136_ASSETS: debug physics only, no substitution with 2004 gates. */
+#include "kart_course.h"
+#include <stddef.h>
+const KartCourseAsset *kart_5136_course_asset_at(unsigned int index) { (void)index; return NULL; }
+'@ | Set-Content -LiteralPath $generatedCourse -Encoding ascii
+  $courseMode = 'debug-only-no-5136-assets'
+  Write-Output 'WAITING: P5136 courses unavailable; building standalone debug physics.'
+} else { throw 'Partial P5136 input: provide all three original track.1s files or none.' }
+$modules = @(Get-ChildItem -LiteralPath (Join-Path $DemoSource 'src') -Filter '*.c' -File | Sort-Object Name | ForEach-Object FullName)
+if ($modules.Count -ne 13) { throw "Expected 13 pinned C modules; found $($modules.Count)" }
+$output = Join-Path $root 'web-preview\demo_physics.wasm'
+& $ZigExe cc -target wasm32-wasi -O2 '-Wl,--no-entry' '-Wl,--export-memory' '-Wl,-z,stack-size=1048576' `
+  -I (Join-Path $DemoSource 'include') -I (Join-Path $DemoSource 'demo') $modules $generatedCourse `
+  (Join-Path $root 'src-demo\demo_bridge.c') -lm -o $output
 if ($LASTEXITCODE -ne 0) { throw 'Demo physics Wasm build failed' }
-Write-Output "Local-only demo Wasm built: $output"
+New-Item -ItemType Directory -Force -Path (Join-Path $root 'local-data') | Out-Null
+@{ revision=$sourceInfo.revision; zig='0.13.0'; courses=$courseMode; wasmSha256=(Get-FileHash -LiteralPath $output).Hash } |
+  ConvertTo-Json | Set-Content -LiteralPath (Join-Path $root 'local-data\physics-build.json') -Encoding utf8
+Write-Output "Built $output ($courseMode)"

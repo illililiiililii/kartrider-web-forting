@@ -6,10 +6,10 @@ import { test } from 'node:test';
 
 const project = resolve(import.meta.dirname, '..');
 const original = process.env.KART_ASSET_ROOT ||
-  'C:\\Users\\user\\Downloads\\kart web\\KartRider_5136_01_UNPACK\\KartRider_5136_01_UNPACK\\_rhoOut';
+  join(project, 'local-assets', 'rhoOut', 'gui', '..');
 const preview = join(project, 'web-preview');
 
-test('game/login UI references unchanged original P5136 GUI assets', { skip: !existsSync(original) }, () => {
+test('game/login UI references unchanged original P5136 GUI assets', { skip: !existsSync(join(original, 'gui', 'tachometer', 'default', 'tachometer.png')) }, () => {
   const sourceFiles = ['game.css', 'index.html', 'login.css', 'login.html'];
   const references = new Set();
   for (const file of sourceFiles) {

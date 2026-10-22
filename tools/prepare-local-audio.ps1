@@ -1,8 +1,12 @@
 param(
-  [string]$AssetRoot = 'C:\Users\user\Downloads\kart web\KartRider_5136_01_UNPACK\KartRider_5136_01_UNPACK\_rhoOut'
+  [string]$AssetRoot = (Join-Path $PSScriptRoot '..\local-assets\rhoOut')
 )
 
 $ErrorActionPreference = 'Stop'
+if (-not (Get-ChildItem -LiteralPath $AssetRoot -Force | Where-Object Name -ne '.gitkeep' | Select-Object -First 1)) {
+  Write-Output 'WAITING: put original P5136 resources in local-assets/rhoOut.'
+  return
+}
 $output = Join-Path $PSScriptRoot '..\web-preview\assets\audio'
 New-Item -ItemType Directory -Force -Path $output | Out-Null
 $files = @{

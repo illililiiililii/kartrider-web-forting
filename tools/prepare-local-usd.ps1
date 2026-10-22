@@ -1,46 +1,57 @@
 param(
-  [string]$ConvertedRoot = 'C:\Users\user\Downloads\kart web\KartRider_5136_02_CONVERT',
-  [string]$RhoRoot = 'C:\Users\user\Downloads\kart web\KartRider_5136_01_UNPACK\KartRider_5136_01_UNPACK\_rhoOut'
+  [string]$ConvertedRoot = (Join-Path $PSScriptRoot '..\local-assets'),
+  [string]$RhoRoot = (Join-Path $PSScriptRoot '..\local-assets\rhoOut'),
+  [string]$PythonExe = 'python',
+  [string]$BlenderExe = 'blender'
 )
-
 $ErrorActionPreference = 'Stop'
-$localUsd = Join-Path $PSScriptRoot '..\..\..\work\usd-python'
-if (Test-Path -LiteralPath (Join-Path $localUsd 'pxr') -PathType Container) {
-  $env:PYTHONPATH = "$localUsd$([IO.Path]::PathSeparator)$env:PYTHONPATH"
-}
-python -c 'from pxr import Usd' 2>$null
-if ($LASTEXITCODE -ne 0) {
-  throw 'Python usd-core is required. Install locally: python -m pip install usd-core==25.5.1'
-}
-
-$output = Join-Path $PSScriptRoot '..\web-preview\assets\usd'
+$root = Split-Path -Parent $PSScriptRoot
+$output = Join-Path $root 'web-preview\assets\usd'
 $items = @(
-  @('kart', 'whiteKnightV1', 'whiteKnightV1_demo.usda', 0.01),
-  @('kart', 'saberV1', 'saberV1_demo.usda', 0.01),
-  @('character', 'dao', 'dao.usda', 0.01),
-  @('character', 'bazzi', 'bazzi_f00.usda', 0.01),
-  # Kart and character retain their 0.01 conversion. The exported tracks
-  # were ten times too small relative to them; KTRK shares this scale.
-  @('track', 'beach_I01', 'beach_I01.usda', 0.01),
-  @('track', 'beach_I02', 'beach_I02.usda', 0.01),
-  @('track', 'village_R01', 'village_R01.usda', 0.01)
+  @('kart','whiteKnightV1','whiteKnightV1_demo.usda',0.01),
+  @('kart','saberV1','saberV1_demo.usda',0.01),
+  @('character','dao','dao.usda',0.01),
+  @('character','bazzi','bazzi_f00.usda',0.01),
+  @('track','beach_I01','beach_I01.usda',0.01),
+  @('track','beach_I02','beach_I02.usda',0.01),
+  @('track','village_R01','village_R01.usda',0.01)
 )
+$runtimeChecked = $false
 foreach ($item in $items) {
-  $categoryRoot = Join-Path $ConvertedRoot $item[0]
-  $assetFolder = Get-ChildItem -LiteralPath $categoryRoot -Directory | Where-Object {
-    $_.Name -eq $item[1] -or $_.Name.StartsWith($item[1] + '_')
-  } | Select-Object -First 1
-  if (-not $assetFolder) { throw "Missing supplied USD directory: $($item[0])/$($item[1])" }
-  $source = Join-Path $assetFolder.FullName $item[2]
+  $category = Join-Path $ConvertedRoot $item[0]
+  $folders = @(if (Test-Path -LiteralPath $category) {
+    Get-ChildItem -LiteralPath $category -Directory | Where-Object { $_.Name -eq $item[1] -or $_.Name.StartsWith($item[1] + '_') }
+  })
+  if ($folders.Count -gt 1) { throw "Ambiguous model directories: $($item[1])" }
+  $folder = if ($folders.Count) { $folders[0].FullName } else { $category }
+  $source = Join-Path $folder $item[2]
   if (-not (Test-Path -LiteralPath $source -PathType Leaf)) {
-    throw "Missing supplied USD asset: $source"
+    $candidates = @(if (Test-Path -LiteralPath $folder) {
+      Get-ChildItem -LiteralPath $folder -File | Where-Object {
+        $_.Extension.ToLowerInvariant() -in @('.usda','.usd','.usdc','.fbx') -and
+        ($folders.Count -gt 0 -or $_.BaseName -eq $item[1] -or $_.BaseName -eq [IO.Path]::GetFileNameWithoutExtension($item[2]))
+      }
+    })
+    if (-not $candidates.Count) { Write-Output "WAITING: $($item[0])/$($item[1]) model"; continue }
+    if ($candidates.Count -ne 1) { throw "Ambiguous models: $($item[1]); use $($item[2])" }
+    $source = $candidates[0].FullName
+  }
+  $format = & $PythonExe (Join-Path $PSScriptRoot 'model-format.py') $source
+  if ($LASTEXITCODE -ne 0) { throw "Model signature check failed: $source" }
+  if (-not $runtimeChecked) {
+    & $PythonExe -c 'from pxr import Usd'
+    if ($LASTEXITCODE -ne 0) { throw 'Install: python -m pip install usd-core==25.5.1' }
+    $runtimeChecked = $true
+  }
+  if ($format -eq 'fbx') {
+    $intermediate = Join-Path $root "local-data\fbx-usd\$($item[1])\model.usda"
+    & $BlenderExe --background --python (Join-Path $PSScriptRoot 'convert-fbx-local.py') -- $source $intermediate
+    if ($LASTEXITCODE -ne 0) { throw "FBX conversion failed: $source" }
+    $source = $intermediate
   }
   $target = Join-Path (Join-Path $output $item[1]) 'model.mesh.json'
-  if ($item[0] -eq 'track') {
-    $collisionFile = Join-Path (Split-Path -Parent $target) 'collision.ktrk'
-    python (Join-Path $PSScriptRoot 'convert-usd-local.py') $source $target --scale $item[3] --ktrk $collisionFile --rho-root $RhoRoot
-  } else {
-    python (Join-Path $PSScriptRoot 'convert-usd-local.py') $source $target --scale $item[3] --rho-root $RhoRoot
-  }
-  if ($LASTEXITCODE -ne 0) { throw "USD conversion failed: $source" }
+  $options = @('--scale',$item[3],'--rho-root',$RhoRoot)
+  if ($item[0] -eq 'track') { $options += @('--ktrk',(Join-Path (Split-Path -Parent $target) 'collision.ktrk')) }
+  & $PythonExe (Join-Path $PSScriptRoot 'convert-usd-local.py') $source $target @options
+  if ($LASTEXITCODE -ne 0) { throw "Model conversion failed: $source" }
 }

@@ -11,3 +11,16 @@
 /web-preview/assets/audio/
 /local-data/
 __pycache__/
+
+/local-assets/**
+!/local-assets/README.md
+!/local-assets/rhoOut/
+!/local-assets/rhoOut/.gitkeep
+!/local-assets/track/
+!/local-assets/track/.gitkeep
+!/local-assets/kart/
+!/local-assets/kart/.gitkeep
+!/local-assets/character/
+!/local-assets/character/.gitkeep
+/.tools/
+/KartriderDemoPhysics-main/
