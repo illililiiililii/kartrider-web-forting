@@ -31,7 +31,8 @@ unsigned int kart_5136_course_laps(unsigned int index) { (void)index; return 0; 
   $courseMode = 'debug-only-no-5136-assets'
   Write-Output 'WAITING: P5136 courses unavailable; building standalone debug physics.'
 } else { throw 'Partial P5136 input: provide all three original track.1s files or none.' }
-$modules = @(Get-ChildItem -LiteralPath (Join-Path $DemoSource 'src') -Filter '*.c' -File | Sort-Object Name | ForEach-Object FullName)
+. (Join-Path $PSScriptRoot 'prepare-demo-overlays.ps1')
+$modules = @(Get-WebDemoModules $DemoSource $root)
 if ($modules.Count -ne 13) { throw "Expected 13 pinned C modules; found $($modules.Count)" }
 $output = Join-Path $root 'web-preview\demo_physics.wasm'
 & $ZigExe cc -target wasm32-wasi -O2 '-Wl,--no-entry' '-Wl,--export-memory' '-Wl,-z,stack-size=1048576' `

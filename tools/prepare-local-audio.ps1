@@ -16,6 +16,7 @@ $files = @{
   'village.ogg' = 'sound\bgm\village\village_01.ogg'
   'drift.ogg' = 'sound\fx\kart\drift.ogg'
   'boost.ogg' = 'sound\fx\kart\engine_X\booster.ogg'
+  'exceed.ogg' = 'sound\fx\kart\engine_V1\exceed.ogg'
 }
 foreach ($name in $files.Keys) {
   $source = Join-Path $AssetRoot $files[$name]

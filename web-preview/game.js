@@ -4,10 +4,12 @@ import { createLiveMinimap } from './live-minimap.mjs';
 import { createRaceAudio } from './race-audio.mjs';
 import { createDemoInput, demoElapsedMilliseconds } from './demo-input.mjs';
 import {readAccountSession} from './account-session.mjs';
+import {applyKartPhysics} from './kart-physics.mjs';
+import {updateExceedDashboard} from './v1-dashboard.mjs';
 
 const $ = (selector) => document.querySelector(selector);
 const view = createPreviewRenderer($('#world'));
-const liveMinimap = createLiveMinimap($('#minimap'),state=>view.renderMinimap(state));
+const liveMinimap = createLiveMinimap($('#minimap'));
 mountV1Dashboard($('.tacho')).catch(error=>console.error('원본 V1 계기판:',error));
 const raceAudio = createRaceAudio();
 const lobby = $('#lobby');
@@ -23,6 +25,13 @@ const trackNames = { beach_I01: '비치 I01', beach_I02: '비치 I02', village_R
 const trackLaps = { beach_I01: 3, beach_I02: 3, village_R01: 2 };
 const courseIndices = { beach_I01: 0, beach_I02: 1, village_R01: 2 };
 let localCatalog, playerProfile, lapNotices;
+let kartPhysics;
+function applySelectedKartPhysics(){
+  applyKartPhysics(wasm,kartPhysics.karts[kartChoice.value]);
+  const fit=view.getKartCollisionFit();
+  if(!fit || !wasm.demo_fit_body(...fit.half,...fit.center))throw new Error('카트 충돌 범위 연결 실패');
+  syncState();
+}
 let raceTicket, rewardSubmitted=false;
 async function loadLocalCatalog() {
   const response=await fetch('./assets/catalog.json',{cache:'no-store'});
@@ -57,7 +66,7 @@ let requestId = 0;
 let itemType = 'kart';
 let selectedTrack = trackChoice.value;
 let signedIn = false;
-const controls = { throttle: false, brake: false, left: false, right: false, drift: false, boost: false };
+const controls = { throttle: false, brake: false, left: false, right: false, drift: false, boost: false, exceed: false };
 const input = createDemoInput(() => wasm, controls);
 const keyMap = {
   ArrowUp: 'throttle', Numpad8: 'throttle', KeyW: 'throttle',
@@ -66,6 +75,7 @@ const keyMap = {
   ArrowRight: 'right', Numpad6: 'right', KeyD: 'right',
   ShiftLeft: 'drift', ShiftRight: 'drift',
   ControlLeft: 'boost', ControlRight: 'boost',
+  Space: 'exceed', KeyX: 'exceed',
 };
 
 async function refreshAccount() {
@@ -196,7 +206,7 @@ async function changeModel(kind) {
   if (!wasm) return;
   const name = kind === 'kart' ? kartChoice.value : characterChoice.value;
   try {
-    if (kind === 'kart') {applyProfile(await playerRequest('equip',{id:name}));await view.setKart(name);}
+    if (kind === 'kart') {applyProfile(await playerRequest('equip',{id:name}));await view.setKart(name);applySelectedKartPhysics();}
     else await view.setCharacter(name);
     view.renderPreview($('#setup-model'));
     view.renderPreview($('#items-model'));
@@ -354,6 +364,7 @@ function draw(state, frameMs) {
   if (active === 'race') raceAudio.update(state);
   if (active === 'race') liveMinimap.draw(visual);
   if (active !== 'race') return;
+  updateExceedDashboard($('.tacho'),state);
   const speed = Math.max(0, Math.round(state[6] * 3.6));
   const speedNode = $('#speed');
   if (speedNode.dataset.value !== String(speed)) speedNode.replaceChildren(...String(Math.min(speed,999)).split('').map(digit => {
@@ -419,6 +430,7 @@ function frame(time) {
   const elapsed = demoElapsedMilliseconds(lastFrame, time);
   lastFrame = time;
   if (active === 'race' && elapsed > 0) {
+    wasm.demo_exceed_input(+controls.exceed);
     wasm.demo_step(elapsed, +controls.throttle, +controls.brake,
       input.steering(), +controls.drift, +controls.boost);
     current.set(new Float32Array(wasm.memory.buffer, statePointer, wasm.demo_state_count()));
@@ -530,11 +542,15 @@ try {
   await accountReady;
   lapNotices=await (await fetch('./assets/ui/lap-notices.json',{cache:'no-store'})).json();
   await loadLocalCatalog();
+  const physicsResponse=await fetch('./assets/kart-physics.json',{cache:'no-store'});
+  if(!physicsResponse.ok)throw new Error('카트별 성능 파일 없음: prepare-local-kart-physics.py 실행 필요');
+  kartPhysics=await physicsResponse.json();
   current = new Float32Array(wasm.demo_state_count());
   previous = new Float32Array(wasm.demo_state_count());
   visual = new Float32Array(wasm.demo_state_count());
   syncState();
   await Promise.all([view.setKart(kartChoice.value), view.setCharacter(characterChoice.value)]);
+  applySelectedKartPhysics();
   await loadSelectedTrack();
   requestAnimationFrame(frame);
 } catch (error) {

@@ -6,6 +6,7 @@ import { collisionPositions } from './collision-wireframe.mjs';
 import { addOpaqueDepthPass } from './material-depth.mjs';
 import { createRaceEffects } from './race-effects.mjs';
 import {seatSurface,mountRider} from './rider-mount.mjs';
+import {collisionFit} from './kart-physics.mjs';
 
 // Rendering only: position and heading come from the C/Wasm demo state.
 export function createPreviewRenderer(canvas) {
@@ -220,6 +221,7 @@ export function createPreviewRenderer(canvas) {
     return fitted;
   }
 
+  let kartBodyFit, kartBodyOverlay;
   async function setKart(name) {
     const { group, nextWheels, data } = await loadAsset(name, 'kart');
     if (original) {
@@ -232,6 +234,11 @@ export function createPreviewRenderer(canvas) {
     group.updateMatrixWorld(true);
     const modelBounds = new THREE.Box3().setFromObject(group);
     originalBase = -modelBounds.min.y;
+    kartBodyFit=collisionFit(modelBounds,kartVisualScale);
+    if(kartBodyOverlay){kart.remove(kartBodyOverlay);kartBodyOverlay.geometry.dispose();kartBodyOverlay.material.dispose();}
+    const {half,center}=kartBodyFit;
+    kartBodyOverlay=new THREE.Mesh(new THREE.BoxGeometry(2*half[1],2*half[2],2*half[0]),new THREE.MeshBasicMaterial({color:0xff9900,wireframe:true,transparent:true,opacity:.65,depthWrite:false}));
+    kartBodyOverlay.position.set(-center[1],center[2],center[0]);kartBodyOverlay.visible=false;kart.add(kartBodyOverlay);
     seatMount=seatSurface(data.parts,data.kartMounts?.seat);
     raceEffects.mountKart(modelBounds,kartVisualScale,0.6);
     group.scale.setScalar(lobbyMode ? lobbyVisualScale : kartVisualScale);
@@ -262,7 +269,7 @@ export function createPreviewRenderer(canvas) {
     if (lobbyMode) setLobbyMode(true);
   }
 
-  let collisionOverlay;
+  let collisionOverlay,collisionDebugEnabled=false;
   async function toggleCollision() {
     if (!originalTrack) return false;
     if (collisionOverlay?.userData.trackName !== originalTrack.userData.trackName) {
@@ -275,8 +282,10 @@ export function createPreviewRenderer(canvas) {
       collisionOverlay.userData.trackName=originalTrack.userData.trackName;
       collisionOverlay.visible=false;scene.add(collisionOverlay);
     }
-    collisionOverlay.visible=!collisionOverlay.visible;
-    return collisionOverlay.visible;
+    collisionDebugEnabled=!collisionDebugEnabled;
+    collisionOverlay.visible=collisionDebugEnabled&&!lobbyMode;
+    if(kartBodyOverlay)kartBodyOverlay.visible=collisionDebugEnabled&&!lobbyMode;
+    return collisionDebugEnabled;
   }
   async function loadTrack(name) {
     if (originalTrack?.userData.trackName === name) return;
@@ -347,6 +356,8 @@ export function createPreviewRenderer(canvas) {
 
   function setLobbyMode(enabled) {
     lobbyMode = enabled;
+    if(collisionOverlay)collisionOverlay.visible=collisionDebugEnabled&&!enabled;
+    if(kartBodyOverlay)kartBodyOverlay.visible=collisionDebugEnabled&&!enabled;
     if(originalCharacter)originalCharacter.traverse(node=>{
       if(!node.isMesh || node.name==='opaque-alpha-depth')return;
       const points=node.geometry.userData[enabled?'standing':'seated'];
@@ -378,7 +389,7 @@ export function createPreviewRenderer(canvas) {
         lobbyCharacter.visible = true;
         lobbyCharacter.scale.setScalar(0.80*0.6);
         lobbyCharacter.position.set(-1.4*0.6, -0.05, 0.45*0.6);
-        lobbyCharacter.rotation.y = Math.PI;
+        lobbyCharacter.rotation.y = 0;
         kart.add(lobbyCharacter);
       }
     }
@@ -502,20 +513,6 @@ export function createPreviewRenderer(canvas) {
   }
   // Share original geometry/materials; no duplicate track conversion or guessed
   // bitmap scale. Layer 2 excludes the rider, sky, skids and effect sprites.
-  let mapRenderer,mapCamera,lastMapTime=0;
-  function renderMinimap(state){
-    if(!originalTrack?.visible || !trackDrive)return null;
-    if(!mapRenderer){
-      mapRenderer=new THREE.WebGLRenderer({antialias:true,alpha:true,preserveDrawingBuffer:true});mapRenderer.setSize(600,540);mapRenderer.outputColorSpace=THREE.SRGBColorSpace;mapRenderer.toneMapping=renderer.toneMapping;mapRenderer.toneMappingExposure=renderer.toneMappingExposure;
-      mapCamera=new THREE.OrthographicCamera(-22,22,19.8,-19.8,.1,260);mapCamera.layers.set(2);
-    }
-    if(performance.now()-lastMapTime>=50){
-      mapCamera.position.set(state[0],state[14]+100,-state[1]);mapCamera.up.set(Math.cos(state[2]),0,-Math.sin(state[2]));mapCamera.lookAt(state[0],state[14],-state[1]);
-      const background=scene.background;scene.background=null;mapRenderer.render(scene,mapCamera);scene.background=background;lastMapTime=performance.now();
-    }
-    return mapRenderer.domElement;
-  }
-
   function render(state, frameDeltaMs = 16) {
     const [x, y, heading, vx, vy, , speed, , boost, drifting] = state;
     const width = Math.max(canvas.clientWidth, 1);
@@ -602,12 +599,12 @@ export function createPreviewRenderer(canvas) {
   return {
     render,
     setKart,
+    getKartCollisionFit:()=>kartBodyFit,
     setCharacter,
     setTrackDrive,
     setLobbyMode,
     renderPreview,
     renderAssetThumbnail,
-    renderMinimap,
     toggleTrackPreview,
     toggleCollision,
     resetCamera: () => { firstFrame = true; raceEffects.clear(); },

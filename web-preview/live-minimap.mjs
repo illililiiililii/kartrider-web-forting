@@ -53,7 +53,7 @@ export function lapAnnouncement(current, total) {
 }
 export const minimapRotation = heading => heading-Math.PI/2;
 
-export function createLiveMinimap(image,renderTrack) {
+export function createLiveMinimap(image) {
   const canvas=document.createElement('canvas');
   canvas.id='live-minimap'; canvas.width=600; canvas.height=540;
   canvas.setAttribute('aria-label','실제 트랙 좌표 기반 지도 및 차량 방향');
@@ -90,13 +90,11 @@ export function createLiveMinimap(image,renderTrack) {
       image.hidden=true; canvas.hidden=false;
     },
     draw(state) {
-      const trackView=renderTrack?.(state);
-      if (!background && !trackView) return;
+      if (!background) return;
       ctx.clearRect(0,0,canvas.width,canvas.height);
-      const position=background?project(state[0],state[1]):[0,0];
+      const position=project(state[0],state[1]);
       const x=canvas.width/2,y=canvas.height/2;
-      if(trackView){ctx.drawImage(trackView,0,0,canvas.width,canvas.height);canvas.dataset.source='original track geometry, heading-up local view';}
-      else {ctx.save();ctx.translate(x,y);ctx.rotate(minimapRotation(state[2]));ctx.scale(zoom,zoom);ctx.translate(-position[0],-position[1]);ctx.drawImage(background,0,0);ctx.restore();}
+      ctx.save();ctx.translate(x,y);ctx.rotate(minimapRotation(state[2]));ctx.scale(zoom,zoom);ctx.translate(-position[0],-position[1]);ctx.drawImage(background,0,0);ctx.restore();
       ctx.save(); ctx.translate(x,y);
       ctx.beginPath(); ctx.moveTo(0,-51); ctx.lineTo(70,50); ctx.lineTo(0,25); ctx.lineTo(-70,50); ctx.closePath();
       ctx.fillStyle='#d82b0b'; ctx.strokeStyle='#160a05'; ctx.lineWidth=7; ctx.fill(); ctx.stroke(); ctx.restore();

@@ -81,8 +81,9 @@ and tests all enabled spawns in Wasm. Logs and incremental caches stay in
 track names and lap counts come from the supplied XML. Missing lap data,
 unsupported native types, non-finite source geometry and coordinate mismatches
 remain disabled; no guessed start, collision flags or lap counts are invented.
-The main game uses the source cotten5 dynamics/geometry. The requested 1.5x
-kart/character enlargement changes presentation only. Other themes' BGM stays
+The main game imports per-kart Korean stock S1 parameters into the recovered
+2004 C dynamics. Suspension geometry remains the demo's; the body collision box
+fits the selected visible model at its existing presentation scale. Other themes' BGM stays
 silent until its exact original music selection is connected; Beach/Village
 BGM and original drift/boost effects remain connected.
 
@@ -104,3 +105,33 @@ owned items and balances live in ignored local-data/accounts-4174.sqlite. Back u
 that database separately to retain progress after a PC format.
 
 For a consistent live account backup, run `node tools/backup-user-db.mjs`.
+
+Korean kart performance preparation (original data remains ignored):
+
+```powershell
+python tools/prepare-local-kart-physics.py --client "$env:USERPROFILE/Documents/kart web/kartrider_5136" --rust "$env:USERPROFILE/Documents/kart web/P5136_Rust-main"
+```
+
+`prepare-local-all.ps1` calls this automatically when these folders exist;
+`-PhysicsClient` / `-PhysicsReference` select different locations. It reads
+Korean `E/_rho5Out/kart_/<kart>/param@kr.xml` (base `param.xml` fallback),
+interprets the supplied server's stock S1 composition/default/unit table,
+and writes ignored `web-preview/assets/kart-physics.json`. Packet speed byte 0
+means S1; `Speed_00` final logs independently verify the four primary karts.
+Source file hashes are retained in the generated output. The Rust workspace
+declares AFL-3.0; its source is not copied into this repository.
+
+EX (SPACE/X) uses original separate gauge sprites, rates, capacity, minimum,
+multiplier and cooldown in a web C adapter. Charge-rate interpretation and
+activation policy are web implementations, not recovered client algorithms.
+Wall-loss recharge, transformed/dual-booster behavior and the native 5136
+drift-gauge formula remain pending. Preserving those parameters in JSON does
+not mean those behaviors are implemented. Demo baseline remains available to
+the native parity tests with adapters disabled. Build overlays live in
+`.tools/demo-web-overlay`; pinned upstream files are never changed.
+
+Shop reference files are `stage/shop/shop@kr.xml`, `stage_window@zz.xml`,
+`shopCard@zz.xml` and `shopGrid.xml` under `rhoOut`. The original card/frame
+skin binding is not specified there and has not been verified. The existing
+temporary shop remains until an original shop screenshot or verified binding
+is available; no guessed full shop layout has been added.

@@ -19,7 +19,7 @@ def prepare(rho):
     # The reference uses the exceed V1 dashboard, not the older V1 layout.
     relative='gui/tachometer/v1_exceed';folder=ROOT/'web-preview/assets/ui'/relative;folder.mkdir(parents=True,exist_ok=True)
     xml=ET.parse(resource_file(rho,relative+'/tacho.xml')).getroot();dashboard=xml.find('./Window[@name="dashboard"]')
-    names=['baseBG_1','exeedBoosterBG','exeedIcon_1','keySpace_1','keyX_1','icon_boost_01','icon_boost_02','icon_Auto_1','icon_draft_1','number_1','soloBoosterBG','soloBooster_1']
+    names=['baseBG_1','exeedBoosterBG','exeedBooster_1','exeedBooster_2','exeedBooster_3','exeedIcon_1','exeedIcon_2','keySpace_1','keySpace_2','keyX_1','keyX_2','icon_boost_01','icon_boost_02','icon_Auto_1','icon_draft_1','number_1','soloBoosterBG','soloBooster_1']
     for name in names:
         name='tacho_v1_'+name+'.png';shutil.copy2(resource_file(rho,relative+'/'+name),folder/name)
     panels={}
@@ -29,7 +29,7 @@ def prepare(rho):
     for panel in dashboard.findall('./Container[@name="exceedFeatures"]/Window[@name="idling"]/Panel'):
         panels[panel.get('name')]={'texture':panel.get('texture'),'position':[int(v) for v in panel.get('leftTopTex').split()]}
     font=dashboard.find('./CharPanel[@name="kmh"]')
-    data={'source':relative+'/tacho.xml','window':[200,74],'panels':panels,'font':{'size':[int(v) for v in font.get('fontSize').split()],'rect':[int(v) for v in font.get('leftTopWH').split()],'characters':font.get('fontStr'),'spacing':int(font.get('spaceOffset'))},'exceedAvailable':False}
+    data={'source':relative+'/tacho.xml','window':[200,74],'panels':panels,'font':{'size':[int(v) for v in font.get('fontSize').split()],'rect':[int(v) for v in font.get('leftTopWH').split()],'characters':font.get('fontStr'),'spacing':int(font.get('spaceOffset'))},'exceedAvailable':True,'exceedRuntime':'web adapter; requires selected kart BodyParam'}
     (ROOT/'web-preview/assets/ui/v1-dashboard.json').write_text(json.dumps(data),encoding='utf-8')
 if __name__=='__main__':
     p=argparse.ArgumentParser();p.add_argument('--rho-root',type=Path,required=True);prepare(p.parse_args().rho_root)

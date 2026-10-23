@@ -47,9 +47,9 @@ test('wheel axis swap preserves authored non-geometric smooth normals',()=>{
   assert.ok(n.distanceTo(source)<1e-6);
 });
 
-test('reference dashboard keeps original EX decoration idle and original XML icons/number atlas',{skip:!has('web-preview/assets/ui/v1-dashboard.json')},()=>{
+test('reference dashboard exposes separate EX telemetry and original XML icons/number atlas',{skip:!has('web-preview/assets/ui/v1-dashboard.json')},()=>{
   const hud=read('web-preview/assets/ui/v1-dashboard.json');
-  assert.equal(hud.exceedAvailable,false);assert.match(hud.source,/v1_exceed/);assert.deepEqual(hud.font.size,[34,42]);
+  assert.equal(hud.exceedAvailable,true);assert.match(hud.exceedRuntime,/web adapter/);assert.match(hud.source,/v1_exceed/);assert.deepEqual(hud.font.size,[34,42]);
   assert.deepEqual(hud.panels.n2o.position,[50,43]);assert.ok(hud.panels.keyX);assert.ok(hud.panels.keySpace);assert.ok(hud.panels.auto);assert.ok(hud.panels.draft);
 });
 

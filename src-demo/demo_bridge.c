@@ -15,12 +15,39 @@
 #include <stdlib.h>
 #include <string.h>
 #include "race-progress.h"
+#include "exceed.h"
 
 static KartSimulationState kart;
 static KartChaseCameraFollow chase;
 static KartSimulationWorld world;
-static float telemetry[57];
+static float telemetry[62];
 static unsigned int timed_boost_kind, airborne_ms;
+static float kart_parameters[29], pending_parameters[29];
+static bool kart_parameters_enabled, exceed_enabled, exceed_pressed;
+static WebExceed exceed;
+static bool body_fitted;
+static KartVec3 fitted_body_center;
+static float fitted_body_width, fitted_body_length;
+float demo_body_half_height = 0.699999988079071f;
+
+KartVec3 demo_body_center(const KartSimulationState *state) {
+    const KartQuat q=state->orientation;
+    const KartVec3 right={1-2*(q.y*q.y+q.z*q.z),2*(q.x*q.y+q.w*q.z),2*(q.x*q.z-q.w*q.y)};
+    const KartVec3 forward={2*(q.w*q.z-q.x*q.y),-(1-2*(q.x*q.x+q.z*q.z)),-2*(q.y*q.z+q.w*q.x)};
+    const KartVec3 up={2*(q.x*q.z+q.w*q.y),2*(q.y*q.z-q.w*q.x),1-2*(q.x*q.x+q.y*q.y)};
+    if(!body_fitted)return (KartVec3){state->position.x+up.x,state->position.y+up.y,state->position.z+up.z};
+    // Fitted Y is native local +Y (back), so negate the native forward axis.
+    return (KartVec3){state->position.x+right.x*fitted_body_center.x-forward.x*fitted_body_center.y+up.x*fitted_body_center.z,
+        state->position.y+right.y*fitted_body_center.x-forward.y*fitted_body_center.y+up.y*fitted_body_center.z,
+        state->position.z+right.z*fitted_body_center.x-forward.z*fitted_body_center.y+up.z*fitted_body_center.z};
+}
+float demo_drive_multiplier(bool boosting,float base_force) {
+    if(!kart_parameters_enabled)return boosting?1.5f:1.0f;
+    if(exceed.active)return kart_parameters[24]*(boosting?kart_parameters[18]:1.0f);
+    if(boosting && timed_boost_kind==2u)
+        return kart_parameters[21]/fmaxf(.000001f,base_force);
+    return boosting?kart_parameters[18]:1.0f;
+}
 static float last_ground_z;
 static KartGaugeState gauge;
 static KartGaugeConfig gauge_config;
@@ -83,9 +110,13 @@ static unsigned int body_query(void *unused, const KartSimulationState *state,
                                KartBodyContact *contacts, unsigned int capacity) {
     (void)unused;
     if (capacity == 0) return 0;
-    if (track_enabled)
-        return kart_track_scene_query_body_collisions(
-            &track_scene, &track_spec, state, contacts, capacity);
+    if (track_enabled) {
+        if(!body_fitted)return kart_track_scene_query_body_collisions(&track_scene,&track_spec,state,contacts,capacity);
+        KartSimulationState body=*state;
+        body.geometry.half_width=fitted_body_width;
+        body.geometry.half_length=fitted_body_length;
+        return kart_track_scene_query_body_collisions(&track_scene,&track_spec,&body,contacts,capacity);
+    }
     const KartVec3 p = state->position;
     KartVec3 normal = {0};
     if (p.x > 78.0f) normal.x = -1.0f;
@@ -101,6 +132,11 @@ static void reset_at(float x, float y, float heading) {
     const KartDemoKartSpec *spec = kart_demo_kart_at(preset_index);
     kart_simulation_init(&kart, spec ? &spec->dynamics : NULL,
                          spec ? &spec->geometry : NULL);
+    if(kart_parameters_enabled) {
+        const float *p=kart_parameters;
+        kart.config=(KartDynamicsConfig){p[0],p[1],p[2],p[3],p[4],p[5],p[6],p[7],p[8],p[9],p[10],p[11],p[12],p[13],p[14],p[15],p[16],p[17]};
+    }
+    exceed=(WebExceed){0};exceed_pressed=false;
     kart.position = (KartVec3){x, y, track_enabled ? spawn_z + 0.5f : 0.5f};
     /* Identity faces world -Y; +pi/2 rotates the forward axis to +X. */
     const float angle = heading + 1.5707963267948966f;
@@ -205,12 +241,12 @@ static void publish(unsigned int elapsed_ms, KartSimulationStepResult step) {
         }
     }
     sound_state = kart_sound_driver_update(&sound_driver, speed, drifting,
-        kart.timed_boost.active || kart.instant_boost.active,
+        kart.timed_boost.active || kart.instant_boost.active || exceed.active,
         kart.instant_boost.active, step.wall_impact_speed,
         step.ground_impact_speed, clock_ms);
     KartChaseCameraPose cam = kart_chase_camera_update(
         &chase, kart.position, kart.orientation, speed,
-        kart.timed_boost.active || kart.instant_boost.active, elapsed_ms,
+        kart.timed_boost.active || kart.instant_boost.active || exceed.active, elapsed_ms,
         KART_CHASE_FOLLOW_FRONT_MS);
     telemetry[0] = kart.position.x;
     telemetry[1] = kart.position.y;
@@ -273,6 +309,12 @@ static void publish(unsigned int elapsed_ms, KartSimulationStepResult step) {
     telemetry[47] = kart.grounded ? 1.0f : 0.0f;
     telemetry[48] = kart.instant_boost.active ? 3.0f :
         kart.timed_boost.active ? (float)timed_boost_kind : 0.0f;
+    if(exceed.active)telemetry[48]=4.0f;
+    telemetry[57]=exceed_enabled && kart_parameters[26]>0 ? exceed.gauge/kart_parameters[26] : 0.0f;
+    telemetry[58]=exceed.active?1.0f:0.0f;
+    telemetry[59]=exceed.cooldown*.001f;
+    telemetry[60]=exceed_enabled && kart_parameters[26]>0 ? kart_parameters[27]/kart_parameters[26] : 1.0f;
+    telemetry[61]=exceed_enabled?1.0f:0.0f;
     /* Read-only copy: query real rear-wheel surface contacts for skid decals.
        Re-querying must not advance suspension compression in the simulation. */
     KartWheelContactState wheels = kart.wheels;
@@ -324,6 +366,36 @@ __attribute__((export_name("demo_start_race"))) void demo_start_race(void) {
 __attribute__((export_name("demo_set_steer_angle"))) void demo_set_steer_angle(float degrees) {
     if (isfinite(degrees) && degrees >= 1.0f && degrees <= 30.0f)
         kart.config.max_steer_angle_deg = degrees;
+}
+
+__attribute__((export_name("demo_set_kart_parameter"))) unsigned int demo_set_kart_parameter(unsigned int field,float value) {
+    if(field>=29u || !isfinite(value) || fabsf(value)>1000000.0f)return 0u;
+    pending_parameters[field]=value;return 1u;
+}
+__attribute__((export_name("demo_apply_kart_parameters"))) unsigned int demo_apply_kart_parameters(unsigned int enable_exceed) {
+    const float *p=pending_parameters;
+    if(p[0]<=0 || p[2]<=0 || p[3]<=0 || p[7]<=0 || p[7]>45 || p[8]<=0 || p[18]<=0 || p[19]<=0 || p[20]<0 || p[21]<=0 ||
+       p[22]<0 || p[23]<0 || p[24]<1 || p[25]<0 || p[26]<0 || p[27]<0 || p[27]>p[26] || p[28]<0)return 0u;
+    memcpy(kart_parameters,pending_parameters,sizeof kart_parameters);
+    kart_parameters_enabled=true;exceed_enabled=enable_exceed && p[26]>0;
+    reset_at(track_enabled?spawn_x:0,track_enabled?spawn_y:0,track_enabled?spawn_heading:0);
+    publish(0,(KartSimulationStepResult){0});return 1u;
+}
+__attribute__((export_name("demo_exceed_input"))) void demo_exceed_input(unsigned int pressed) {exceed_pressed=pressed!=0;}
+__attribute__((export_name("demo_fit_body"))) unsigned int demo_fit_body(float width,float length,float height,float x,float y,float z) {
+    if(!isfinite(width)||!isfinite(length)||!isfinite(height)||!isfinite(x)||!isfinite(y)||!isfinite(z)||
+       width<=0 || length<=0 || height<=0 || width>10 || length>10 || height>10 || fabsf(x)>10 || fabsf(y)>10 || fabsf(z)>10)return 0;
+    fitted_body_width=width;fitted_body_length=length;demo_body_half_height=height;
+    fitted_body_center=(KartVec3){x,y,z};body_fitted=true;return 1;
+}
+__attribute__((export_name("demo_body_value"))) float demo_body_value(unsigned int field) {
+    switch(field){case 0:return fitted_body_width;case 1:return fitted_body_length;case 2:return demo_body_half_height;
+        case 3:return fitted_body_center.x;case 4:return fitted_body_center.y;case 5:return fitted_body_center.z;default:return NAN;}
+}
+/* Read-only collision debugger: the same query and fitted shape as simulation. */
+__attribute__((export_name("demo_body_contacts"))) unsigned int demo_body_contacts(void) {
+    KartBodyContact contacts[KART_MAX_BODY_CONTACTS];
+    return body_query(NULL,&kart,contacts,KART_MAX_BODY_CONTACTS);
 }
 
 __attribute__((export_name("demo_config_value"))) float demo_config_value(unsigned int field) {
@@ -534,7 +606,7 @@ __attribute__((export_name("demo_step"))) void demo_step(
     if (throttle_pressed && !previous_throttle &&
         kart_countdown_start_boost_granted(&race_countdown, clock_ms)) {
         kart_timed_boost_start(&kart.timed_boost, 1.0f,
-                               KART_START_BOOST_DURATION_MS);
+                               kart_parameters_enabled?(unsigned int)kart_parameters[20]:KART_START_BOOST_DURATION_MS);
         timed_boost_kind = 2u;
     }
     const bool before_go = race_phase == 1.0f &&
@@ -544,8 +616,23 @@ __attribute__((export_name("demo_step"))) void demo_step(
         controls.boost_active = false;
     }
     previous_throttle = throttle_pressed;
-    if (!kart.timed_boost.active && controls.boost_active) timed_boost_kind = 1u;
-    KartSimulationStepResult step = kart_simulate_milliseconds(&kart, &controls, &world, elapsed_ms);
+    if (!kart.timed_boost.active && controls.boost_active) {
+        timed_boost_kind = 1u;
+        if(kart_parameters_enabled)kart_timed_boost_start(&kart.timed_boost,controls.forward_input,(unsigned int)kart_parameters[19]);
+    }
+    KartSimulationStepResult step={0};
+    if(exceed_enabled){
+        for(unsigned int remaining=elapsed_ms;remaining;){
+            const unsigned int ms=remaining>5u?5u:remaining;remaining-=ms;
+            const float speed=sqrtf(kart.linear_velocity.x*kart.linear_velocity.x+kart.linear_velocity.y*kart.linear_velocity.y)*3.6f;
+            const bool driving=!before_go && throttle_pressed && !brake && kart.grounded && speed>=kart_parameters[28];
+            web_exceed_step(&exceed,kart_parameters,ms,exceed_pressed,driving,kart.timed_boost.active);
+            const KartSimulationStepResult part=kart_simulate_milliseconds(&kart,&controls,&world,ms);
+            step.substeps+=part.substeps;step.wheel_contacts+=part.wheel_contacts;step.body_contacts+=part.body_contacts;
+            step.wall_impact_speed=fmaxf(step.wall_impact_speed,part.wall_impact_speed);
+            step.ground_impact_speed=fmaxf(step.ground_impact_speed,part.ground_impact_speed);
+        }
+    }else step = kart_simulate_milliseconds(&kart, &controls, &world, elapsed_ms);
     if (!kart.timed_boost.active) timed_boost_kind = 0u;
     if (kart.grounded) { last_ground_z = kart.position.z; airborne_ms = 0u; }
     else airborne_ms += elapsed_ms;
