@@ -7,6 +7,7 @@ import argparse,base64,hashlib,json
 from pathlib import Path
 import numpy as np
 from pxr import Gf,Usd,UsdGeom
+from usd_normals import world_normals,web_normals
 ROOT=Path(__file__).resolve().parent.parent
 VERSION=hashlib.sha256(Path(__file__).read_bytes()).hexdigest()[:16]
 
@@ -75,6 +76,17 @@ def prepare(entry):
             offset+=count
         if len(expanded)!=len(part['positions']) or np.max(np.abs(np.array(expanded_rest)-part['positions']))>1e-4:raise ValueError('Rest skin does not match existing conversion')
         part['seatedPositions']=expanded
+        normals=world_normals(mesh,time,transform)
+        if normals is not None:
+            part['normals']=web_normals(normals);posed_normals=[]
+            for index,normal in normals:
+                value=np.array(normal,dtype=float)
+                if weights:
+                    blended=sum(weights['jw'][index*weights['es']+j]*skin[weights['ji'][index*weights['es']+j]][:3,:3] for j in range(weights['es']))
+                    value=np.linalg.inv(blended).T@value
+                elif prim.GetParent().GetName()=='face':value=np.linalg.inv(skin[rig['face_bone']][:3,:3]).T@value
+                value/=np.linalg.norm(value);posed_normals.extend([float(value[0]),float(value[2]),-float(value[1])])
+            part['seatedNormals']=posed_normals
     model['drivingPoseVersion']=VERSION;model['drivingPose']='original weighted joints; web seated pose'
     path.write_text(json.dumps(model,separators=(',',':')),encoding='utf-8');return True
 

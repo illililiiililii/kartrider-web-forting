@@ -10,6 +10,10 @@ $conversionLog=Join-Path $root 'local-data\catalog-conversion.log'
 & $PythonExe (Join-Path $PSScriptRoot 'prepare-local-all.py') --rho-root $RhoRoot --workers $Workers *> $conversionLog
 if ($LASTEXITCODE -ne 0) { throw 'Asset catalog preparation failed; see local-data/catalog-logs' }
 Write-Output "Local model catalog prepared; conversion details: $conversionLog"
+& $PythonExe (Join-Path $PSScriptRoot 'prepare-local-normals.py') --rho-root $RhoRoot
+if ($LASTEXITCODE -ne 0) { throw 'Original normal preparation failed' }
+& $PythonExe (Join-Path $PSScriptRoot 'prepare-local-sky.py') --rho-root $RhoRoot
+if ($LASTEXITCODE -ne 0) { throw 'Original sky preparation failed' }
 & $PythonExe (Join-Path $PSScriptRoot 'prepare-local-riders.py')
 if ($LASTEXITCODE -ne 0) { throw 'Weighted driving pose preparation failed' }
 & $PythonExe (Join-Path $PSScriptRoot 'prepare-local-hud.py') --rho-root $RhoRoot

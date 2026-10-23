@@ -10,6 +10,11 @@ Put the original PC KartRider **5136** resources here. No KartRider: Drift asset
 - `character/`: converted character folders, e.g. `dao/dao.usda`.
 
 Keep referenced textures beside the model with their original relative paths.
+Keep `skydome.1s` and its referenced sky texture beside each track too.
+Preparation reuses the native reader for the sky, keeps authored USD normals
+(including weighted seated normals), and reads alpha flags from bound materials.
+The reference flower-logo ads use the exact `20221222_facelift` theme/slot;
+no unrelated kart atlas is substituted for missing regional number plates.
 If unpacked resources live elsewhere, save an ignored `local-data/asset-paths.json`:
 
 ```json
@@ -40,6 +45,12 @@ From the project root (PowerShell; Python with usd-core 25.5.1, Pillow and NumPy
 .\tools\build-demo-physics.ps1 -Bootstrap
 node server.mjs
 ```
+
+To upgrade already converted models without rebuilding collision data, run
+`tools/prepare-local-normals.py`, then `tools/prepare-local-riders.py`;
+`tools/prepare-local-sky.py --rho-root local-assets/rhoOut` prepares original skies.
+Run `tools/prepare-local-ui.ps1` for the XML-based V1 exceed dashboard. Its EX
+decoration stays idle because the recovered demo does not simulate V1 exceed.
 
 Empty inputs are reported as waiting. Partial/malformed inputs fail explicitly.
 The physics build needs no game assets: without all three `track.1s` files it

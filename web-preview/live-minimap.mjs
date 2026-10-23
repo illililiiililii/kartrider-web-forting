@@ -53,7 +53,7 @@ export function lapAnnouncement(current, total) {
 }
 export const minimapRotation = heading => heading-Math.PI/2;
 
-export function createLiveMinimap(image) {
+export function createLiveMinimap(image,renderTrack) {
   const canvas=document.createElement('canvas');
   canvas.id='live-minimap'; canvas.width=600; canvas.height=540;
   canvas.setAttribute('aria-label','실제 트랙 좌표 기반 지도 및 차량 방향');
@@ -90,14 +90,16 @@ export function createLiveMinimap(image) {
       image.hidden=true; canvas.hidden=false;
     },
     draw(state) {
-      if (!background) return;
+      const trackView=renderTrack?.(state);
+      if (!background && !trackView) return;
       ctx.clearRect(0,0,canvas.width,canvas.height);
-      const position=project(state[0],state[1]);
+      const position=background?project(state[0],state[1]):[0,0];
       const x=canvas.width/2,y=canvas.height/2;
-      ctx.save();ctx.translate(x,y);ctx.rotate(minimapRotation(state[2]));ctx.scale(zoom,zoom);ctx.translate(-position[0],-position[1]);ctx.drawImage(background,0,0);ctx.restore();
+      if(trackView){ctx.drawImage(trackView,0,0,canvas.width,canvas.height);canvas.dataset.source='original track geometry, heading-up local view';}
+      else {ctx.save();ctx.translate(x,y);ctx.rotate(minimapRotation(state[2]));ctx.scale(zoom,zoom);ctx.translate(-position[0],-position[1]);ctx.drawImage(background,0,0);ctx.restore();}
       ctx.save(); ctx.translate(x,y);
-      ctx.beginPath(); ctx.moveTo(0,-12); ctx.lineTo(8,9); ctx.lineTo(0,5); ctx.lineTo(-8,9); ctx.closePath();
-      ctx.fillStyle='#ffdf00'; ctx.strokeStyle='#151515'; ctx.lineWidth=3; ctx.fill(); ctx.stroke(); ctx.restore();
+      ctx.beginPath(); ctx.moveTo(0,-51); ctx.lineTo(70,50); ctx.lineTo(0,25); ctx.lineTo(-70,50); ctx.closePath();
+      ctx.fillStyle='#d82b0b'; ctx.strokeStyle='#160a05'; ctx.lineWidth=7; ctx.fill(); ctx.stroke(); ctx.restore();
     },
   };
 }

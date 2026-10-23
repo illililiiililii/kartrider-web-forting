@@ -19,10 +19,11 @@ export function createPreviewRenderer(canvas) {
   scene.background = skyBackground;
   scene.fog = new THREE.Fog(0x9bc8d4, 85, 200);
   const testFog = scene.fog;
-  scene.add(new THREE.HemisphereLight(0xeaf8ff, 0x456357, 2.4));
+  const ambient=new THREE.HemisphereLight(0xeaf8ff, 0x456357, 2.4);ambient.layers.enable(2);scene.add(ambient);
   const sun = new THREE.DirectionalLight(0xfff2d6, 3.2);
   sun.position.set(-25, 48, 30);
   scene.add(sun);
+  sun.layers.enable(2);
   const testWorld = new THREE.Group();
   scene.add(testWorld);
 
@@ -82,6 +83,8 @@ export function createPreviewRenderer(canvas) {
   let original = null;
   let originalCharacter = null;
   let originalTrack = null;
+  let originalSky = null;
+  const skyAvailability=fetch('./assets/sky-catalog.json',{cache:'no-store'}).then(r=>r.ok?r.json():null).catch(()=>null);
   let trackPreview = false;
   let trackDrive = false;
   let lobbyMode = false;
@@ -147,10 +150,15 @@ export function createPreviewRenderer(canvas) {
       const geometry = new THREE.BufferGeometry();
       geometry.setAttribute('position', new THREE.Float32BufferAttribute(part.positions, 3));
       if(type==='character'&&part.seatedPositions)geometry.userData.seated=part.seatedPositions;
-      if(type==='character')geometry.userData.standing=part.positions;
+      if(type==='character'){
+        geometry.userData.standing=part.positions;
+        geometry.userData.standingNormals=part.normals;
+        geometry.userData.seatedNormals=part.seatedNormals;
+      }
       if (part.uvs) geometry.setAttribute('uv', new THREE.Float32BufferAttribute(part.uvs, 2));
       geometry.setIndex(part.indices);
-      geometry.computeVertexNormals();
+      if(part.normals)geometry.setAttribute('normal',new THREE.Float32BufferAttribute(part.normals,3));
+      else geometry.computeVertexNormals();
       const color = partName.startsWith('wheel') ? 0x262a31
         : partName.startsWith('lamp') ? 0xe4f0f2
         : partName === 'seat' ? 0xcbd4da : 0xeeeeee;
@@ -180,7 +188,7 @@ export function createPreviewRenderer(canvas) {
       // material stage without altering or replacing either source image.
       const family = name.split('--')[0];
       const characterTint = type === 'character' && partName === 'body'
-        ? family === 'dao' ? 0x42b8ff : family === 'bazzi' ? 0xffbb52 : 0xffffff
+        ? family === 'dao' ? 0x42b8ff : family === 'bazzi' ? 0xff8000 : 0xffffff
         : null;
       const mesh = new THREE.Mesh(geometry, new THREE.MeshStandardMaterial({
         color: characterTint ?? (part.baseColor ? new THREE.Color(...part.baseColor) : texture ? 0xffffff : color), map: texture, alphaMap,
@@ -232,7 +240,9 @@ export function createPreviewRenderer(canvas) {
         if (node.isMesh) { node.geometry.dispose(); node.material.dispose(); }
       });
     }
-    group.scale.setScalar(0.42 * kartVisualScale);
+    // Original Bazzi head/body width ~0.9 of White Knight's body in reference.
+    // Rider and kart are separately mounted; do not resize the collision body.
+    group.scale.setScalar(0.80 * kartVisualScale);
     group.position.set(-0.25 * kartVisualScale, 0.5 * kartVisualScale, 0);
     originalCharacter = group;
     kart.add(group);
@@ -258,6 +268,24 @@ export function createPreviewRenderer(canvas) {
   async function loadTrack(name) {
     if (originalTrack?.userData.trackName === name) return;
     const { group } = await loadAsset(name, 'track');
+    if(originalSky){scene.remove(originalSky);originalSky.traverse(n=>{if(n.isMesh){n.geometry.dispose();n.material.map?.dispose();n.material.dispose();}});originalSky=null;}
+    const availableSkies=await skyAvailability;
+    const skyResponse=!availableSkies || availableSkies.includes(name)?await fetch(`./assets/usd/${name}/sky.mesh.json`,{cache:'no-store'}):null;
+    if(skyResponse?.ok){
+      const sky=await skyResponse.json();originalSky=new THREE.Group();
+      for(const part of sky.parts){
+        const geometry=new THREE.BufferGeometry();geometry.setAttribute('position',new THREE.Float32BufferAttribute(part.positions,3));geometry.setAttribute('uv',new THREE.Float32BufferAttribute(part.uvs,2));geometry.setIndex(part.indices);
+        const map=new THREE.TextureLoader().load(`./assets/usd/${name}/${part.texture}`);map.colorSpace=THREE.SRGBColorSpace;
+        // Native .1s UVs are D3D top-left, unlike the already converted USDA
+        // UVs. A second Y flip put the green horizon over the top of the dome.
+        map.flipY=false;
+        const mesh=new THREE.Mesh(geometry,new THREE.MeshBasicMaterial({map,side:THREE.DoubleSide,depthWrite:false,depthTest:false,toneMapped:false,fog:false}));
+        mesh.renderOrder=-1000;mesh.frustumCulled=false;originalSky.add(mesh);
+      }
+      // Camera-centred backdrop: normalize radius only, retain original UV/shape.
+      const size=new THREE.Box3().setFromObject(originalSky).getSize(new THREE.Vector3());
+      originalSky.scale.setScalar(200/Math.max(size.x,size.y,size.z));scene.add(originalSky);
+    }
     if (originalTrack) {
       scene.remove(originalTrack);
       originalTrack.traverse((node) => {
@@ -271,6 +299,7 @@ export function createPreviewRenderer(canvas) {
     // USD and collision mesh now share their original horizontal orientation.
     originalTrack.scale.x = 1;
     scene.add(group);
+    group.traverse(node=>node.layers.enable(2));
     originalTrack.updateMatrixWorld(true);
     const trackFocus = new THREE.Box3();
     group.traverse((node) => {
@@ -308,7 +337,9 @@ export function createPreviewRenderer(canvas) {
     if(originalCharacter)originalCharacter.traverse(node=>{
       if(!node.isMesh || node.name==='opaque-alpha-depth')return;
       const points=node.geometry.userData[enabled?'standing':'seated'];
-      if(points){node.geometry.attributes.position.array.set(points);node.geometry.attributes.position.needsUpdate=true;node.geometry.computeVertexNormals();node.geometry.computeBoundingSphere();}
+      if(points){node.geometry.attributes.position.array.set(points);node.geometry.attributes.position.needsUpdate=true;
+        const normals=node.geometry.userData[enabled?'standingNormals':'seatedNormals'];
+        if(normals)node.geometry.setAttribute('normal',new THREE.Float32BufferAttribute(normals,3));else node.geometry.computeVertexNormals();node.geometry.computeBoundingSphere();}
     });
     scene.background = enabled ? null : skyBackground;
     if (original) {
@@ -317,7 +348,7 @@ export function createPreviewRenderer(canvas) {
       original.position.y = originalBase * scale;
     }
     if (originalCharacter) originalCharacter.scale.setScalar(
-      0.42 * (enabled ? lobbyVisualScale : kartVisualScale));
+      0.80 * (enabled ? lobbyVisualScale : kartVisualScale));
     if (originalCharacter) originalCharacter.position.set(
       -0.25 * (enabled ? lobbyVisualScale : kartVisualScale),
       0.5 * (enabled ? lobbyVisualScale : kartVisualScale), 0);
@@ -403,9 +434,9 @@ export function createPreviewRenderer(canvas) {
     display.add(kartCopy);
     if (originalCharacter) {
       const characterCopy = originalCharacter.clone(true);
-      characterCopy.traverse(node=>{if(node.isMesh&&node.geometry.userData.seated){node.geometry=node.geometry.clone();node.userData.previewGeometry=true;node.geometry.attributes.position.array.set(node.geometry.userData.seated);node.geometry.attributes.position.needsUpdate=true;node.geometry.computeVertexNormals();}});
+      characterCopy.traverse(node=>{if(node.isMesh&&node.geometry.userData.seated){node.geometry=node.geometry.clone();node.userData.previewGeometry=true;node.geometry.attributes.position.array.set(node.geometry.userData.seated);node.geometry.attributes.position.needsUpdate=true;if(node.geometry.userData.seatedNormals)node.geometry.setAttribute('normal',new THREE.Float32BufferAttribute(node.geometry.userData.seatedNormals,3));else node.geometry.computeVertexNormals();}});
       characterCopy.visible = true;
-      characterCopy.scale.setScalar(0.42 * lobbyVisualScale);
+      characterCopy.scale.setScalar(0.80 * lobbyVisualScale);
       characterCopy.position.set(-0.25 * lobbyVisualScale, 0.5 * lobbyVisualScale, 0);
       display.add(characterCopy);
     }
@@ -425,6 +456,21 @@ export function createPreviewRenderer(canvas) {
   }
   const lobbyRight = new THREE.Vector3();
   const up = new THREE.Vector3(0, 1, 0);
+  // Share original geometry/materials; no duplicate track conversion or guessed
+  // bitmap scale. Layer 2 excludes the rider, sky, skids and effect sprites.
+  let mapRenderer,mapCamera,lastMapTime=0;
+  function renderMinimap(state){
+    if(!originalTrack?.visible || !trackDrive)return null;
+    if(!mapRenderer){
+      mapRenderer=new THREE.WebGLRenderer({antialias:true,alpha:true,preserveDrawingBuffer:true});mapRenderer.setSize(600,540);mapRenderer.outputColorSpace=THREE.SRGBColorSpace;mapRenderer.toneMapping=renderer.toneMapping;mapRenderer.toneMappingExposure=renderer.toneMappingExposure;
+      mapCamera=new THREE.OrthographicCamera(-22,22,19.8,-19.8,.1,260);mapCamera.layers.set(2);
+    }
+    if(performance.now()-lastMapTime>=50){
+      mapCamera.position.set(state[0],state[14]+100,-state[1]);mapCamera.up.set(Math.cos(state[2]),0,-Math.sin(state[2]));mapCamera.lookAt(state[0],state[14],-state[1]);
+      const background=scene.background;scene.background=null;mapRenderer.render(scene,mapCamera);scene.background=background;lastMapTime=performance.now();
+    }
+    return mapRenderer.domElement;
+  }
 
   function render(state, frameDeltaMs = 16) {
     const [x, y, heading, vx, vy, , speed, , boost, drifting] = state;
@@ -494,6 +540,10 @@ export function createPreviewRenderer(canvas) {
       camera.fov = pose.fov;
       camera.updateProjectionMatrix();
     }
+    // Reference framing: move the road/kart down 8% without replacing C pose,
+    // its speed-dependent FOV, suspension follow or smoothing.
+    if(!lobbyMode&&!trackPreview&&!overhead)camera.setViewOffset(width,height,0,-height*.08,width,height);
+    else camera.clearViewOffset();
     if (lobbyMode || trackPreview || overhead) camera.up.set(0, 1, 0);
     const follow = 1; // Never smooth the source chase result twice.
     camera.position.lerp(desired, follow);
@@ -501,6 +551,7 @@ export function createPreviewRenderer(canvas) {
     look.copy(smoothedLook);
     firstFrame = false;
     camera.lookAt(look);
+    if(originalSky){originalSky.visible=!lobbyMode && !!originalTrack?.visible;originalSky.position.copy(camera.position);}
     raceEffects.render(camera);
   }
 
@@ -511,6 +562,7 @@ export function createPreviewRenderer(canvas) {
     setTrackDrive,
     setLobbyMode,
     renderPreview,
+    renderMinimap,
     toggleTrackPreview,
     toggleCollision,
     resetCamera: () => { firstFrame = true; raceEffects.clear(); },

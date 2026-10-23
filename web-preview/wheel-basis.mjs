@@ -14,7 +14,8 @@ export function mountWheel(mesh) {
   for(let i=0;i<index.count;i+=3) {
     const b=index.getX(i+1); index.setX(i+1,index.getX(i+2)); index.setX(i+2,b);
   }
-  geometry.computeVertexNormals();
+  // applyMatrix4 already transformed authored normals by the normal matrix.
+  if (!geometry.getAttribute('normal')) geometry.computeVertexNormals();
   const frame=new THREE.Group(); frame.matrixAutoUpdate=false; frame.matrix.copy(swapWheelXZ);
   frame.add(mesh);
   const pivot=new THREE.Group(); pivot.position.copy(center); pivot.add(frame);

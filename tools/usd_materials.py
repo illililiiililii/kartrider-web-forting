@@ -19,6 +19,11 @@ def material_info(prim,source,output,rho=None):
    value=parent.GetCustomDataByKey(field)
    if value is not None:result[target]=value;break
    parent=parent.GetParent()
+  else:
+   # Exported kart flags live on the bound Material, outside mesh ancestry.
+   # A mesh override still wins, including an explicitly authored False.
+   value=material.GetPrim().GetCustomDataByKey(field) if material else None
+   if value is not None:result[target]=value
  if not material:
   _cache[key]=result;return result
  surface=material.ComputeSurfaceSource()[0]
@@ -41,18 +46,27 @@ def material_info(prim,source,output,rho=None):
    candidate=rho/category/name/Path(raw).name
    if candidate.is_file():file=candidate
    if not file.is_file() and category=='track' and Path(raw).name.startswith('ad_'):
-    candidate=rho/'zeta/kr/ppl/ingame/hangul'/name.split('_')[0]/Path(raw).name
-    if candidate.is_file():file=candidate
+    # The supplied reference shows the flower-logo facelift campaign, not
+    # the older Hangul-learning campaign. Resolve only the exact authored
+    # ad slot and theme; never borrow an unrelated atlas/filename.
+    for campaign in ['20221222_facelift','hangul']:
+     candidate=rho/'zeta/kr/ppl/ingame'/campaign/name.split('_')[0]/Path(raw).name
+     if candidate.is_file():file=candidate;break
   result['missingTexture']=bool(raw and not file.is_file())
   if file.is_file():
+   result['textureSource']=str(file)
    digest=hashlib.sha256(file.read_bytes()).hexdigest()[:12]
    target=f'{digest}-{file.stem}.png'
    if file.suffix.lower() in ['.png','.jpg','.jpeg']:
     target=f'{digest}-{file.name}'
     import shutil
-    shutil.copy2(file,output/target)
+    if not (output/target).is_file():shutil.copy2(file,output/target)
    elif file.suffix.lower() in ['.dds','.tga']:
-    Image.open(file).convert('RGBA').save(output/target)
+    # Content-addressed output is immutable. Reopening an image while the
+    # running web server streams it can fail on Windows (or truncate it).
+    if not (output/target).is_file():
+     temporary=output/(target+'.tmp')
+     Image.open(file).convert('RGBA').save(temporary,format='PNG');temporary.replace(output/target)
    else:raise ValueError(f'Unsupported authored texture: {file}')
    result['texture']=target
   for axis in ['S','T']:

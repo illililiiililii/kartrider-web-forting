@@ -12,6 +12,7 @@ from pathlib import Path
 
 from pxr import Gf, Usd, UsdGeom
 from usd_materials import material_info
+from usd_normals import world_normals, web_normals
 
 
 def texture_for(prim, source, output_dir, rho_root=None):
@@ -149,10 +150,12 @@ def export(source, output, scale, ktrk=None, rho_root=None):
                 triangles[i + 1], triangles[i + 2] = triangles[i + 2], triangles[i + 1]
         if not triangles:
             continue
+        normals = world_normals(mesh, time, transform)
         parts.append({
             "name": str(prim.GetPath()), "positions": positions, "uvs": uvs,
             "indices": triangles, "texture": texture_for(prim, source, output.parent, rho_root),
             **material_flags(prim, source, output.parent, rho_root),
+            **({'normals':web_normals(normals)} if normals is not None else {}),
         })
     if not parts:
         raise ValueError(f"No meshes in {source}")

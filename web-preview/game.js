@@ -1,4 +1,5 @@
-import { createPreviewRenderer } from './render3d.js?v=player-profile-v1';
+import { createPreviewRenderer } from './render3d.js?v=original-visuals-v2';
+import {mountV1Dashboard} from './v1-dashboard.mjs';
 import { createLiveMinimap } from './live-minimap.mjs';
 import { createRaceAudio } from './race-audio.mjs';
 import { createDemoInput, demoElapsedMilliseconds } from './demo-input.mjs';
@@ -6,7 +7,8 @@ import {readAccountSession} from './account-session.mjs';
 
 const $ = (selector) => document.querySelector(selector);
 const view = createPreviewRenderer($('#world'));
-const liveMinimap = createLiveMinimap($('#minimap'));
+const liveMinimap = createLiveMinimap($('#minimap'),state=>view.renderMinimap(state));
+mountV1Dashboard($('.tacho')).catch(error=>console.error('원본 V1 계기판:',error));
 const raceAudio = createRaceAudio();
 const lobby = $('#lobby');
 const raceUi = $('#race-ui');
@@ -337,13 +339,19 @@ function draw(state, frameMs) {
   if (speedNode.dataset.value !== String(speed)) speedNode.replaceChildren(...String(Math.min(speed,999)).split('').map(digit => {
     const glyph=document.createElement('span');
     glyph.className='v1-speed-digit';
-    // Original tacho.xml fontStr="1234567890", fontSize="36 43".
-    glyph.style.backgroundPositionX=`-${((Number(digit)+9)%10)*36}px`;
+    const width=Number(speedNode.dataset.fontWidth)||34,height=Number(speedNode.dataset.fontHeight)||42;
+    glyph.style.width=width+'px';glyph.style.height=height+'px';
+    glyph.style.backgroundPositionX=`-${((Number(digit)+9)%10)*width}px`;
     return glyph;
   }));
   speedNode.dataset.value = String(speed);
   $('#speed').setAttribute('aria-label', `속도 ${speed} km/h`);
   $('#gauge').style.width = `${Math.min(100, Math.max(0, state[7]))}%`;
+  const boostIcon=$('#v1-boost-icon');
+  if(boostIcon){
+    const active=state[48]?'2':'1';
+    if(boostIcon.dataset.active!==active){boostIcon.dataset.active=active;boostIcon.src=`./assets/ui/gui/tachometer/v1_exceed/tacho_v1_icon_boost_0${active}.png`;}
+  }
   const nitroCount = Math.max(0, Math.floor(state[32]));
   $('#nitro-count').setAttribute('aria-label', `보유 부스터 ${nitroCount}개`);
   if($('#nitro-count').dataset.count!==String(nitroCount)){
