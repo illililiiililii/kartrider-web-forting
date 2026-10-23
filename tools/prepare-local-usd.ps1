@@ -78,3 +78,5 @@ foreach ($item in $items) {
 $nativeTracks=@(@('beach_I01','beach_I02','village_R01') | Where-Object { Test-Path -LiteralPath (Resolve-LocalTrackFile $RhoRoot $_) })
 if ($nativeTracks.Count -eq 3) { & (Join-Path $PSScriptRoot 'prepare-local-collision.ps1') -RhoRoot $RhoRoot -PythonExe $PythonExe }
 else { Write-Warning 'Original collision metadata unavailable; driving collision remains unverified.' }
+& $PythonExe (Join-Path $PSScriptRoot 'prepare-local-riders.py')
+if ($LASTEXITCODE -ne 0) { throw 'Weighted driving pose preparation failed' }

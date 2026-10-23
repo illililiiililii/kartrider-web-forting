@@ -1,5 +1,6 @@
 param(
-  [string]$AssetRoot
+  [string]$AssetRoot,
+  [string]$PythonExe = 'python'
 )
 
 $ErrorActionPreference = 'Stop'
@@ -56,3 +57,5 @@ New-Item -ItemType Directory -Force -Path $slotTarget | Out-Null
 Copy-Item -LiteralPath $slotSource -Destination (Join-Path $slotTarget 'slot_v1.png') -Force
 
 & (Join-Path $PSScriptRoot 'prepare-local-effects.ps1') -AssetRoot $AssetRoot
+& $PythonExe (Join-Path $PSScriptRoot 'prepare-local-hud.py') --rho-root $AssetRoot
+if ($LASTEXITCODE -ne 0) { throw 'Original lap GUI preparation failed' }

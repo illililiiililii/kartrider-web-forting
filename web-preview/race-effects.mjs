@@ -52,9 +52,10 @@ export function createRaceEffects(renderer,scene,kart) {
   function clear() {previous=[null,null];cursor=count=0;geometry.setDrawRange(0,0);lastKind=0;burst=0;}
   return {
     clear,
-    mountKart(bounds,scale) {
-      group.position.x=bounds.min.x*scale+1.15;
-      group.position.y=(bounds.max.y-bounds.min.y)*scale*.3-.6;
+    mountKart(bounds,scale,sizeRatio=1) {
+      group.scale.setScalar(sizeRatio);
+      group.position.x=bounds.min.x*scale+1.15*sizeRatio;
+      group.position.y=(bounds.max.y-bounds.min.y)*scale*.3-.6*sizeRatio;
     },
     setBlurEnabled(value){blurEnabled=Boolean(value);},
     update(state,elapsed,active) {

@@ -1,6 +1,5 @@
-import { createPreviewRenderer } from './render3d.js?v=race-effects57';
-import { boostLabel } from './race-effects.mjs';
-import { createLiveMinimap, lapAnnouncement } from './live-minimap.mjs';
+import { createPreviewRenderer } from './render3d.js?v=player-profile-v1';
+import { createLiveMinimap } from './live-minimap.mjs';
 import { createRaceAudio } from './race-audio.mjs';
 import { createDemoInput, demoElapsedMilliseconds } from './demo-input.mjs';
 
@@ -20,7 +19,8 @@ const trackNames = { beach_I01: '비치 I01', beach_I02: '비치 I02', village_R
 // _rhoOut/track/common/track@zz.xml: item tracks have three laps; R01 has two.
 const trackLaps = { beach_I01: 3, beach_I02: 3, village_R01: 2 };
 const courseIndices = { beach_I01: 0, beach_I02: 1, village_R01: 2 };
-let localCatalog;
+let localCatalog, playerProfile, lapNotices;
+let raceTicket, rewardSubmitted=false;
 async function loadLocalCatalog() {
   const response=await fetch('./assets/catalog.json',{cache:'no-store'});
   if(response.status===404)return;
@@ -37,6 +37,7 @@ async function loadLocalCatalog() {
     }));
     select.value=[...select.options].some(o=>o.value===selected&&!o.disabled)?selected:[...select.options].find(o=>!o.disabled)?.value??'';
   }
+  populateOwnedKarts();
   selectedTrack=trackChoice.value;
 }
 let wasm, statePointer, current, previous, visual;
@@ -74,9 +75,9 @@ async function refreshAccount() {
     const { user } = await response.json();
     if (!user) { location.replace('login.html'); return; }
     signedIn = true;
-    accountState.textContent = user.handle;
-    $('#menu-account').textContent = user.handle;
-    $('#race-rider-name').textContent = user.handle;
+    playerProfile=await playerRequest('profile');
+    applyProfile(playerProfile);
+
     accountLink.textContent = '로그아웃';
     accountLink.href = '#';
     accountLink.dataset.loggedIn = 'true';
@@ -89,7 +90,52 @@ accountLink.addEventListener('click', async (event) => {
   await fetch('/api/auth/logout', { method: 'POST', credentials: 'same-origin' });
   location.replace('login.html');
 });
-refreshAccount();
+
+const playerErrors={NOT_ENOUGH_LUCCI:'루찌가 부족합니다.',ALREADY_OWNED:'이미 보유한 카트입니다.',NICKNAME_TAKEN:'이미 사용 중인 닉네임입니다.',INVALID_NICKNAME:'닉네임은 한글·영문·숫자·밑줄 2~16자로 입력해 주세요.',NICKNAME_UNCHANGED:'현재와 다른 닉네임을 입력해 주세요.',RENAME_TICKET_REQUIRED:'닉네임 변경권이 필요합니다.',DAILY_ALREADY_CLAIMED:'오늘 출석 보상은 이미 받았습니다.'};
+async function playerRequest(action,fields) {
+  const response=await fetch('/api/player/'+action,{credentials:'same-origin',cache:'no-store',...(fields!==undefined?{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(fields)}:{})});
+  const result=await response.json();if(!response.ok)throw new Error(playerErrors[result.error]||result.error||'요청 실패');return result;
+}
+function populateOwnedKarts() {
+  if(!localCatalog||!playerProfile)return;
+  const owned=new Set(playerProfile.inventory.filter(i=>i.kind==='kart').map(i=>i.id));
+  kartChoice.replaceChildren(...localCatalog.karts.filter(k=>owned.has(k.id)).map(k=>{const option=new Option(k.label,k.id);option.disabled=!k.ready;return option;}));
+  kartChoice.value=playerProfile.equippedKart;
+  if(!kartChoice.value)kartChoice.value=[...kartChoice.options].find(o=>!o.disabled)?.value??'';
+  $('#setup-kart-name').textContent=kartChoice.selectedOptions[0]?.textContent??'카트 준비 필요';
+}
+function applyProfile(profile) {
+  playerProfile=profile;accountState.textContent=profile.nickname;
+  $('#menu-account').textContent=$('#race-rider-name').textContent=profile.nickname;
+  $('#player-level').textContent=`Lv.${profile.level}`;$('#lucci').textContent=profile.lucci.toLocaleString('ko-KR');
+  const progress=$('#experience');progress.max=profile.nextLevelExperience-profile.levelStartExperience;progress.value=profile.experience-profile.levelStartExperience;
+  progress.title=`경험치 ${profile.experience} / ${profile.nextLevelExperience}`;
+  $('#daily-reward').disabled=!profile.dailyAvailable;
+  $('#rename-tickets').textContent=profile.inventory.find(i=>i.id==='nickname-change')?.quantity??0;
+  populateOwnedKarts();
+}
+async function openShop() {
+  closeAllDialogs();$('#shop-dialog').classList.remove('hidden');$('#shop-status').textContent='';
+  const shop=await playerRequest('shop');renderShop(shop);
+}
+function renderShop(shop) {
+  const search=$('#shop-search').value.trim().toLowerCase();
+  $('#shop-items').replaceChildren(...shop.items.filter(i=>(i.label+' '+i.id).toLowerCase().includes(search)).map(item=>{
+    const row=document.createElement('div');row.className='shop-row';const label=document.createElement('span');label.textContent=`${item.label} · ${item.price.toLocaleString('ko-KR')} 루찌`;
+    const button=document.createElement('button');button.textContent=item.owned?'보유 중':'구매';button.disabled=item.owned||playerProfile.lucci<item.price;
+    button.addEventListener('click',async()=>{button.disabled=true;try{applyProfile(await playerRequest('purchase',{id:item.id,kind:item.kind}));$('#shop-status').textContent=`${item.label} 구매 완료`;renderShop(await playerRequest('shop'));}catch(error){$('#shop-status').textContent=error.message;button.disabled=false;}});
+    row.append(label,button);return row;
+  }));
+}
+$('#shop-search').addEventListener('input',async()=>{try{renderShop(await playerRequest('shop'));}catch(error){$('#shop-status').textContent=error.message;}});
+$('#daily-reward').addEventListener('click',async()=>{try{applyProfile(await playerRequest('daily',{}));$('#shop-status').textContent='출석 보상 500 루찌를 받았습니다.';renderShop(await playerRequest('shop'));}catch(error){$('#shop-status').textContent=error.message;}});
+$('#rename-form').addEventListener('submit',async event=>{event.preventDefault();try{applyProfile(await playerRequest('rename',{nickname:$('#new-nickname').value}));$('#shop-status').textContent='닉네임을 변경했습니다.';$('#new-nickname').value='';}catch(error){$('#shop-status').textContent=error.message;}});
+async function claimRaceReward(state) {
+  const result=await playerRequest('race/finish',{id:raceTicket,milliseconds:Math.floor(state[24]*1000),completedLaps:Math.max(0,Math.round(state[21])-1)});
+  applyProfile(result.profile);$('#result-reward').textContent=`완주 보상 +${result.reward.lucci} 루찌 · +${result.reward.experience} 경험치`;
+}
+
+const accountReady=refreshAccount();
 
 function syncState() {
   current.set(new Float32Array(wasm.memory.buffer, statePointer, wasm.demo_state_count()));
@@ -153,7 +199,7 @@ async function changeModel(kind) {
   if (!wasm) return;
   const name = kind === 'kart' ? kartChoice.value : characterChoice.value;
   try {
-    if (kind === 'kart') await view.setKart(name);
+    if (kind === 'kart') {applyProfile(await playerRequest('equip',{id:name}));await view.setKart(name);}
     else await view.setCharacter(name);
     view.renderPreview($('#setup-model'));
     view.renderPreview($('#items-model'));
@@ -162,8 +208,13 @@ async function changeModel(kind) {
   }
 }
 
-function startRace() {
+async function startRace() {
   if (!wasm || !signedIn || $('#start').disabled) return;
+  $('#start').disabled=$('#setup-start').disabled=true;
+  try {raceTicket=(await playerRequest('race/start',{track:trackChoice.value})).id;}
+  catch(error){showError(error);return;}
+  finally{$('#start').disabled=$('#setup-start').disabled=false;}
+  rewardSubmitted=false;$('#result-reward').textContent='';
   raceAudio.start(trackChoice.value);
   announcedLap=0;lapNoticeUntil=0;
   wasm.demo_start_race();
@@ -193,7 +244,7 @@ function goLobby() {
 }
 
 function closeAllDialogs() {
-  for (const id of ['single-setup', 'items-dialog', 'tracks-dialog', 'nexon-menu']) {
+  for (const id of ['single-setup', 'items-dialog', 'tracks-dialog', 'nexon-menu','shop-dialog']) {
     document.getElementById(id).classList.add('hidden');
   }
 }
@@ -319,17 +370,22 @@ function draw(state, frameMs) {
     state[19] === 3 ? '완주' : '원본 체크포인트 레이스';
   const currentLap=Math.max(1,Math.round(state[21]));
   if(state[19]===2 && currentLap!==announcedLap && currentLap<=trackLaps[trackChoice.value]) {
-    announcedLap=currentLap;lapNoticeUntil=performance.now()+2200;
-    $('#lap-notice').textContent=lapAnnouncement(currentLap,trackLaps[trackChoice.value]);
+    announcedLap=currentLap;
+    const panel=currentLap>1?lapNotices?.[currentLap===trackLaps[trackChoice.value]?'finallap':`${currentLap}lap`]:null;
+    lapNoticeUntil=panel?performance.now()+panel.fadeIn+panel.hold+panel.fadeOut:0;
+    if(panel){const [x,y,right,bottom]=panel.rect;const node=$('#lap-notice');
+      node.style.backgroundImage=`url("./assets/ui/${panel.image}")`;node.style.backgroundPosition=`-${x}px -${y}px`;
+      node.style.width=`${right-x}px`;node.style.height=`${bottom-y}px`;
+      node.style.left=`calc(50% + ${panel.adjust[0]}px)`;node.style.top=`calc(50% + ${panel.adjust[1]}px)`;
+      node.setAttribute('aria-label',currentLap===trackLaps[trackChoice.value]?'마지막 바퀴!!':`${currentLap}번째 바퀴`);
+      node.animate([{opacity:0,transform:'translate(-50%,-50%) scale(.8)'},{opacity:1,transform:'translate(-50%,-50%) scale(1)',offset:panel.fadeIn/(panel.fadeIn+panel.hold+panel.fadeOut)},{opacity:1,offset:(panel.fadeIn+panel.hold)/(panel.fadeIn+panel.hold+panel.fadeOut)},{opacity:0}],{duration:panel.fadeIn+panel.hold+panel.fadeOut});
+    }
   }
   $('#lap-notice').classList.toggle('hidden',state[19]!==2 || performance.now()>lapNoticeUntil);
-  const kind=Math.round(state[48]||0);
-  $('#boost-status').textContent=boostLabel(kind);
-  $('#boost-status').classList.toggle('hidden',!kind);
-  $('#boost-status').dataset.kind=kind;
   const finished = state[19] === 3;
   $('#race-result').classList.toggle('hidden', !finished);
   if (finished) {
+    if(!rewardSubmitted){rewardSubmitted=true;claimRaceReward(state).catch(error=>{$('#result-reward').textContent=error.message;});}
     $('#result-time').textContent = formatTime(state[24]);
     $('#result-best').textContent = formatTime(state[18]);
   }
@@ -420,6 +476,7 @@ for (const item of document.querySelectorAll('[data-lobby-action]')) {
     if (action === 'select') openSetup();
     if (action === 'kart') { itemType = 'kart'; openItems(); }
     if (action === 'character') { itemType = 'character'; openItems(); }
+    if (action === 'shop') openShop().catch(showError);
   });
 }
 $('#close-selection').addEventListener('click', () => $('#selection-panel').classList.add('hidden'));
@@ -447,6 +504,8 @@ try {
   if (!statePointer) throw new Error('Wasm 초기화 실패');
   // Use the original demo gauge; V1-specific automatic charge is experimental.
   wasm.demo_configure_v1_charger(0, 25, 2);
+  await accountReady;
+  lapNotices=await (await fetch('./assets/ui/lap-notices.json',{cache:'no-store'})).json();
   await loadLocalCatalog();
   current = new Float32Array(wasm.demo_state_count());
   previous = new Float32Array(wasm.demo_state_count());

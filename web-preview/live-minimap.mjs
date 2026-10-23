@@ -51,6 +51,7 @@ export function bitmapProjection(mapping, width, height) {
 export function lapAnnouncement(current, total) {
   return current === total ? '마지막 바퀴!!' : `${current}번째 바퀴`;
 }
+export const minimapRotation = heading => heading-Math.PI/2;
 
 export function createLiveMinimap(image) {
   const canvas=document.createElement('canvas');
@@ -93,8 +94,8 @@ export function createLiveMinimap(image) {
       ctx.clearRect(0,0,canvas.width,canvas.height);
       const position=project(state[0],state[1]);
       const x=canvas.width/2,y=canvas.height/2;
-      ctx.save();ctx.translate(x-position[0]*zoom,y-position[1]*zoom);ctx.scale(zoom,zoom);ctx.drawImage(background,0,0);ctx.restore();
-      ctx.save(); ctx.translate(x,y); ctx.rotate(Math.PI/2-state[2]);
+      ctx.save();ctx.translate(x,y);ctx.rotate(minimapRotation(state[2]));ctx.scale(zoom,zoom);ctx.translate(-position[0],-position[1]);ctx.drawImage(background,0,0);ctx.restore();
+      ctx.save(); ctx.translate(x,y);
       ctx.beginPath(); ctx.moveTo(0,-12); ctx.lineTo(8,9); ctx.lineTo(0,5); ctx.lineTo(-8,9); ctx.closePath();
       ctx.fillStyle='#ffdf00'; ctx.strokeStyle='#151515'; ctx.lineWidth=3; ctx.fill(); ctx.stroke(); ctx.restore();
     },

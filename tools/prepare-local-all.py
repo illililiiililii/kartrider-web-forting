@@ -75,6 +75,9 @@ def main():
    kind,entry=future.result();catalog[kind].append(entry)
    if index%25==0 or index==len(jobs):print(f'Prepared {index}/{len(jobs)} models',flush=True)
  for kind in ['tracks','karts','characters']:
+  if kind=='karts':
+   for entry in catalog[kind]:
+    if entry['id'] in ['practiceV1','cottonV1']:entry['label']={'practiceV1':'연습카트 V1','cottonV1':'코튼 V1'}[entry['id']]
   if kind=='tracks':
    for entry in catalog[kind]:entry['label']=names.get(entry['id'],entry['label'])
   priority=PRIORITY if kind=='tracks' else ['whiteKnightV1','saberV1'] if kind=='karts' else ['dao','bazzi','marid','run_dizini']

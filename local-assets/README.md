@@ -29,7 +29,7 @@ USD ASCII/binary and FBX are detected from file signatures. FBX requires Blender
 (`-BlenderExe`) and is exported into ignored `local-data/fbx-usd/` first; source
 models are never changed. Converted USD uses the existing OpenUSD pipeline.
 
-From the project root (PowerShell; Python with usd-core 25.5.1 and Pillow,
+From the project root (PowerShell; Python with usd-core 25.5.1, Pillow and NumPy 2.3.5,
 .NET 8 SDK and Git for original `.1s` collision extraction):
 
 ```powershell
@@ -82,3 +82,12 @@ ignored. The settings button switches boost blur and remembers that choice.
 Original `ToMinimap` registration is extracted from each map's own `.1s`;
 the enlarged `xt_bigmap.png` pans beneath the vehicle marker. Missing mappings
 retain an explicitly labelled collision schematic, without guessed calibration.
+
+`prepare-local-riders.py` derives a seated web driving pose from retained original
+joints/weights for the supplied character families, preserving the rest mesh.
+`prepare-local-hud.py` copies original lap atlas rectangles and timings from XML.
+The main account store grants only practiceV1 and cottonV1. Other prepared karts
+remain available in the local Lucci shop; prices/rewards are provisional local
+policy in player-store.mjs, not extracted original 5136 economy data. Accounts,
+owned items and balances live in ignored local-data/accounts.sqlite. Back up
+that database separately to retain progress after a PC format.

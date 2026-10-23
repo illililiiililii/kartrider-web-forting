@@ -67,7 +67,7 @@ user's unpacked original files in `local-assets/rhoOut/`:
 .\tools\prepare-local-ui.ps1
 .\tools\prepare-local-audio.ps1
 # Required for model conversion (not for standalone debug physics):
-python -m pip install usd-core==25.5.1 Pillow
+python -m pip install usd-core==25.5.1 Pillow numpy==2.3.5
 # Native collision conversion additionally requires the .NET 8 SDK and Git.
 .\tools\prepare-local-all.ps1
 ```
@@ -80,7 +80,7 @@ with KTRK collision selected by original inherited `property/road` metadata.
 Korean track labels/lap data, builds all valid ToRoad tables and verifies each
 advertised start through Wasm. Unsupported inputs stay disabled with a reason
 in ignored `assets/catalog.json`. It caches unchanged successes and failures.
-.NET 8 SDK, Git, usd-core 25.5.1 and Pillow are required for full preparation. Its checkpoint gates are decoded
+.NET 8 SDK, Git, usd-core 25.5.1, Pillow and NumPy 2.3.5 are required for full preparation. Its checkpoint gates are decoded
 from those tracks' original `.1s` ToRoad records and use 3/3/2 laps
 respectively. The web track, collision triangles, and `.1s` gates are all
 enlarged tenfold relative to the earlier prototype while the kart/character

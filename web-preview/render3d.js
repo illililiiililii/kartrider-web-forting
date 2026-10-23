@@ -90,8 +90,8 @@ export function createPreviewRenderer(canvas) {
   let trackRadius = 100;
   let originalWheels = [];
   // Presentation-only enlargement. Native C keeps its source kart geometry.
-  const kartVisualScale = 1.25 * 1.5;
-  const lobbyVisualScale = 0.75 * 1.5;
+  const kartVisualScale = 1.25 * 1.5 * 0.6;
+  const lobbyVisualScale = 0.75 * 1.5 * 0.6;
   let originalBase = 0;
   const shell = material(0x33b6e4, 0.32, 0.32);
   const dark = material(0x192936, 0.18, 0.6);
@@ -127,7 +127,7 @@ export function createPreviewRenderer(canvas) {
   async function loadAsset(name, type) {
     const usd = type !== 'kart' || !['whiteKnight1','cotton11'].includes(name);
     const path = usd ? `./assets/usd/${name}/model.mesh.json` : `./assets/${name}.mesh.json`;
-    const response = await fetch(path);
+    const response = await fetch(path,{cache:'no-store'});
     if (!response.ok) throw new Error(`원본 모델 변환 파일 없음 (${response.status})`);
     const data = await response.json();
     if (!['p5136-preview-mesh-v1', 'p5136-usd-mesh-v1'].includes(data.format) || !Array.isArray(data.parts)) {
@@ -146,6 +146,8 @@ export function createPreviewRenderer(canvas) {
       if (type === 'kart' && /^mod/i.test(partName) && !/^mod1b/i.test(partName)) continue;
       const geometry = new THREE.BufferGeometry();
       geometry.setAttribute('position', new THREE.Float32BufferAttribute(part.positions, 3));
+      if(type==='character'&&part.seatedPositions)geometry.userData.seated=part.seatedPositions;
+      if(type==='character')geometry.userData.standing=part.positions;
       if (part.uvs) geometry.setAttribute('uv', new THREE.Float32BufferAttribute(part.uvs, 2));
       geometry.setIndex(part.indices);
       geometry.computeVertexNormals();
@@ -182,7 +184,7 @@ export function createPreviewRenderer(canvas) {
         : null;
       const mesh = new THREE.Mesh(geometry, new THREE.MeshStandardMaterial({
         color: characterTint ?? (part.baseColor ? new THREE.Color(...part.baseColor) : texture ? 0xffffff : color), map: texture, alphaMap,
-        side: part.doubleSided ? THREE.DoubleSide : THREE.FrontSide,
+        side: type==='track' || part.doubleSided ? THREE.DoubleSide : THREE.FrontSide,
         transparent: Boolean(part.alphaBlend), depthWrite: !part.alphaBlend,
         opacity: part.opacity ?? 1,
         roughness: part.roughness ?? 0.8, metalness: part.metalness ?? 0.08,
@@ -213,7 +215,7 @@ export function createPreviewRenderer(canvas) {
     group.updateMatrixWorld(true);
     const modelBounds = new THREE.Box3().setFromObject(group);
     originalBase = -modelBounds.min.y;
-    raceEffects.mountKart(modelBounds,kartVisualScale);
+    raceEffects.mountKart(modelBounds,kartVisualScale,0.6);
     group.scale.setScalar(lobbyMode ? lobbyVisualScale : kartVisualScale);
     group.position.y = originalBase * (lobbyMode ? lobbyVisualScale : kartVisualScale);
     originalWheels = nextWheels;
@@ -303,6 +305,11 @@ export function createPreviewRenderer(canvas) {
 
   function setLobbyMode(enabled) {
     lobbyMode = enabled;
+    if(originalCharacter)originalCharacter.traverse(node=>{
+      if(!node.isMesh || node.name==='opaque-alpha-depth')return;
+      const points=node.geometry.userData[enabled?'standing':'seated'];
+      if(points){node.geometry.attributes.position.array.set(points);node.geometry.attributes.position.needsUpdate=true;node.geometry.computeVertexNormals();node.geometry.computeBoundingSphere();}
+    });
     scene.background = enabled ? null : skyBackground;
     if (original) {
       const scale = enabled ? lobbyVisualScale : kartVisualScale;
@@ -324,8 +331,8 @@ export function createPreviewRenderer(canvas) {
       if (enabled) {
         lobbyCharacter = originalCharacter.clone(true);
         lobbyCharacter.visible = true;
-        lobbyCharacter.scale.setScalar(0.80);
-        lobbyCharacter.position.set(-1.4, -0.05, 0.45);
+        lobbyCharacter.scale.setScalar(0.80*0.6);
+        lobbyCharacter.position.set(-1.4*0.6, -0.05, 0.45*0.6);
         lobbyCharacter.rotation.y = Math.PI;
         kart.add(lobbyCharacter);
       }
@@ -385,7 +392,10 @@ export function createPreviewRenderer(canvas) {
       preview = { renderer: miniRenderer, scene: miniScene, camera: miniCamera, display: null };
       previews.set(previewCanvas, preview);
     }
-    if (preview.display) preview.scene.remove(preview.display);
+    if (preview.display) {
+      preview.display.traverse(node=>{if(node.userData.previewGeometry)node.geometry.dispose();});
+      preview.scene.remove(preview.display);
+    }
     const display = new THREE.Group();
     const kartCopy = original.clone(true);
     kartCopy.scale.setScalar(lobbyVisualScale);
@@ -393,6 +403,7 @@ export function createPreviewRenderer(canvas) {
     display.add(kartCopy);
     if (originalCharacter) {
       const characterCopy = originalCharacter.clone(true);
+      characterCopy.traverse(node=>{if(node.isMesh&&node.geometry.userData.seated){node.geometry=node.geometry.clone();node.userData.previewGeometry=true;node.geometry.attributes.position.array.set(node.geometry.userData.seated);node.geometry.attributes.position.needsUpdate=true;node.geometry.computeVertexNormals();}});
       characterCopy.visible = true;
       characterCopy.scale.setScalar(0.42 * lobbyVisualScale);
       characterCopy.position.set(-0.25 * lobbyVisualScale, 0.5 * lobbyVisualScale, 0);
@@ -429,7 +440,7 @@ export function createPreviewRenderer(canvas) {
     // 0.5 compression), not at the initial airborne spawn height of +0.5.
     // originalBase already mounts the visual wheel bottoms at that origin.
     kart.position.set(x, state[14] || 0, -y);
-    if (lobbyMode) kart.rotation.y = heading + Math.PI / 2;
+    if (lobbyMode) kart.rotation.y = heading - Math.PI / 2;
     else applyKartOrientation(kart, state);
     if (originalCharacter && !lobbyMode) {
       // Pose the imported original mesh as a single rigid rider until its

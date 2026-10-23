@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>카트라이더 5136 · 웹 포트</title>
-  <link rel="stylesheet" href="game.css?v=v1-source">
+  <link rel="stylesheet" href="game.css?v=player-profile-v1">
 </head>
 <body>
   <main class="game-shell">
@@ -14,8 +14,8 @@
     </div>
     <canvas id="world" aria-label="카트라이더 3D 게임"></canvas>
     <section id="lobby" class="lobby" aria-label="로비">
-      <div class="player-bar"><span id="account-state">로그인 확인 중</span><a id="account-link" href="login.html">로그인</a></div>
-      <div class="currency-bar" role="img" aria-label="원작 루찌 표시 영역"></div>
+      <div class="player-bar"><span id="player-level">Lv.1</span><span id="account-state">로그인 확인 중</span><a id="account-link" href="login.html">로그인</a><progress id="experience" value="0" max="100" aria-label="레벨 경험치"></progress></div>
+      <div class="currency-bar" aria-label="보유 루찌"><span id="lucci">0</span></div>
       <div class="lobby-content">
         <div class="mode-choice">
           <img class="competition-ribbon" src="assets/ui/zeta/kr/stage/mainMenu/타임어택경쟁전_1.png" alt="타임어택 경쟁전">
@@ -55,7 +55,7 @@
       <div id="nexon-menu" class="nexon-menu hidden" role="menu"><strong id="menu-account"></strong><button data-menu-action="single">싱글플레이</button><button data-menu-action="items">내 아이템</button><button data-menu-action="tracks">트랙 선택</button><button data-menu-action="logout">로그아웃</button></div>
       <nav class="taskbar" aria-label="원작 작업표시줄">
         <div class="taskbar-left"><button class="bottom-icon allmenu" data-lobby-action="menu" aria-label="넥슨 메뉴 열기"></button><button class="bottom-icon home" data-lobby-action="home" aria-label="로비 홈"></button><img src="assets/ui/gui/window/menu/btn_menuReward_1.png" alt="선물함 (미구현)"></div>
-        <div class="taskbar-center"><img src="assets/ui/gui/window/menu/btn_mainMulti_1@zz.png" alt="멀티플레이 (미구현)"><button class="bottom-main single" data-lobby-action="select" aria-label="싱글플레이 선택"></button><button class="bottom-main myroom" data-lobby-action="character" aria-label="캐릭터 선택"></button><img src="assets/ui/gui/window/menu/btn_mainShop_1@zz.png" alt="상점 (미구현)"><button class="bottom-main tuning" data-lobby-action="kart" aria-label="카트 선택"></button><img src="assets/ui/gui/window/menu/클럽_01@zz.png" alt="클럽 (미구현)"><img src="assets/ui/gui/window/menu/kartPass_lobby_passShortcut_1@zz.png" alt="카트 패스 (미구현)"></div>
+        <div class="taskbar-center"><img src="assets/ui/gui/window/menu/btn_mainMulti_1@zz.png" alt="멀티플레이 (미구현)"><button class="bottom-main single" data-lobby-action="select" aria-label="싱글플레이 선택"></button><button class="bottom-main myroom" data-lobby-action="character" aria-label="캐릭터 선택"></button><button class="shop-open" data-lobby-action="shop" aria-label="상점"><img src="assets/ui/gui/window/menu/btn_mainShop_1@zz.png" alt=""></button><button class="bottom-main tuning" data-lobby-action="kart" aria-label="카트 선택"></button><img src="assets/ui/gui/window/menu/클럽_01@zz.png" alt="클럽 (미구현)"><img src="assets/ui/gui/window/menu/kartPass_lobby_passShortcut_1@zz.png" alt="카트 패스 (미구현)"></div>
         <div class="taskbar-right"><img src="assets/ui/gui/window/menu/btn_menuQuest_1.png" alt="퀘스트 (미구현)"><img src="assets/ui/gui/window/menu/btn_menuChatting_1.png" alt="채팅 (미구현)"><img src="assets/ui/gui/window/menu/btn_menuMessenger_1.png" alt="메신저 (미구현)"><img src="assets/ui/gui/window/menu/btn_menuSearch_1.png" alt="라이더 검색 (미구현)"><button class="settings-icon" data-open-settings aria-label="설정"><img src="assets/ui/gui/window/menu/btn_menuOption_1.png" alt=""></button></div>
       </nav>
     </section>
@@ -63,20 +63,28 @@
       <div class="nitro-inventory"><span id="nitro-count" aria-label="보유 부스터 0개"></span></div>
       <div class="race-standing"><div class="rankboard"><span id="rank-digit" class="big-digit"></span><span class="ordinal"></span><span class="rank-divider"></span><span id="rider-count" class="small-digit"></span></div><div class="rider-row"><span>1</span><strong id="race-rider-name"></strong></div></div>
       <div class="time-panel"><div class="lap-readout"><strong id="lap-number">1</strong><span>/</span><span id="lap-total">3</span></div><div class="time-line"><span>TIME</span><strong id="race-time">00:00:00</strong></div><div class="time-line"><span>BEST</span><strong id="best-time">00:00:00</strong></div><span id="lap" class="visually-hidden">연습 주행</span><div id="timer" class="visually-hidden" aria-label="주행 시간 00:00:00"></div></div>
-      <div id="lap-notice" class="lap-notice hidden" aria-live="polite"></div><div id="boost-status" class="boost-status hidden" role="status"></div>
+      <div id="lap-notice" class="lap-notice hidden" aria-live="polite"></div>
       <div id="countdown" class="countdown" aria-live="polite"></div>
       <div class="race-actions"><button class="race-icon settings-icon" data-open-settings aria-label="설정"><img src="assets/ui/gui/window/menu/btn_menuOption_1.png" alt=""></button><button id="back-lobby" class="race-icon home" aria-label="로비로 돌아가기" title="로비로 돌아가기"></button><button id="reset" class="race-icon previous" aria-label="체크포인트 리셋 (R)" title="체크포인트 리셋 (R)"></button></div>
       <div class="map-panel"><span class="map-marker">M</span><img id="minimap" alt="선택한 원본 트랙 미니맵"><span id="map-label" class="visually-hidden">비치 I01</span><div class="map-footer">충돌　<span id="collision-count">0</span>회 | 부스터　<span id="boost-use-count">0</span>회</div></div>
       <div class="dashboard"><div class="booster"><div class="gauge-rail"><i id="gauge"></i></div></div><div class="tacho"><div id="speed" class="speed-digits" aria-label="속도 0 km/h">0</div></div></div>
       <div id="race-result" class="race-result hidden" role="dialog" aria-label="주행 결과" aria-live="polite">
         <div class="result-times"><div class="result-row"><img src="assets/ui/stage/speedIndiGame/laptime_time@zz.png" alt="TIME"><span id="result-time">00:00:00</span></div><div class="result-row"><img src="assets/ui/stage/speedIndiGame/laptime_best@zz.png" alt="BEST"><span id="result-best">00:00:00</span></div></div>
-        <div class="result-buttons"><button id="result-retry" aria-label="다시 달리기" title="다시 달리기"></button><button id="result-lobby" aria-label="로비로 돌아가기" title="로비로 돌아가기"></button></div>
+        <div id="result-reward" class="result-reward" role="status"></div><div class="result-buttons"><button id="result-retry" aria-label="다시 달리기" title="다시 달리기"></button><button id="result-lobby" aria-label="로비로 돌아가기" title="로비로 돌아가기"></button></div>
       </div>
       <div class="touch-controls" aria-label="터치 조작"><button data-control="left" class="touch-button left" aria-label="왼쪽"></button><button data-control="right" class="touch-button right" aria-label="오른쪽"></button><button data-control="throttle" class="touch-button throttle" aria-label="가속"></button><button data-control="brake" class="touch-button brake" aria-label="후진"></button><button data-control="drift" class="touch-button drift" aria-label="드리프트"></button><button data-control="boost" class="touch-button boost" aria-label="부스터"></button></div>
     </section>
+    <div id="shop-dialog" class="original-modal shop-window hidden" role="dialog" aria-label="루찌 상점">
+      <header class="original-title">루찌 상점<button class="dialog-close" data-close="shop-dialog" aria-label="상점 닫기"></button></header>
+      <div class="shop-tools"><input id="shop-search" aria-label="상점 검색" placeholder="카트·아이템 검색"><button id="daily-reward">출석 보상 받기</button></div>
+      <small class="shop-policy">현재 카트는 외형만 다르고 주행 성능은 같습니다. 완주 보상: 100 루찌 · 50 경험치.</small>
+      <div id="shop-items" class="shop-items"></div>
+      <form id="rename-form"><label for="new-nickname">닉네임 변경권 <span id="rename-tickets">0</span>개</label><input id="new-nickname" aria-label="새 닉네임" minlength="2" maxlength="16" required><button>변경권 사용</button><small>라이더명만 변경됩니다. 로그인 아이디는 그대로입니다.</small></form>
+      <div id="shop-status" role="status"></div>
+    </div>
     <div id="settings-dialog" class="effect-settings hidden" role="dialog" aria-label="설정"><strong>설정</strong><label><input id="boost-blur-setting" type="checkbox" checked> 부스터 블러</label><button data-close="settings-dialog">닫기</button></div>
     <div id="error" class="error hidden" role="alert"></div>
   </main>
-  <script type="module" src="game.js?v=race-effects57"></script>
+  <script type="module" src="game.js?v=player-profile-v1"></script>
 </body>
 </html>

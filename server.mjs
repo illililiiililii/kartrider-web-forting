@@ -6,6 +6,7 @@ import { readFile, stat } from 'node:fs/promises';
 import { mkdirSync } from 'node:fs';
 import { dirname, extname, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import {createPlayerStore} from './player-store.mjs';
 
 const scrypt = promisify(scryptCallback);
 const webRoot = resolve(dirname(fileURLToPath(import.meta.url)), 'web-preview');
@@ -61,6 +62,8 @@ export function createKartServer({
   root = webRoot,
   databasePath = resolve(webRoot, '..', 'local-data', 'accounts.sqlite'),
   secureCookies = false,
+  catalogPath = resolve(webRoot,'assets','catalog.json'),
+  now = Date.now,
 } = {}) {
   const resolvedRoot = resolve(root);
   mkdirSync(dirname(databasePath), { recursive: true });
@@ -81,6 +84,7 @@ export function createKartServer({
   const addUser = database.prepare('INSERT INTO users VALUES (?, ?, ?, ?, ?)');
   const addSession = database.prepare('INSERT INTO sessions VALUES (?, ?, ?)');
   const deleteSession = database.prepare('DELETE FROM sessions WHERE token_hash = ?');
+  const players=createPlayerStore(database,{catalogPath,now});
 
   function currentUser(request) {
     const token = cookieToken(request);
@@ -148,6 +152,24 @@ export function createKartServer({
     try {
       const pathname = new URL(request.url ?? '/', 'http://localhost').pathname;
       if (pathname.startsWith('/api/auth/')) return await auth(request, response, pathname);
+      if(pathname.startsWith('/api/player/')) {
+        const user=currentUser(request);
+        if(!user)return json(response,401,{error:'SIGN_IN_REQUIRED'});
+        const action=pathname.slice('/api/player/'.length);
+        if(request.method==='GET'&&['profile','shop'].includes(action)) {
+          try{return json(response,200,players[action](user));}
+          catch(error){return json(response,error.status??500,{error:error.status?error.message:'SERVER_ERROR'});}
+        }
+        const mutations={purchase:'purchase',equip:'equip',rename:'rename',daily:'daily','race/start':'start','race/finish':'finish'};
+        if(request.method!=='POST'||!mutations[action])return json(response,405,{error:'METHOD_NOT_ALLOWED'});
+        let allowed=request.headers['sec-fetch-site']!=='cross-site';
+        try{if(request.headers.origin)allowed=allowed&&new URL(request.headers.origin).host===request.headers.host;}catch{allowed=false;}
+        if(!allowed)return json(response,403,{error:'ORIGIN_DENIED'});
+        try {
+          const fields=await bodyJson(request);
+          return json(response,200,players[mutations[action]](user,fields));
+        } catch(error) {const malformed=['INVALID_JSON','BODY_TOO_LARGE'].includes(error.message);return json(response,error.status??(malformed?400:500),{error:error.status?error.message:malformed?'INVALID_REQUEST':'SERVER_ERROR'});}
+      }
       if (request.method !== 'GET' && request.method !== 'HEAD') {
         return json(response, 405, { error: 'METHOD_NOT_ALLOWED' });
       }
