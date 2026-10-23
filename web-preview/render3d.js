@@ -1,5 +1,5 @@
 import * as THREE from './vendor/three.module.js';
-import { readChasePose } from './camera-pose.mjs';
+import { readChasePose,pullCameraTowardRider } from './camera-pose.mjs';
 import { mountWheel } from './wheel-basis.mjs';
 import { applyKartOrientation } from './kart-pose.mjs';
 import { collisionPositions } from './collision-wireframe.mjs';
@@ -425,7 +425,7 @@ export function createPreviewRenderer(canvas) {
     if (!original || !previewCanvas) return;
     let preview = previews.get(previewCanvas);
     if (!preview) {
-      const miniRenderer = new THREE.WebGLRenderer({ canvas: previewCanvas, antialias: true, alpha: true });
+      const miniRenderer = new THREE.WebGLRenderer({ canvas: previewCanvas, antialias: true, alpha: true, preserveDrawingBuffer:true });
       miniRenderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
       miniRenderer.outputColorSpace = THREE.SRGBColorSpace;
       const miniScene = new THREE.Scene();
@@ -457,6 +457,7 @@ export function createPreviewRenderer(canvas) {
     }
     preview.scene.add(display);
     preview.display = display;
+    display.updateMatrixWorld(true);
     const bounds = new THREE.Box3().setFromObject(display);
     const center = bounds.getCenter(new THREE.Vector3());
     const radius = bounds.getSize(new THREE.Vector3()).length() * 0.5;
@@ -575,7 +576,7 @@ export function createPreviewRenderer(canvas) {
       if(originalCharacter&&riderMounts?.head){
         kart.updateMatrixWorld(true);
         const riderFocus=originalCharacter.localToWorld(new THREE.Vector3(...riderMounts.head));
-        desired.lerp(riderFocus,.25); // User-requested close view; source FOV/filter stay intact.
+        desired.fromArray(pullCameraTowardRider(pose.position,riderFocus.toArray()));
       }
       cameraDirection.fromArray(pose.forward).normalize();
       targetLook.copy(desired).add(cameraDirection);

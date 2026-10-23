@@ -7,3 +7,9 @@ export function readChasePose(state) {
     fov: state[31],
   };
 }
+
+// Presentation only: preserve the C view direction/up/FOV and move a quarter
+// of the distance to the rider. No extra camera filter or physics adjustment.
+export function pullCameraTowardRider(position,rider,amount=.25){
+  return position.map((value,index)=>value+(rider[index]-value)*amount);
+}

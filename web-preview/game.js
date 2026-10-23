@@ -1,4 +1,4 @@
-import { createPreviewRenderer } from './render3d.js?v=original-visuals-v2';
+import { createPreviewRenderer } from './render3d.js?v=seated-rider-thumbnails-v3';
 import {mountV1Dashboard} from './v1-dashboard.mjs';
 import { createLiveMinimap } from './live-minimap.mjs';
 import { createRaceAudio } from './race-audio.mjs';
@@ -259,13 +259,33 @@ function openItems() {
   view.renderPreview($('#items-model'));
 }
 
+let itemImages;
 function renderItems() {
+  itemImages?.disconnect();
+  const kind=itemType;
+  itemImages=new IntersectionObserver(entries=>{
+    for(const entry of entries){
+      const button=entry.target;
+      if(!entry.isIntersecting || button.dataset.loading)return;
+      button.dataset.loading='true';
+      const image=button.querySelector('img'),note=button.querySelector('.item-image-status');
+      view.renderAssetThumbnail(button.dataset.model,kind,()=>button.isConnected&&!$('#items-dialog').classList.contains('hidden')).then(url=>{
+        if(!url||!button.isConnected)return;
+        image.src=url;image.hidden=false;note.hidden=true;itemImages?.unobserve(button);
+      }).catch(()=>{if(button.isConnected)note.textContent='미리보기 불러오기 실패';});
+    }
+  },{root:$('#item-cards'),rootMargin:'100px'});
   const select = itemType === 'kart' ? kartChoice : characterChoice;
   $('#item-cards').replaceChildren(...[...select.options].map((option) => {
     const button = document.createElement('button');
     button.className = `item-card ${select.value === option.value ? 'selected' : ''}`;
     button.disabled=option.disabled;
-    button.textContent = option.textContent;
+    button.dataset.model=option.value;
+    const image=document.createElement('img');image.alt=option.textContent+' 원본 3D 미리보기';image.hidden=true;
+    const label=document.createElement('span');label.textContent=option.textContent;
+    const note=document.createElement('small');note.className='item-image-status';note.textContent=option.disabled?'모델 준비 필요':'미리보기 불러오는 중…';
+    button.append(image,note,label);
+    if(!option.disabled)itemImages.observe(button);
     button.addEventListener('click', async () => {
       select.value = option.value;
       await changeModel(itemType);
