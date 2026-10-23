@@ -1,4 +1,4 @@
-# Recovery status — 2026-10-22
+# Recovery status — 2026-10-23
 
 The latest recovery entry in `DEVELOPMENT_PROGRESS.md` supersedes historical
 camera/source-path/minimap notes below. Use `local-assets/README.md` for inputs.
@@ -158,8 +158,9 @@ not permanent removal. Other opaque/transparent material mismatches may remain.
   `kart_track_texture.c` is exercised with KTEX, but browser texture drawing
   still uses converted PNGs; demo Win32 drawing, sky, skid-mark and sound
   playback code outside `src` is not integrated. The chase camera consumes
-  `kart_camera.c` position, orientation and FOV (with web occlusion shortening), and the P5136 kart collider uses
-  a web-specific 2.08×3.04 m footprint instead of demo `cotten5` geometry.
+  `kart_camera.c` position, orientation and FOV directly. Full chassis quaternion
+  is rendered too. The main game uses original cotten5 geometry, with V1 auto
+  charge and stored steering overrides disabled; model sizes are visual only.
   Track collision now uses original `.1s` inherited `property/road` tags.
   Next: investigate prolonged wall-contact sinking reproduced in native C;
   complete route/underpass QA and unmatched animated USD object alignment.

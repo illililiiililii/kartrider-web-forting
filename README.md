@@ -13,7 +13,7 @@ sheet, timer-number sheet, V1 N₂O slot/gauge and tachometer, and taskbar icons
 native account fields are text, not newly drawn UI art. The account-entry
 layout remains provisional because an original account-login screen was not
 found in the extracted files.
-All three converted original tracks use original `.1s` road-tagged collision
+Validated local tracks use original `.1s` road-tagged collision
 triangles. Full wall-contact stability remains under investigation. Their original `.1s` ToRoad checkpoint routes, lap counts and a
 basic finish result are connected to C/Wasm. Multiplayer is not implemented.
 
@@ -30,10 +30,9 @@ and an adapter for original `.1s` road-tagged triangle collision. The demo's
 200-unit/two-slot hypothesis, course-gate graph, warp, recovery, and sound
 driving laws are linked. This is **2004 demo physics**, not verified P5136
 physics. The rendered chase camera now consumes the C position, forward/up vectors and
-full 75–110 degree FOV; C performs the follow smoothing. Web occlusion may
-shorten its position. Lobby and top-down presentation remain separate. The P5136
-kart's render scale and matching collision footprint also differ from the
-demo's `cotten5` body. These are known differences, not claimed parity.
+full 75–110 degree FOV; C performs the follow smoothing. The race camera position is applied without a web occlusion override. Lobby and top-down presentation remain separate. Kart and character presentation is enlarged by 1.5x, while the physics keeps
+the source cotten5 geometry and dynamics. Kart selection changes the model,
+not invented V1 dynamics. Input handedness is converted once at the browser boundary.
 Its Windows renderer/playback and experimental multi-gear sound are
 not part of the physics Wasm. The demo's 2004 course tables are not silently
 applied to the 5136 tracks: local 5136 ToRoad gates are decoded separately
@@ -70,17 +69,23 @@ user's unpacked original files in `local-assets/rhoOut/`:
 # Required for model conversion (not for standalone debug physics):
 python -m pip install usd-core==25.5.1 Pillow
 # Native collision conversion additionally requires the .NET 8 SDK and Git.
-.\tools\prepare-local-usd.ps1
+.\tools\prepare-local-all.ps1
 ```
 
 The locally copied artwork, 5136-derived C gate table, and collision outputs
 are Git-ignored. The new
 main page drives on `beach_I01`, `beach_I02`, and `village_R01` visual meshes
-with KTRK collision selected by original inherited `property/road` metadata. Its checkpoint gates are decoded
+with KTRK collision selected by original inherited `property/road` metadata.
+`prepare-local-all.ps1` discovers every supplied USDA model, retains original
+Korean track labels/lap data, builds all valid ToRoad tables and verifies each
+advertised start through Wasm. Unsupported inputs stay disabled with a reason
+in ignored `assets/catalog.json`. It caches unchanged successes and failures.
+.NET 8 SDK, Git, usd-core 25.5.1 and Pillow are required for full preparation. Its checkpoint gates are decoded
 from those tracks' original `.1s` ToRoad records and use 3/3/2 laps
 respectively. The web track, collision triangles, and `.1s` gates are all
 enlarged tenfold relative to the earlier prototype while the kart/character
-and its C body remain the same size. This deliberately changes the prototype
+and its C body originally remained the same size. The later 1.5x model-only
+enlargement leaves native physics unchanged. This deliberately changes the prototype
 world scale; it is **not** a claim about original 5136 physical metres. The
 original-scale start heights had agreed with KTRK within 0.005 m before this
 uniform enlargement. The square test course
@@ -105,9 +110,10 @@ is visual only and does not pretend to be that demo kart. The start has the
 demo's 7-second countdown and ±100 ms acceleration-press boost window. The
 square debug test course is not an original P5136 race. The demo gauge rule is
 explicitly a hypothesis, not a recovered original charging formula. The two
-selectable V1 karts additionally use a configurable passive charger in the
-C/Wasm bridge: grounded forward speed above 25 m/s adds 2 gauge units/s.
-These values are provisional, not recovered P5136 constants. The visible lap
+V1 passive-charger API remains experimental and is disabled in the main game;
+the original demo SLIP gauge is used. Stored debug steering-angle settings do
+not override the main game's source preset. Both input paths use the original
+last-key ownership; aliases and touch inputs share that same state. The visible lap
 totals come from original `track@zz.xml`; original `.1s` ToRoad checkpoints
 drive the Wasm lap and finish state. On imported tracks, `R` requests a
 course checkpoint respawn; deep-fall recovery can still use a temporary
@@ -153,7 +159,7 @@ so this evidence applies to non-drift steering only.
 .\tools\test-5136-course.ps1
 .\tools\test-physics-parity.ps1
 python tools/test-usd-conversion.py
-node --test tools\test-auth-server.mjs tools\test-demo-physics.mjs tools\test-frame-interpolation.mjs tools\test-local-ui-assets.mjs tools\test-recovery.mjs tools\test-wheel-basis.mjs tools\test-track-collision.mjs tools\test-local-models.mjs
+node --test tools\test-auth-server.mjs tools\test-demo-physics.mjs tools\test-frame-interpolation.mjs tools\test-local-ui-assets.mjs tools\test-recovery.mjs tools\test-wheel-basis.mjs tools\test-track-collision.mjs tools\test-local-models.mjs tools\test-demo-input.mjs tools\test-kart-pose.mjs tools\test-local-catalog.mjs
 ```
 
 The recovery run passes 17 Node checks and one Python format check; eight

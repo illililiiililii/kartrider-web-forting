@@ -18,7 +18,7 @@
 static KartSimulationState kart;
 static KartChaseCameraFollow chase;
 static KartSimulationWorld world;
-static float telemetry[43];
+static float telemetry[47];
 static KartGaugeState gauge;
 static KartGaugeConfig gauge_config;
 /* V1's passive charger is a 5136-era feature absent from the 2004 demo.
@@ -33,12 +33,14 @@ static KartSteeringInputState steering_keys;
 static KartCourse course;
 /* This table is generated locally from the user's 5136 track.1s files. */
 extern const KartCourseAsset *kart_5136_course_asset_at(unsigned int index);
+extern unsigned int kart_5136_course_laps(unsigned int index);
 float demo_track_ground_height(float x, float y, float top);
 static KartCourseProgress course_progress;
 static bool course_enabled;
 static unsigned int clock_ms;
 static unsigned int respawn_arm_ms;
-static bool previous_throttle, previous_boost;
+static bool previous_throttle;
+static bool boost_press_allowed;
 static float race_phase, countdown, lap, next_gate, race_time, finish_time;
 static float wall_hits;
 static bool wall_contact;
@@ -94,15 +96,8 @@ static unsigned int body_query(void *unused, const KartSimulationState *state,
 
 static void reset_at(float x, float y, float heading) {
     const KartDemoKartSpec *spec = kart_demo_kart_at(preset_index);
-    KartSimulationGeometry web_geometry = spec ? spec->geometry : (KartSimulationGeometry){0};
-    /* The converted P5136 kart is about 1.66 m wide and 2.43 m long at
-       scale 1.0. Keep its collidable footprint aligned with the 1.25x mesh. */
-    if (track_enabled) {
-        web_geometry.half_width = 1.04f;
-        web_geometry.half_length = 1.52f;
-    }
     kart_simulation_init(&kart, spec ? &spec->dynamics : NULL,
-                         &web_geometry);
+                         spec ? &spec->geometry : NULL);
     kart.position = (KartVec3){x, y, track_enabled ? spawn_z + 0.5f : 0.5f};
     /* Identity faces world -Y; +pi/2 rotates the forward axis to +X. */
     const float angle = heading + 1.5707963267948966f;
@@ -121,7 +116,8 @@ static void reset_at(float x, float y, float heading) {
     kart_steering_input_reset(&steering_keys);
     clock_ms = 0;
     respawn_arm_ms = 0;
-    previous_throttle = previous_boost = false;
+    previous_throttle = false;
+    boost_press_allowed = false;
     wall_hits = 0.0f;
     wall_contact = false;
     last_wall_hit_ms = 0;
@@ -135,9 +131,9 @@ static void reset_at(float x, float y, float heading) {
 
 static void update_race(float dt) {
     if (race_phase == 1.0f) {
-        const KartCountdownCues cues = kart_countdown_update(&race_countdown, clock_ms);
-        countdown = (float)cues.remaining_ms * 0.001f;
-        if (cues.released) race_phase = 2.0f;
+        countdown = race_countdown.released ? 0.0f :
+            (float)(race_countdown.deadline_ms - clock_ms) * 0.001f;
+        if (race_countdown.released) race_phase = 2.0f;
         return;
     }
     if (race_phase != 2.0f) return;
@@ -265,6 +261,14 @@ static void publish(unsigned int elapsed_ms, KartSimulationStepResult step) {
     telemetry[37] = sound_state.motor_volume;
     telemetry[38] = sound_state.start_crash ? sound_state.crash_volume : 0.0f;
     telemetry[39] = course_enabled ? (float)course_progress.node : -1.0f;
+    telemetry[43] = q.w;
+    telemetry[44] = q.x;
+    telemetry[45] = q.y;
+    telemetry[46] = q.z;
+}
+
+__attribute__((export_name("demo_state_count"))) unsigned int demo_state_count(void) {
+    return sizeof telemetry / sizeof telemetry[0];
 }
 
 __attribute__((export_name("demo_new"))) float *demo_new(void) {
@@ -293,6 +297,19 @@ __attribute__((export_name("demo_start_race"))) void demo_start_race(void) {
 __attribute__((export_name("demo_set_steer_angle"))) void demo_set_steer_angle(float degrees) {
     if (isfinite(degrees) && degrees >= 1.0f && degrees <= 30.0f)
         kart.config.max_steer_angle_deg = degrees;
+}
+
+__attribute__((export_name("demo_config_value"))) float demo_config_value(unsigned int field) {
+    switch (field) {
+    case 0: return kart.geometry.half_width;
+    case 1: return kart.geometry.half_length;
+    case 2: return kart.geometry.suspension_range;
+    case 3: return kart.grounded_drag_scale;
+    case 4: return kart.config.mass;
+    case 5: return kart.config.max_steer_angle_deg;
+    case 6: return kart.config.steer_constraint;
+    default: return NAN;
+    }
 }
 
 __attribute__((export_name("demo_set_preset"))) void demo_set_preset(unsigned int index) {
@@ -333,11 +350,11 @@ __attribute__((export_name("demo_set_course"))) unsigned int demo_set_course(uns
 __attribute__((export_name("demo_set_5136_course"))) unsigned int demo_set_5136_course(
     unsigned int index) {
     const KartCourseAsset *asset = kart_5136_course_asset_at(index);
-    if (!track_enabled || !asset || index > 2u) return 0u;
+    if (!track_enabled || !asset) return 0u;
     kart_course_free(&course);
     course_enabled = false;
     if (!kart_course_build(&course, asset)) return 0u;
-    kart_course_set_lap_count(&course, index == 2u ? 2u : 3u);
+    kart_course_set_lap_count(&course, kart_5136_course_laps(index));
     KartVec3 start;
     KartQuat orientation;
     kart_course_start_pose(&course, 0u, &start, &orientation);
@@ -419,8 +436,12 @@ __attribute__((export_name("demo_track_load"))) unsigned int demo_track_load(
     kart_course_free(&course);
     course_enabled = false;
     kart_track_scene_free(&track_scene);
-    return kart_track_scene_load_memory(&track_scene, data, size) ?
-        track_scene.total_triangle_count : 0u;
+    if (!kart_track_scene_load_memory(&track_scene, data, size)) return 0u;
+    // Keep the adapter's horizontal origin, but recover the original fall
+    // limit from the lowest scene geometry instead of spawn height - 20.
+    track_spec.minimum.z = track_scene.minimum[2];
+    track_spec.maximum.z = track_scene.maximum[2];
+    return track_scene.total_triangle_count;
 }
 
 __attribute__((export_name("demo_track_ground_height"))) float demo_track_ground_height(
@@ -468,14 +489,7 @@ __attribute__((export_name("demo_step"))) void demo_step(
     clock_ms += elapsed_ms;
     const bool throttle_pressed = throttle != 0;
     const bool boost_pressed = boost != 0;
-    if (race_phase == 1.0f || race_phase == 3.0f) {
-        if (race_phase == 1.0f && throttle_pressed && !previous_throttle &&
-            kart_countdown_start_boost_granted(&race_countdown, clock_ms))
-            kart_timed_boost_start(&kart.timed_boost, 1.0f,
-                                   KART_START_BOOST_DURATION_MS);
-        previous_throttle = throttle_pressed;
-        previous_boost = boost_pressed;
-        update_race(elapsed_ms * 0.001f);
+    if (race_phase == 3.0f) {
         publish(0, (KartSimulationStepResult){0});
         return;
     }
@@ -484,10 +498,23 @@ __attribute__((export_name("demo_step"))) void demo_step(
     controls.reverse_input = brake ? 1.0f : 0.0f;
     controls.steering_input = fmaxf(-1.0f, fminf(1.0f, steer));
     controls.drift_input = drift != 0;
-    controls.boost_active = boost_pressed && !previous_boost && throttle_pressed &&
-        !kart.timed_boost.active && kart_gauge_take_booster(&gauge);
+    /* Match demo/kart_win32.c: holding Ctrl may acquire a charge once
+       throttle becomes active or the preceding item boost finishes. */
+    if (!boost_pressed) boost_press_allowed = false;
+    else if (!boost_press_allowed && !kart.timed_boost.active && throttle_pressed)
+        boost_press_allowed = kart_gauge_take_booster(&gauge);
+    controls.boost_active = boost_pressed && boost_press_allowed;
+    if (throttle_pressed && !previous_throttle &&
+        kart_countdown_start_boost_granted(&race_countdown, clock_ms))
+        kart_timed_boost_start(&kart.timed_boost, 1.0f,
+                               KART_START_BOOST_DURATION_MS);
+    const bool before_go = race_phase == 1.0f &&
+        !kart_countdown_update(&race_countdown, clock_ms).released;
+    if (before_go) {
+        controls.forward_input = controls.reverse_input = 0.0f;
+        controls.boost_active = false;
+    }
     previous_throttle = throttle_pressed;
-    previous_boost = boost_pressed;
     KartSimulationStepResult step = kart_simulate_milliseconds(&kart, &controls, &world, elapsed_ms);
     /* Original road-tagged triangles now supply ground/walls. Never rewind a
        natural fall/jump, teleport chassis height, or add a static-friction law. */
@@ -506,7 +533,7 @@ __attribute__((export_name("demo_step"))) void demo_step(
     if (!track_enabled) {
         kart.position.x = fmaxf(-78.0f, fminf(78.0f, kart.position.x));
         kart.position.y = fmaxf(-78.0f, fminf(78.0f, kart.position.y));
-    } else if (kart.position.z < spawn_z - 20.0f && respawn_arm_ms == 0) {
+    } else if (kart.position.z < kart_demo_track_fall_limit(&track_spec) && respawn_arm_ms == 0) {
         respawn_arm_ms = clock_ms ? clock_ms : 1u;
     }
     update_race(elapsed_ms * 0.001f);

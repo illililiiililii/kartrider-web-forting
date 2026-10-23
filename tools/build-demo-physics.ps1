@@ -13,7 +13,10 @@ $generatedCourse = Join-Path $root 'src-demo\generated_5136_course.c'
 $tracks = @('beach_I01', 'beach_I02', 'village_R01')
 $available = @($tracks | Where-Object { Test-Path -LiteralPath (Join-Path $RhoRoot "track\$_\track.1s") })
 if ($available.Count -eq 3) {
-  & $PythonExe (Join-Path $PSScriptRoot 'prepare-local-course.py') --demo-source $DemoSource --rho-root $RhoRoot --output $generatedCourse
+  $catalogArgs=@()
+  $catalog=Join-Path $root 'web-preview\assets\catalog.json'
+  if (Test-Path -LiteralPath $catalog) { $catalogArgs=@('--catalog',$catalog) }
+  & $PythonExe (Join-Path $PSScriptRoot 'prepare-local-course.py') --demo-source $DemoSource --rho-root $RhoRoot --output $generatedCourse @catalogArgs
   if ($LASTEXITCODE -ne 0) { throw 'P5136 course extraction failed' }
   $courseMode = 'original-5136'
 } elseif ($available.Count -eq 0) {
@@ -23,6 +26,7 @@ if ($available.Count -eq 3) {
 #include "kart_course.h"
 #include <stddef.h>
 const KartCourseAsset *kart_5136_course_asset_at(unsigned int index) { (void)index; return NULL; }
+unsigned int kart_5136_course_laps(unsigned int index) { (void)index; return 0; }
 '@ | Set-Content -LiteralPath $generatedCourse -Encoding ascii
   $courseMode = 'debug-only-no-5136-assets'
   Write-Output 'WAITING: P5136 courses unavailable; building standalone debug physics.'

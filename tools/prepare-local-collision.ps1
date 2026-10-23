@@ -1,4 +1,4 @@
-param([string]$RhoRoot, [string]$PythonExe='python')
+param([string]$RhoRoot, [string]$PythonExe='python', [switch]$BuildOnly)
 $ErrorActionPreference='Stop'
 . (Join-Path $PSScriptRoot 'local-asset-paths.ps1')
 $RhoRoot=Resolve-LocalRhoRoot $RhoRoot
@@ -24,6 +24,7 @@ $build=Join-Path $root 'local-data\native-collision-build.log'
 & dotnet build $project -c Release -p:TargetFramework=net8.0 *> $build
 if ($LASTEXITCODE -ne 0) { throw "Native collision exporter build failed; see $build" }
 $tool=Join-Path $PSScriptRoot 'native-collision-exporter\bin\Release\net8.0\NativeCollisionExporter.dll'
+if ($BuildOnly) { Write-Output $tool; return }
 $run=Join-Path $root ('local-data\native-collision\'+[Guid]::NewGuid().ToString('N'))
 New-Item -ItemType Directory -Force -Path $run | Out-Null
 Push-Location $root

@@ -1,5 +1,5 @@
-import { createPreviewRenderer } from './render3d.js?v=source-fixes';
-import { interpolatePreviewState } from './frame-interpolation.mjs';
+import { createPreviewRenderer } from './render3d.js?v=native47-catalog';
+import { createDemoInput, demoElapsedMilliseconds } from './demo-input.mjs';
 
 const canvas = document.querySelector('#track');
 const view = createPreviewRenderer(canvas);
@@ -83,7 +83,7 @@ function applySteerAngle(syncNumber = true) {
   if (wasm) wasm.demo_set_steer_angle(value);
   localStorage.setItem('demo-steer-angle', String(value));
 }
-steerAngle.value = localStorage.getItem('demo-steer-angle') || '10';
+steerAngle.value = '10'; // Always begin with the source preset; slider changes are explicit.
 steerAngle.addEventListener('input', applySteerAngle);
 steerAngleNumber.value = Number(steerAngle.value).toFixed(1);
 steerAngleNumber.addEventListener('input', () => {
@@ -118,6 +118,7 @@ physicsPreset.addEventListener('change', () => {
   wasm.demo_set_steer_angle(Number(steerAngle.value));
 });
 const controls = { throttle: false, brake: false, left: false, right: false, drift: false, boost: false };
+const input = createDemoInput(() => wasm, controls);
 const keyMap = {
   KeyW: 'throttle', ArrowUp: 'throttle', Numpad8: 'throttle',
   KeyS: 'brake', ArrowDown: 'brake', Numpad2: 'brake',
@@ -134,16 +135,16 @@ for (const type of ['keydown', 'keyup']) {
     const control = keyMap[event.code];
     if (!control) return;
     event.preventDefault();
-    controls[control] = type === 'keydown';
+    input.set(control, type === 'keydown', event.code);
   });
 }
-window.addEventListener('blur', () => Object.keys(controls).forEach((key) => { controls[key] = false; }));
+window.addEventListener('blur', () => input.clear());
 document.querySelector('#reset').addEventListener('click', resetPreview);
 document.querySelector('#start-race').addEventListener('click', () => {
   if (!wasm || !statePointer) return;
   wasm.demo_start_race();
   wasm.demo_set_steer_angle(Number(steerAngle.value));
-  currentState.set(new Float32Array(wasm.memory.buffer, statePointer, 43));
+  currentState.set(new Float32Array(wasm.memory.buffer, statePointer, wasm.demo_state_count()));
   previousState.set(currentState);
   visualState.set(currentState);
   view.resetCamera();
@@ -157,7 +158,7 @@ document.querySelector('#collision-wireframe').addEventListener('click', async (
 });
 for (const button of document.querySelectorAll('[data-key]')) {
   const key = button.dataset.key;
-  const set = (pressed) => { controls[key] = pressed; button.classList.toggle('active', pressed); };
+  const set = (pressed) => { input.set(key, pressed, button); button.classList.toggle('active', pressed); };
   button.addEventListener('pointerdown', (event) => { event.preventDefault(); button.setPointerCapture(event.pointerId); set(true); });
   for (const type of ['pointerup', 'pointercancel', 'lostpointercapture']) button.addEventListener(type, () => set(false));
 }
@@ -165,7 +166,6 @@ for (const button of document.querySelectorAll('[data-key]')) {
 let wasm;
 let statePointer = 0;
 let previousTime = 0;
-let accumulator = 0;
 let previousState;
 let currentState;
 let visualState;
@@ -176,7 +176,7 @@ function resetPreview() {
   resetVisualState();
 }
 function resetVisualState() {
-  currentState.set(new Float32Array(wasm.memory.buffer, statePointer, 43));
+  currentState.set(new Float32Array(wasm.memory.buffer, statePointer, wasm.demo_state_count()));
   previousState.set(currentState);
   visualState.set(currentState);
   view.resetCamera();
@@ -220,17 +220,14 @@ function draw(state, visual, frameDeltaMs) {
 
 function frame(time) {
   if (!previousTime) previousTime = time;
-  const frameDeltaMs = Math.min(Math.max(time - previousTime, 0), 100);
-  accumulator = Math.min(accumulator + frameDeltaMs, 100);
+  const frameDeltaMs = demoElapsedMilliseconds(previousTime, time);
   previousTime = time;
-  while (accumulator >= 16) {
-    previousState.set(currentState);
-    wasm.demo_step(16, +controls.throttle, +controls.brake,
-      (+controls.right) - (+controls.left), +controls.drift, +controls.boost);
-    currentState.set(new Float32Array(wasm.memory.buffer, statePointer, 43));
-    accumulator -= 16;
+  if (frameDeltaMs > 0) {
+    wasm.demo_step(frameDeltaMs, +controls.throttle, +controls.brake,
+      input.steering(), +controls.drift, +controls.boost);
+    currentState.set(new Float32Array(wasm.memory.buffer, statePointer, wasm.demo_state_count()));
   }
-  interpolatePreviewState(previousState, currentState, accumulator / 16, visualState);
+  visualState.set(currentState);
   draw(currentState, visualState, frameDeltaMs);
   requestAnimationFrame(frame);
 }
@@ -245,7 +242,7 @@ try {
   statePointer = wasm.demo_new();
   if (!statePointer) throw new Error('Wasm 상태 생성 실패');
   wasm.demo_set_steer_angle(Number(steerAngle.value));
-  currentState = new Float32Array(new Float32Array(wasm.memory.buffer, statePointer, 43));
+  currentState = new Float32Array(new Float32Array(wasm.memory.buffer, statePointer, wasm.demo_state_count()));
   previousState = new Float32Array(currentState);
   visualState = new Float32Array(currentState);
   status.textContent = '데모 C 물리 / Wasm 실행 중';

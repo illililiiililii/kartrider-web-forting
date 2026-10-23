@@ -16,7 +16,11 @@ export function createRaceAudio() {
     for (const sound of Object.values(sounds)) { sound.pause(); sound.currentTime = 0; }
   }
   return {
-    start(track) { stop(); enabled = true; play(track.startsWith('village') ? sounds.village : sounds.beach); },
+    start(track) {
+      stop(); enabled = true;
+      if(track.startsWith('village'))play(sounds.village);
+      else if(track.startsWith('beach'))play(sounds.beach);
+    },
     stop,
     update(state) {
       if (!enabled) return;

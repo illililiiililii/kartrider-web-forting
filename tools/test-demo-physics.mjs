@@ -111,6 +111,9 @@ test('upstream gauge banks a booster only after drift ends, then Ctrl spends it'
   for (let i = 0; i < 100 && state[32] === 0; i++) api.demo_step(16, 1, 0, 0, 0, 0);
   assert.equal(state[32], 1);
   assert.equal(state[7], 0);
+  // Ctrl held before throttle must remain eligible, as in Win32's caller.
+  api.demo_step(16, 0, 0, 0, 0, 1);
+  assert.equal(state[32], 1);
   api.demo_step(16, 1, 0, 0, 0, 1);
   assert.ok(state[8] > 2.9);
   assert.equal(state[32], 0);
@@ -123,10 +126,12 @@ test('recovered 7-second countdown blocks driving and grants precisely timed sta
   for (let i = 0; i < 432; i++) api.demo_step(16, 0, 0, 0, 0, 0);
   assert.equal(state[0], x);
   assert.equal(state[19], 1);
-  api.demo_step(16, 1, 0, 0, 0, 0);
-  assert.ok(state[8] > 0.99);
-  for (let i = 0; i < 14; i++) api.demo_step(16, 1, 0, 0, 0, 0);
+  assert.ok(Math.abs(state[14]) < 0.01, 'native suspension must run during countdown');
+  assert.equal(state[16], 4);
+  for (let i = 0; i < 6; i++) api.demo_step(16, 0, 0, 0, 0, 0);
   assert.equal(state[19], 2);
+  api.demo_step(16, 1, 0, 0, 0, 0); // GO +24ms, inside native +/-100ms window.
+  assert.ok(state[8] > 0.98);
   api.demo_step(16, 1, 0, 0, 0, 0);
   assert.ok(state[23] > 0);
 });

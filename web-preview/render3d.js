@@ -1,6 +1,7 @@
 import * as THREE from './vendor/three.module.js';
 import { readChasePose } from './camera-pose.mjs';
 import { mountWheel } from './wheel-basis.mjs';
+import { applyKartOrientation } from './kart-pose.mjs';
 import { collisionPositions } from './collision-wireframe.mjs';
 
 // Rendering only: position and heading come from the C/Wasm demo state.
@@ -85,12 +86,10 @@ export function createPreviewRenderer(canvas) {
   let lobbyCharacter = null;
   const trackCenter = new THREE.Vector3();
   let trackRadius = 100;
-  let trackMeshes = [];
   let originalWheels = [];
-  // The track is expanded tenfold during local conversion, including KTRK and
-  // ToRoad gates. This kart scale still matches the C body footprint below.
-  const kartVisualScale = 1.25;
-  const lobbyVisualScale = 0.75;
+  // Presentation-only enlargement. Native C keeps its source kart geometry.
+  const kartVisualScale = 1.25 * 1.5;
+  const lobbyVisualScale = 0.75 * 1.5;
   let originalBase = 0;
   const shell = material(0x33b6e4, 0.32, 0.32);
   const dark = material(0x192936, 0.18, 0.6);
@@ -132,7 +131,7 @@ export function createPreviewRenderer(canvas) {
   kart.add(boostFlames);
 
   async function loadAsset(name, type) {
-    const usd = type !== 'kart' || name === 'whiteKnightV1' || name === 'saberV1';
+    const usd = type !== 'kart' || !['whiteKnight1','cotton11'].includes(name);
     const path = usd ? `./assets/usd/${name}/model.mesh.json` : `./assets/${name}.mesh.json`;
     const response = await fetch(path);
     if (!response.ok) throw new Error(`원본 모델 변환 파일 없음 (${response.status})`);
@@ -183,8 +182,9 @@ export function createPreviewRenderer(canvas) {
       // The supplied Dao/Bazzi body atlas is intentionally neutral greyscale;
       // the face is a separate original texture. Apply the body colour at the
       // material stage without altering or replacing either source image.
+      const family = name.split('--')[0];
       const characterTint = type === 'character' && partName === 'body'
-        ? name === 'dao' ? 0x42b8ff : name === 'bazzi' ? 0xffbb52 : 0xffffff
+        ? family === 'dao' ? 0x42b8ff : family === 'bazzi' ? 0xffbb52 : 0xffffff
         : null;
       const mesh = new THREE.Mesh(geometry, new THREE.MeshStandardMaterial({
         color: characterTint ?? (part.baseColor ? new THREE.Color(...part.baseColor) : texture ? 0xffffff : color), map: texture, alphaMap,
@@ -274,7 +274,6 @@ export function createPreviewRenderer(canvas) {
     originalTrack.scale.x = 1;
     scene.add(group);
     originalTrack.updateMatrixWorld(true);
-    trackMeshes = [];
     const trackFocus = new THREE.Box3();
     group.traverse((node) => {
       if (!node.isMesh) return;
@@ -285,11 +284,7 @@ export function createPreviewRenderer(canvas) {
       if (Math.max(size.x, size.z) < 700 && box.getCenter(new THREE.Vector3()).y > 100) {
         trackFocus.union(box);
       }
-      // A camera obstruction must be solid scenery, not a bird, sign, or
-      // alpha card that happens to cross the kart-to-camera ray.
-      if (node.visible &&
-          /(road|bridge|side|tile|sand|grass|cement)/.test(tag) &&
-          Math.max(size.x, size.z) < 2000) trackMeshes.push(node);
+
     });
     const bounds = new THREE.Box3().setFromObject(group);
     const focus = trackFocus.isEmpty() ? bounds : trackFocus;
@@ -374,7 +369,6 @@ export function createPreviewRenderer(canvas) {
   const desired = new THREE.Vector3();
   const look = new THREE.Vector3();
   const targetLook = new THREE.Vector3();
-  const cameraRay = new THREE.Raycaster();
   const cameraDirection = new THREE.Vector3();
   const smoothedLook = new THREE.Vector3();
   const previews = new WeakMap();
@@ -398,14 +392,14 @@ export function createPreviewRenderer(canvas) {
     if (preview.display) preview.scene.remove(preview.display);
     const display = new THREE.Group();
     const kartCopy = original.clone(true);
-    kartCopy.scale.setScalar(0.75);
-    kartCopy.position.y = originalBase * 0.75;
+    kartCopy.scale.setScalar(lobbyVisualScale);
+    kartCopy.position.y = originalBase * lobbyVisualScale;
     display.add(kartCopy);
     if (originalCharacter) {
       const characterCopy = originalCharacter.clone(true);
       characterCopy.visible = true;
-      characterCopy.scale.setScalar(0.42 * 0.75);
-      characterCopy.position.set(-0.25 * 0.75, 0.5 * 0.75, 0);
+      characterCopy.scale.setScalar(0.42 * lobbyVisualScale);
+      characterCopy.position.set(-0.25 * lobbyVisualScale, 0.5 * lobbyVisualScale, 0);
       display.add(characterCopy);
     }
     preview.scene.add(display);
@@ -439,12 +433,12 @@ export function createPreviewRenderer(canvas) {
     // 0.5 compression), not at the initial airborne spawn height of +0.5.
     // originalBase already mounts the visual wheel bottoms at that origin.
     kart.position.set(x, state[14] || 0, -y);
-    kart.rotation.y = heading + (lobbyMode ? Math.PI / 2 : 0);
+    if (lobbyMode) kart.rotation.y = heading + Math.PI / 2;
+    else applyKartOrientation(kart, state);
     if (originalCharacter && !lobbyMode) {
       // Pose the imported original mesh as a single rigid rider until its
       // 1s skeleton/bind animation can be recovered from the local archive.
-      originalCharacter.rotation.z = THREE.MathUtils.clamp(-state[13] * 0.25, -0.12, 0.12);
-      originalCharacter.rotation.x = THREE.MathUtils.clamp(state[15] * 0.002, -0.08, 0.08);
+      originalCharacter.rotation.x = originalCharacter.rotation.z = 0;
     }
     shell.color.setHex(boost > 0 ? 0xffcd4f : drifting ? 0xf779a8 : 0x33b6e4);
     boostFlames.visible = boost > 0;
@@ -490,27 +484,11 @@ export function createPreviewRenderer(canvas) {
       cameraDirection.fromArray(pose.forward).normalize();
       targetLook.copy(desired).add(cameraDirection);
       camera.up.fromArray(pose.up).normalize();
-      if (trackDrive && originalTrack) {
-        const origin = new THREE.Vector3(x, (state[14] || 0) + 0.4, -y);
-        cameraDirection.subVectors(desired, origin);
-        const distance = cameraDirection.length();
-        if (distance > 0.01) {
-          cameraDirection.divideScalar(distance);
-          cameraRay.set(origin, cameraDirection);
-          cameraRay.far = distance;
-          const hit = cameraRay.intersectObjects(trackMeshes, false)[0];
-          if (hit && hit.distance < distance - 0.3) {
-            desired.copy(origin).addScaledVector(cameraDirection, Math.max(0.8, hit.distance - 0.3));
-          }
-        }
-      }
-      // Occlusion may move position, but preserves the C orientation.
-      targetLook.set(desired.x + state[28], desired.y + state[30], desired.z - state[29]);
       camera.fov = pose.fov;
       camera.updateProjectionMatrix();
     }
     if (lobbyMode || trackPreview || overhead) camera.up.set(0, 1, 0);
-    const follow = 1; // Interpolation is done on telemetry; never smooth C chase twice.
+    const follow = 1; // Never smooth the source chase result twice.
     camera.position.lerp(desired, follow);
     smoothedLook.lerp(targetLook, follow);
     look.copy(smoothedLook);

@@ -35,7 +35,7 @@ test('render camera follows actual C position/orientation and preserves boost FO
   camera.lookAt(camera.position.clone().add(new THREE.Vector3(...pose.forward)));
   assert.ok(camera.getWorldDirection(new THREE.Vector3()).distanceTo(new THREE.Vector3(...pose.forward))<1e-5);
   api.demo_start_race();
-  for(let i=0;i<432;i++) api.demo_step(16,0,0,0,0,0);
+  for(let i=0;i<438;i++) api.demo_step(16,0,0,0,0,0);
   for(let i=0;i<32;i++) api.demo_step(16,1,0,0,0,0);
   assert.ok(state[31]>78,`boost FOV was clamped: ${state[31]}`);
   assert.equal(readChasePose(state).fov,state[31]);

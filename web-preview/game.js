@@ -1,7 +1,7 @@
-import { createPreviewRenderer } from './render3d.js?v=source-fixes';
+import { createPreviewRenderer } from './render3d.js?v=native47-catalog';
 import { createLiveMinimap } from './live-minimap.mjs';
 import { createRaceAudio } from './race-audio.mjs';
-import { interpolatePreviewState } from './frame-interpolation.mjs';
+import { createDemoInput, demoElapsedMilliseconds } from './demo-input.mjs';
 
 const $ = (selector) => document.querySelector(selector);
 const view = createPreviewRenderer($('#world'));
@@ -19,15 +19,34 @@ const trackNames = { beach_I01: '비치 I01', beach_I02: '비치 I02', village_R
 // _rhoOut/track/common/track@zz.xml: item tracks have three laps; R01 has two.
 const trackLaps = { beach_I01: 3, beach_I02: 3, village_R01: 2 };
 const courseIndices = { beach_I01: 0, beach_I02: 1, village_R01: 2 };
+let localCatalog;
+async function loadLocalCatalog() {
+  const response=await fetch('./assets/catalog.json',{cache:'no-store'});
+  if(response.status===404)return;
+  if(!response.ok)throw new Error('로컬 모델 목록을 읽을 수 없습니다');
+  localCatalog=await response.json();
+  if(localCatalog.format!=='p5136-local-catalog-v1')throw new Error('로컬 모델 목록 형식 오류');
+  for(const [kind,select] of [['tracks',trackChoice],['karts',kartChoice],['characters',characterChoice]]) {
+    const selected=select.value;
+    select.replaceChildren(...localCatalog[kind].map(entry=>{
+      const option=new Option(entry.label+(entry.ready?'':' · 준비 필요'),entry.id);
+      option.disabled=!entry.ready;
+      if(kind==='tracks') {trackNames[entry.id]=entry.label;trackLaps[entry.id]=entry.laps;courseIndices[entry.id]=entry.courseIndex;}
+      return option;
+    }));
+    select.value=[...select.options].some(o=>o.value===selected&&!o.disabled)?selected:[...select.options].find(o=>!o.disabled)?.value??'';
+  }
+  selectedTrack=trackChoice.value;
+}
 let wasm, statePointer, current, previous, visual;
 let active = 'lobby';
 let lastFrame = 0;
-let accumulator = 0;
 let requestId = 0;
 let itemType = 'kart';
 let selectedTrack = trackChoice.value;
 let signedIn = false;
 const controls = { throttle: false, brake: false, left: false, right: false, drift: false, boost: false };
+const input = createDemoInput(() => wasm, controls);
 const keyMap = {
   ArrowUp: 'throttle', Numpad8: 'throttle', KeyW: 'throttle',
   ArrowDown: 'brake', Numpad2: 'brake', KeyS: 'brake',
@@ -65,7 +84,7 @@ accountLink.addEventListener('click', async (event) => {
 refreshAccount();
 
 function syncState() {
-  current.set(new Float32Array(wasm.memory.buffer, statePointer, 43));
+  current.set(new Float32Array(wasm.memory.buffer, statePointer, wasm.demo_state_count()));
   previous.set(current);
   visual.set(current);
   view.resetCamera();
@@ -82,11 +101,16 @@ async function loadSelectedTrack() {
   const name = trackChoice.value;
   const serial = ++requestId;
   $('#start').disabled = true;
-  $('#track-card').src = `./assets/tracks/${name}/xt_trackCard.png`;
-  $('#minimap').src = `./assets/tracks/${name}/xt_minimap.png`;
+  const info=localCatalog?.tracks.find(t=>t.id===name);
+  const cardAvailable=info?.card!==false;
+  $('#track-card').hidden=$('#setup-track-image').hidden=!cardAvailable;
+  if(cardAvailable) {
+    $('#track-card').src = `./assets/tracks/${name}/xt_trackCard.png`;
+    $('#setup-track-image').src = `./assets/tracks/${name}/xt_trackCard.png`;
+  }
+  if(info?.minimap!==false)$('#minimap').src = `./assets/tracks/${name}/xt_minimap.png`;
   $('#track-name').textContent = $('#map-label').textContent = trackNames[name];
   $('#setup-track-name').textContent = trackNames[name];
-  $('#setup-track-image').src = `./assets/tracks/${name}/xt_trackCard.png`;
   $('#lap-total').textContent = trackLaps[name];
   status.textContent = `${trackNames[name]} 메시 로딩 중…`;
   await view.setTrackDrive(name);
@@ -106,7 +130,6 @@ async function loadSelectedTrack() {
     if (!wasm.demo_track_enable(0, 0, 0, 0)) throw new Error('트랙 활성화 실패');
     const gates = wasm.demo_set_5136_course(courseIndices[name]);
     if (!gates) throw new Error(`${name} 원본 체크포인트 그래프를 생성하지 못함`);
-    wasm.demo_set_steer_angle(Number(localStorage.getItem('demo-steer-angle')) || 10);
     syncState();
     view.setLobbyMode(true);
     status.textContent = `원본 3D 트랙 · ${triangles.toLocaleString()}개 트랙 삼각형 · 체크포인트 ${gates}개`;
@@ -134,7 +157,6 @@ function startRace() {
   if (!wasm || !signedIn || $('#start').disabled) return;
   raceAudio.start(trackChoice.value);
   wasm.demo_start_race();
-  wasm.demo_set_steer_angle(Number(localStorage.getItem('demo-steer-angle')) || 10);
   syncState();
   view.setLobbyMode(false);
   $('#lobby-backdrop').classList.add('hidden');
@@ -149,8 +171,7 @@ function startRace() {
 function goLobby() {
   raceAudio.stop();
   active = 'lobby';
-  Object.keys(controls).forEach((key) => { controls[key] = false; });
-  wasm.demo_steering_clear();
+  input.clear();
   wasm.demo_reset();
   syncState();
   view.setLobbyMode(true);
@@ -185,6 +206,7 @@ function renderItems() {
   $('#item-cards').replaceChildren(...[...select.options].map((option) => {
     const button = document.createElement('button');
     button.className = `item-card ${select.value === option.value ? 'selected' : ''}`;
+    button.disabled=option.disabled;
     button.textContent = option.textContent;
     button.addEventListener('click', async () => {
       select.value = option.value;
@@ -214,12 +236,16 @@ function renderTracks() {
     .map((option) => {
       const button = document.createElement('button');
       button.className = `track-card-button ${selectedTrack === option.value ? 'selected' : ''}`;
-      const image = document.createElement('img');
-      image.src = `./assets/tracks/${option.value}/xt_trackCard.png`;
-      image.alt = '';
+      button.disabled=option.disabled;
       const label = document.createElement('span');
       label.textContent = option.textContent;
-      button.append(image, label);
+      if(!localCatalog || localCatalog.tracks.find(t=>t.id===option.value)?.card) {
+        const image=document.createElement('img');
+        image.loading='lazy';image.decoding='async';image.alt='';
+        image.src=`./assets/tracks/${option.value}/xt_trackCard.png`;
+        button.append(image);
+      }
+      button.append(label);
       button.addEventListener('click', () => { selectedTrack = option.value; renderTracks(); });
       return button;
     }));
@@ -287,21 +313,14 @@ function draw(state, frameMs) {
 
 function frame(time) {
   if (!lastFrame) lastFrame = time;
-  const elapsed = Math.min(Math.max(time - lastFrame, 0), 100);
+  const elapsed = demoElapsedMilliseconds(lastFrame, time);
   lastFrame = time;
-  if (active === 'race') {
-    accumulator = Math.min(accumulator + elapsed, 100);
-    while (accumulator >= 16) {
-      previous.set(current);
-      const steer = Math.max(-1, Math.min(1,
-        wasm.demo_steering_value() + (+controls.right) - (+controls.left)));
-      wasm.demo_step(16, +controls.throttle, +controls.brake,
-        steer, +controls.drift, +controls.boost);
-      current.set(new Float32Array(wasm.memory.buffer, statePointer, 43));
-      accumulator -= 16;
-    }
-    interpolatePreviewState(previous, current, accumulator / 16, visual);
-  } else visual.set(current);
+  if (active === 'race' && elapsed > 0) {
+    wasm.demo_step(elapsed, +controls.throttle, +controls.brake,
+      input.steering(), +controls.drift, +controls.boost);
+    current.set(new Float32Array(wasm.memory.buffer, statePointer, wasm.demo_state_count()));
+  }
+  visual.set(current); // C owns the chase filter; render the actual latest pose.
   draw(current, elapsed);
   requestAnimationFrame(frame);
 }
@@ -320,18 +339,15 @@ for (const type of ['keydown', 'keyup']) {
     const control = keyMap[event.code];
     if (!control) return;
     event.preventDefault();
-    if (control === 'left' || control === 'right') {
-      wasm.demo_steering_event(control === 'left' ? -1 : 1, +(type === 'keydown'));
-    } else controls[control] = type === 'keydown';
+    input.set(control, type === 'keydown', event.code);
   });
 }
 window.addEventListener('blur', () => {
-  Object.keys(controls).forEach((key) => { controls[key] = false; });
-  wasm?.demo_steering_clear();
+  input.clear();
 });
 for (const button of document.querySelectorAll('[data-control]')) {
   const control = button.dataset.control;
-  const press = (value) => { controls[control] = value; button.classList.toggle('active', value); };
+  const press = (value) => { input.set(control, value, button); button.classList.toggle('active', value); };
   button.addEventListener('pointerdown', (event) => { event.preventDefault(); button.setPointerCapture(event.pointerId); press(true); });
   for (const name of ['pointerup', 'pointercancel', 'lostpointercapture']) button.addEventListener(name, () => press(false));
 }
@@ -405,12 +421,12 @@ try {
   wasm = module.instance.exports;
   statePointer = wasm.demo_new();
   if (!statePointer) throw new Error('Wasm 초기화 실패');
-  // Both currently supported kart bodies are V1. These provisional charger
-  // parameters are isolated from the recovered demo's drift gauge formula.
-  wasm.demo_configure_v1_charger(1, 25, 2);
-  current = new Float32Array(43);
-  previous = new Float32Array(43);
-  visual = new Float32Array(43);
+  // Use the original demo gauge; V1-specific automatic charge is experimental.
+  wasm.demo_configure_v1_charger(0, 25, 2);
+  await loadLocalCatalog();
+  current = new Float32Array(wasm.demo_state_count());
+  previous = new Float32Array(wasm.demo_state_count());
+  visual = new Float32Array(wasm.demo_state_count());
   syncState();
   await Promise.all([view.setKart(kartChoice.value), view.setCharacter(characterChoice.value)]);
   await loadSelectedTrack();

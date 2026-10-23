@@ -54,3 +54,21 @@ F3 in the race, or the debug page's collision button, displays the actual KTRK
 triangles. Prolonged wall contact still has a reproduced native-engine sinking
 issue, and Beach I02 has 19 collision meshes without a matching USD world box;
 full laps are not certified. Raw sources are never rewritten.
+
+For all supplied USDA tracks, kart bodies and character variants:
+
+```powershell
+.\tools\prepare-local-all.ps1
+```
+
+This reuses the same USD/native collision converters, copies available original
+track images, generates a local catalog, compiles every valid original course,
+and tests all enabled spawns in Wasm. Logs and incremental caches stay in
+`local-data/catalog-logs/` and `local-data/catalog-cache/`. Original Korean
+track names and lap counts come from the supplied XML. Missing lap data,
+unsupported native types, non-finite source geometry and coordinate mismatches
+remain disabled; no guessed start, collision flags or lap counts are invented.
+The main game uses the source cotten5 dynamics/geometry. The requested 1.5x
+kart/character enlargement changes presentation only. Other themes' BGM stays
+silent until its exact original music selection is connected; Beach/Village
+BGM and original drift/boost effects remain connected.
