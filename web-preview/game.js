@@ -7,10 +7,13 @@ import {readAccountSession} from './account-session.mjs';
 import {applyKartPhysics} from './kart-physics.mjs';
 import {updateExceedDashboard} from './v1-dashboard.mjs';
 import {createMultiplayerClient} from './multiplayer.mjs';
+import {createRankBoard} from './rank-board.mjs';
 
 const $ = (selector) => document.querySelector(selector);
 const view = createPreviewRenderer($('#world'));
 const liveMinimap = createLiveMinimap($('#minimap'));
+const rankBoard=createRankBoard($('.race-standing'));
+rankBoard.ready.catch(error=>console.error('원본 순위표:',error));
 mountV1Dashboard($('.tacho')).catch(error=>console.error('원본 V1 계기판:',error));
 const raceAudio = createRaceAudio();
 const lobby = $('#lobby');
@@ -117,7 +120,8 @@ function populateOwnedKarts() {
 }
 function applyProfile(profile) {
   playerProfile=profile;accountState.textContent=profile.nickname;
-  $('#menu-account').textContent=$('#race-rider-name').textContent=profile.nickname;
+  $('#menu-account').textContent=profile.nickname;
+  rankBoard.update([{id:'self',rank:1,nickname:profile.nickname}],'self');
   $('#player-level').textContent=`Lv.${profile.level}`;$('#lucci').textContent=profile.lucci.toLocaleString('ko-KR');
   const progress=$('#experience');progress.max=profile.nextLevelExperience-profile.levelStartExperience;progress.value=profile.experience-profile.levelStartExperience;
   progress.title=`경험치 ${profile.experience} / ${profile.nextLevelExperience}`;
@@ -244,7 +248,7 @@ function goLobby(keepRoom=false) {
   if(multiRace&&keepRoom!==true)multiplayer?.leave().catch(showError);
   multiRace=false;
   view.setPeers([]).catch(showError);
-  $('#multi-race-board').classList.add('hidden');
+  rankBoard.update([{id:'self',rank:1,nickname:playerProfile?.nickname??''}],'self');
   $('#multi-chat-open').classList.add('hidden');
   $('.race-standing').style.visibility='';
   raceAudio.stop();
@@ -577,13 +581,13 @@ try {
     onStart(){
       rewardSubmitted=true;announcedLap=0;lapNoticeUntil=0;resetRequested=false;input.clear();raceAudio.start(trackChoice.value);
       view.setLobbyMode(false);$('#lobby-backdrop').classList.add('hidden');closeAllDialogs();lobby.classList.add('hidden');raceUi.classList.remove('hidden');active='race';
-      $('.race-standing').style.visibility='hidden';$('#multi-race-board').classList.remove('hidden');
+      $('.race-standing').style.visibility='visible';
       $('#multi-chat-open').classList.remove('hidden');
     },
     onFrame(frame){
       const self=frame.players.find(p=>p.id===accountUserId);if(self&&self.state.length===current.length&&self.state.every(Number.isFinite))current.set(self.state);
       view.updatePeers(frame.players.filter(p=>p.id!==accountUserId));
-      $('#multi-race-board').textContent=frame.players.map(p=>`${multiplayer.room?.players.find(m=>m.id===p.id)?.nickname??''} · ${p.state[19]===3?'완주':`${Math.max(1,Math.round(p.state[21]))}바퀴`}`).join('\n');
+      rankBoard.update(frame.players.map(p=>({id:p.id,rank:p.rank,nickname:multiplayer.room?.players.find(m=>m.id===p.id)?.nickname??''})),accountUserId);
     },
     onResults(){goLobby(true);closeAllDialogs();},
     onRoster(room){view.setPeers(room.players.filter(p=>p.id!==accountUserId)).catch(showError);},

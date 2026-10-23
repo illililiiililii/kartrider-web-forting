@@ -8,6 +8,7 @@ import { dirname, extname, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {createPlayerStore} from './player-store.mjs';
 import {createMultiplayer} from './multiplayer-server.mjs';
+import {requestTransport} from './request-transport.mjs';
 
 const scrypt = promisify(scryptCallback);
 const webRoot = resolve(dirname(fileURLToPath(import.meta.url)), 'web-preview');
@@ -121,10 +122,10 @@ export function createKartServer({
       const token = cookieToken(request,sessionCookieName);
       if (token) deleteSession.run(tokenHash(token));
       return json(response, 200, { user: null }, {
-        'Set-Cookie': `${sessionCookieName}=; Path=/; HttpOnly; SameSite=Strict; Max-Age=0${secureCookies ? '; Secure' : ''}`,
+        'Set-Cookie': `${sessionCookieName}=; Path=/; HttpOnly; SameSite=Strict; Max-Age=0${secureCookies||requestTransport(request).secure ? '; Secure' : ''}`,
       });
     }
-    if (limited(request.socket.remoteAddress ?? 'unknown')) {
+    if (limited(requestTransport(request).ip)) {
       return json(response, 429, { error: 'RATE_LIMITED' });
     }
     let fields;
@@ -157,7 +158,7 @@ export function createKartServer({
     players.profile(user);
     addSession.run(tokenHash(token), user.id, Date.now() + sessionAgeSeconds * 1000);
     return json(response, 200, { user }, {
-      'Set-Cookie': `${sessionCookieName}=${token}; Path=/; HttpOnly; SameSite=Strict; Max-Age=${sessionAgeSeconds}${secureCookies ? '; Secure' : ''}`,
+      'Set-Cookie': `${sessionCookieName}=${token}; Path=/; HttpOnly; SameSite=Strict; Max-Age=${sessionAgeSeconds}${secureCookies||requestTransport(request).secure ? '; Secure' : ''}`,
     });
   }
 
@@ -175,6 +176,7 @@ export function createKartServer({
           if(request.method==='GET'&&action==='events')return multiplayer.connect(user,response,()=>Boolean(currentUser(request)));
           if(request.method==='GET'&&action==='rooms')return json(response,200,multiplayer.list());
           if(request.method==='GET'&&action==='current')return json(response,200,multiplayer.current(user));
+          if(request.method==='GET'&&action==='sync')return json(response,200,multiplayer.sync(user));
           if(request.method!=='POST')return json(response,405,{error:'METHOD_NOT_ALLOWED'});
           return json(response,200,multiplayer.command(user,action,await bodyJson(request)));
         }catch(error){return json(response,error.status??503,{error:error.status?error.message:'MULTIPLAYER_UNAVAILABLE'});}

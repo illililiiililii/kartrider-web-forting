@@ -72,7 +72,7 @@ export function createLiveMinimap(image) {
         await bitmap.decode();
         if(serial!==generation)return;
         project=bitmapProjection(mapping,bitmap.naturalWidth,bitmap.naturalHeight);
-        zoom=canvas.width/bitmap.naturalWidth*2;
+        zoom=canvas.width/bitmap.naturalWidth*2.6;
         background=bitmap;
         canvas.dataset.source='xt_bigmap.png + track.1s/ToMinimap';
         image.hidden=true;canvas.hidden=false;return;
@@ -86,7 +86,7 @@ export function createLiveMinimap(image) {
         tri.forEach(([x,y],i) => { const p=project(x,y); i ? draw.lineTo(...p) : draw.moveTo(...p); });
         draw.closePath(); draw.fill();
       }
-      background=fallback;zoom=1.75;canvas.dataset.source='collision schematic (no original mapping)';
+      background=fallback;zoom=2.275;canvas.dataset.source='collision schematic (no original mapping)';
       image.hidden=true; canvas.hidden=false;
     },
     draw(state) {

@@ -346,6 +346,58 @@ __attribute__((export_name("demo_new"))) float *demo_new(void) {
     return telemetry;
 }
 
+/* Web pair adapter: expose the same fitted OBB, and reuse the pinned linear
+ * contact resolver. This is not the unrecovered 5136 car-to-car algorithm. */
+__attribute__((export_name("demo_peer_body"))) float *demo_peer_body(void) {
+    static float b[18];
+    const KartVec3 center=demo_body_center(&kart);
+    const KartQuat q=kart.orientation;
+    const float values[]={center.x,center.y,center.z,q.w,q.x,q.y,q.z,
+        kart.linear_velocity.x,kart.linear_velocity.y,kart.linear_velocity.z,
+        kart.config.mass,body_fitted?fitted_body_width:kart.geometry.half_width,
+        body_fitted?fitted_body_length:kart.geometry.half_length,demo_body_half_height,
+        race_phase==2.0f && respawn_arm_ms==0u,
+        kart.angular_velocity.x,kart.angular_velocity.y,kart.angular_velocity.z};
+    memcpy(b,values,sizeof values);return b;
+}
+__attribute__((export_name("demo_peer_response"))) float *demo_peer_response(float nx,float ny,float nz,float vx,float vy,float vz) {
+    static float delta[6];const KartQuat q=kart.orientation;
+    const KartCollisionInput input={.velocity={vx,vy,vz},.angular_velocity=kart.angular_velocity,.normal={nx,ny,nz},
+        .body_right={1-2*(q.y*q.y+q.z*q.z),2*(q.x*q.y+q.w*q.z),2*(q.x*q.z-q.w*q.y)},
+        .body_forward={2*(q.w*q.z-q.x*q.y),-(1-2*(q.x*q.x+q.z*q.z)),-2*(q.y*q.z+q.w*q.x)},
+        .body_up={2*(q.x*q.z+q.w*q.y),2*(q.y*q.z-q.w*q.x),1-2*(q.x*q.x+q.y*q.y)}};
+    const KartCollisionOutput out=kart_resolve_linear_collision(&input);
+    delta[0]=out.velocity.x-vx;delta[1]=out.velocity.y-vy;delta[2]=out.velocity.z-vz;
+    delta[3]=out.angular_velocity.x-kart.angular_velocity.x;
+    delta[4]=out.angular_velocity.y-kart.angular_velocity.y;
+    delta[5]=out.angular_velocity.z-kart.angular_velocity.z;return delta;
+}
+__attribute__((export_name("demo_peer_apply"))) void demo_peer_apply(float vx,float vy,float vz,float ax,float ay,float az,float x,float y,float z) {
+    const float values[]={vx,vy,vz,ax,ay,az,x,y,z};
+    if(race_phase!=2.0f || respawn_arm_ms!=0u)return;
+    for(unsigned int i=0;i<9;i++)if(!isfinite(values[i]))return;
+    kart.linear_velocity.x+=vx;kart.linear_velocity.y+=vy;kart.linear_velocity.z+=vz;
+    kart.angular_velocity.x+=ax;kart.angular_velocity.y+=ay;kart.angular_velocity.z+=az;
+    kart.position.x+=x;kart.position.y+=y;kart.position.z+=z;
+    publish(0,(KartSimulationStepResult){0});
+}
+/* Graph data uses source indices/links, never numeric node IDs as distance. */
+__attribute__((export_name("demo_course_info"))) unsigned int demo_course_info(unsigned int field) {
+    switch(field){case 0:return course.node_count;case 1:return course.first_node;case 2:return course.last_node;case 3:return course.link_count;default:return 0;}
+}
+__attribute__((export_name("demo_course_node_value"))) float demo_course_node_value(unsigned int index,unsigned int field) {
+    if(index>=course.node_count)return -1;
+    return field==0?course.nodes[index].length:(course.nodes[index].backward==KART_COURSE_NO_INDEX?-1:(float)course.nodes[index].backward);
+}
+__attribute__((export_name("demo_course_link_value"))) int demo_course_link_value(unsigned int index,unsigned int field) {
+    if(index>=course.link_count)return -1;
+    unsigned int result=field==0?course.links[index].node:course.links[index].next;
+    return result==KART_COURSE_NO_INDEX?-1:(int)result;
+}
+__attribute__((export_name("demo_progress_value"))) float demo_progress_value(unsigned int field) {
+    switch(field){case 0:return (float)course_progress.advance;case 1:return (float)course_progress.node;case 2:return course_progress.node_distance;default:return 0;}
+}
+
 __attribute__((export_name("demo_reset"))) void demo_reset(void) {
     reset_at(track_enabled ? spawn_x : 0.0f,
              track_enabled ? spawn_y : 0.0f,

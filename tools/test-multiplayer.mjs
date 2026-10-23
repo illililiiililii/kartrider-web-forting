@@ -8,6 +8,15 @@ import {createMultiplayer} from '../multiplayer-server.mjs';
 import {createRacePhysicsFactory} from '../server-physics.mjs';
 import {createKartServer} from '../server.mjs';
 import {readFileSync} from 'node:fs';
+import {requestTransport} from '../request-transport.mjs';
+import {contact} from '../peer-collision.mjs';
+
+test('public tunnel preserves HTTPS cookies and per-client identity; LAN proxy spoofing is ignored',()=>{
+  const headers={'cf-connecting-ip':'203.0.113.42','cf-ray':'test-ray','x-forwarded-proto':'https'};
+  assert.deepEqual(requestTransport({socket:{remoteAddress:'127.0.0.1'},headers}),{ip:'203.0.113.42',secure:true});
+  assert.deepEqual(requestTransport({socket:{remoteAddress:'192.168.1.4'},headers}),{ip:'192.168.1.4',secure:false});
+  assert.deepEqual(requestTransport({socket:{remoteAddress:'127.0.0.1'},headers:{}}),{ip:'127.0.0.1',secure:false});
+});
 
 const project=resolve(import.meta.dirname,'..');
 const catalog={tracks:[{id:'beach_I01',ready:true,courseIndex:0,laps:3}],karts:[{id:'practiceV1',ready:true}],characters:[{id:'dao',ready:true}]};
@@ -15,7 +24,7 @@ function fixture(t){
   const dir=mkdtempSync(join(tmpdir(),'kart-multi-')),path=join(dir,'catalog.json');writeFileSync(path,JSON.stringify(catalog));
   let clock=10000;const inputs=[],saved=[];
   const physics={version:'fixture-v1',speed:'S7',create({slot}){let elapsed=0,x=slot*2;
-    return {step(input){inputs.push({...input});elapsed+=50;if(input.throttle)x++;},state(){const s=Array(62).fill(0);s[0]=x;s[19]=elapsed>=9000?3:elapsed>=7000?2:1;s[21]=s[19]===3?4:1;s[24]=s[19]===3?2:0;s[43]=1;return s;}};
+    return {step(input,ms=50){inputs.push({...input});elapsed+=ms;if(input.throttle)x+=ms/50;},state(){const s=Array(62).fill(0);s[0]=x;s[19]=elapsed>=9000?3:elapsed>=7000?2:1;s[21]=s[19]===3?4:1;s[24]=s[19]===3?2:0;s[43]=1;return s;}};
   }};
   const players={profile:user=>({nickname:user.id,equippedKart:'practiceV1'})};
   const manager=createMultiplayer({players,root:project,catalogPath:path,now:()=>clock,createPhysics:physics,recordResult:r=>saved.push(r),autoTick:false});
@@ -75,11 +84,14 @@ test('HTTP room API requires login, blocks foreign origins and streams both play
   t.after(async()=>{for(const c of controllers)c.abort();server.close();await once(server,'close');});
   const post=(path,fields,cookie,extra={})=>fetch(base+path,{method:'POST',headers:{'Content-Type':'application/json',...(cookie?{Cookie:cookie}:{}),...extra},body:JSON.stringify(fields)});
   assert.equal((await fetch(base+'/api/multi/rooms')).status,401);
+  assert.equal((await fetch(base+'/api/multi/sync')).status,401);
   const cookies=[];
   for(const name of ['multi_alpha','multi_beta']){const r=await post('/api/auth/register',{handle:name,password:'local-test-password'});assert.equal(r.status,200);cookies.push(r.headers.get('set-cookie').split(';')[0]);}
   assert.equal((await post('/api/multi/create',{name:'blocked',track:'beach_I01',character:'dao'},cookies[0],{Origin:'https://other.invalid'})).status,403);
   const made=await (await post('/api/multi/create',{name:'두 명 테스트',track:'beach_I01',character:'dao'},cookies[0])).json();
   assert.ok(made.id);assert.equal((await post('/api/multi/join',{id:made.id,character:'dao'},cookies[1])).status,200);
+  const synced=await (await fetch(base+'/api/multi/sync',{headers:{Cookie:cookies[0]}})).json();
+  assert.equal(synced.room.players.length,2);assert.equal(synced.frame,null);
   for(const cookie of cookies){
     const controller=new AbortController();controllers.push(controller);
     const response=await fetch(base+'/api/multi/events',{headers:{Cookie:cookie},signal:controller.signal});assert.match(response.headers.get('content-type'),/event-stream/);
@@ -95,4 +107,27 @@ test('real authoritative WASM gives distinct original grid slots and advances bo
   const input={throttle:false,brake:false,steer:0,drift:false,boost:false,exceed:false};
   for(let i=0;i<160;i++){a.step({...input,throttle:true});b.step(input);}
   const sa=a.state(),sb=b.state();assert.equal(sa[19],2);assert.ok(sa[6]>sb[6]);assert.ok(Math.hypot(sa[0]-first[0],sa[1]-first[1])>1);assert.ok(sa.every(Number.isFinite)&&sb.every(Number.isFinite));
+  for(const track of ['beach_I02','village_R01']){
+    const other=factory.create({track,kart:'practiceV1',slot:0});
+    assert.ok(Number.isFinite(other.progress()),track);assert.ok(other.body().half.every(v=>v>0),track);
+  }
+});
+
+test('server 5ms simulation actually resolves peer contacts and publishes ranked poll frames',t=>{
+  const root=join(project,'web-preview'),catalogPath=join(root,'assets/catalog.json'),catalog=JSON.parse(readFileSync(catalogPath)),factory=createRacePhysicsFactory(root,catalog);
+  let clock=10000,contacts=0;const engines=[];
+  const physics={...factory,create(args){const e=factory.create(args),apply=e.apply;engines.push(e);e.apply=delta=>{contacts++;apply(delta);};return e;}};
+  const manager=createMultiplayer({root,catalogPath,createPhysics:physics,autoTick:false,now:()=>clock,players:{profile:u=>({nickname:u.id,equippedKart:'practiceV1'})}});
+  t.after(()=>manager.close());
+  const f={manager,physics}, {users}=admit(f),room=readyStart(f,users);loaded(f,users,room);
+  for(let i=0;i<145;i++){clock+=50;manager.tick();}
+  const [a,b]=engines,ba=a.body(),bb=b.body();
+  // Move B halfway inside A's fitted body. Only this test holds the engine;
+  // HTTP clients have no position/velocity write path.
+  b.apply([0,0,0,0,0,0,...ba.center.map((v,i)=>v-bb.center[i]+(i===0?.1:0))]);contacts=0;
+  clock+=50;manager.tick();assert.ok(contacts>0);
+  const synced=manager.sync(users[0]);assert.equal(synced.frame.tick,7300);assert.equal(synced.room.phase,'running');
+  assert.deepEqual(synced.frame.players.map(p=>p.rank),[1,2]);
+  assert.ok(synced.frame.players.every(p=>p.state.length===62&&p.state.every(Number.isFinite)));
+  const hit=contact(a.body(),b.body());assert.ok(!hit||hit.depth<.001);
 });

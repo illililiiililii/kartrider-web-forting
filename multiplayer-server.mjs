@@ -1,6 +1,8 @@
 import {randomUUID} from 'node:crypto';
 import {readFileSync} from 'node:fs';
 import {createRacePhysicsFactory} from './server-physics.mjs';
+import {resolvePlayers} from './peer-collision.mjs';
+import {rankPlayers} from './race-ranking.mjs';
 
 const emptyInput=()=>({throttle:false,brake:false,steer:0,drift:false,boost:false,exceed:false,reset:false});
 const fail=(message,status=400)=>{throw Object.assign(new Error(message),{status});};
@@ -16,7 +18,7 @@ export function createMultiplayer({players,root,catalogPath,now=Date.now,createP
   function snapshot(room){return {id:room.id,revision:room.revision,name:room.name,track:room.track,host:room.host,phase:room.phase,race:room.race,speed:factory.speed,version:factory.version,
     players:[...room.members.values()].map(p=>({id:p.id,nickname:p.nickname,kart:p.kart,character:p.character,slot:p.slot,ready:p.ready,loaded:p.loaded,finished:p.finished,time:p.time})),chat:room.chat,results:room.results};}
   function send(id,event,data){const stream=streams.get(id);if(!stream||stream.response.destroyed||stream.response.writableEnded)return;if(stream.response.writableLength>256*1024){stream.response.destroy();return;}stream.response.write(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`);}
-  function broadcast(room,event='room',value){if(event==='room'){room.revision++;value=snapshot(room);}for(const id of room.members.keys())send(id,event,value);}
+  function broadcast(room,event='room',value){if(event==='room'){room.revision++;value=snapshot(room);}if(event==='frame')room.frame=value;for(const id of room.members.keys())send(id,event,value);}
   function roomFor(user){const room=rooms.get(membership.get(user.id));if(!room)fail('ROOM_REQUIRED',409);return room;}
   function character(value){if(!catalog.characters.some(c=>c.ready&&c.id===value))fail('CHARACTER_UNAVAILABLE');return value;}
   function leave(user){
@@ -26,7 +28,7 @@ export function createMultiplayer({players,root,catalogPath,now=Date.now,createP
     if(room.host===user.id)room.host=room.members.keys().next().value;
     if(room.phase==='loading')cancel(room,'플레이어가 나가 로딩을 취소했습니다.');else broadcast(room);
   }
-  function cancel(room,message){room.phase='lobby';room.engines=null;room.results=[];room.chat.push({nickname:'안내',text:message});room.chat=room.chat.slice(-30);for(const p of room.members.values()){p.ready=false;p.loaded=false;}broadcast(room);}
+  function cancel(room,message){room.phase='lobby';room.engines=null;room.frame=null;room.results=[];room.chat.push({nickname:'안내',text:message});room.chat=room.chat.slice(-30);for(const p of room.members.values()){p.ready=false;p.loaded=false;}broadcast(room);}
   function settle(room){
     room.phase='results';room.engines=null;
     room.results=[...room.members.values()].sort((a,b)=>(a.time??Infinity)-(b.time??Infinity)||a.slot-b.slot).map((p,index)=>({id:p.id,nickname:p.nickname,rank:p.finished?index+1:null,time:p.time??null,dnf:!p.finished}));
@@ -48,14 +50,22 @@ export function createMultiplayer({players,root,catalogPath,now=Date.now,createP
       room.accumulator+=Math.max(0,Math.min(250,time-room.lastTick));room.lastTick=time;
       try{while(room.accumulator>=50&&room.phase==='running'){
         room.accumulator-=50;room.simulated+=50;const states=[];
+        // Advance all racers together at the native 5ms step before contacts.
+        for(let step=0;step<10;step++){
+          const previous=new Map([...room.engines].flatMap(([id,e])=>{const b=e.body?.();return b?.active?[[id,b.center]]:[];}));
+          for(const p of room.members.values()){
+            const input=time-p.inputAt<=350?p.input:emptyInput();room.engines.get(p.id).step(input,5);p.input.reset=false;
+          }
+          resolvePlayers(room.engines,previous);
+        }
         for(const p of room.members.values()){
-          const engine=room.engines.get(p.id),input=time-p.inputAt<=350?p.input:emptyInput();engine.step(input);p.input.reset=false;
+          const engine=room.engines.get(p.id);
           const state=engine.state();
           if(state.length!==62||state.some(value=>!Number.isFinite(value)))throw new Error('NON_FINITE_PHYSICS');
           if(!p.finished&&state[19]===3){p.finished=true;p.time=Math.round(state[24]*1000);room.firstFinish??=room.simulated;}
-          states.push({id:p.id,state});
+          states.push({id:p.id,state,progress:engine.progress?.()??0});
         }
-        broadcast(room,'frame',{race:room.race,tick:room.simulated,players:states});
+        broadcast(room,'frame',{race:room.race,tick:room.simulated,players:rankPlayers(states,room.members)});
         if([...room.members.values()].every(p=>p.finished)||(room.firstFinish!==null&&room.simulated-room.firstFinish>=60000)||room.simulated>=600000)settle(room);
       }}catch(error){console.error('Multiplayer race stopped:',error.message);cancel(room,'경기 처리에 실패해 대기실로 돌아왔습니다.');}
     }
@@ -64,6 +74,7 @@ export function createMultiplayer({players,root,catalogPath,now=Date.now,createP
   return {tick,
     list(){assets();return {speed:factory.speed,rooms:[...rooms.values()].map(room=>({id:room.id,name:room.name,track:room.track,count:room.members.size,phase:room.phase}))};},
     current(user){const room=rooms.get(membership.get(user.id));if(room)room.members.get(user.id).seen=now();return room?snapshot(room):null;},
+    sync(user){const room=this.current(user);return {room,frame:room?rooms.get(room.id).frame??null:null};},
     connect(user,response,authenticate){
       const old=streams.get(user.id);if(old){old.response.write('event: replaced\ndata: {}\n\n');old.response.end();}
       response.writeHead(200,{'Content-Type':'text/event-stream','Cache-Control':'no-store','X-Accel-Buffering':'no'});response.write(': connected\n\n');
@@ -103,7 +114,7 @@ export function createMultiplayer({players,root,catalogPath,now=Date.now,createP
         if(user.id!==room.host)fail('HOST_REQUIRED',403);
         if(room.phase!=='lobby'||room.members.size<2||[...room.members.values()].some(p=>!p.ready))fail('PLAYERS_NOT_READY',409);
         if([...rooms.values()].filter(r=>['loading','running'].includes(r.phase)).length>=4)fail('SERVER_BUSY',429);
-        room.phase='loading';room.race=randomUUID();room.loadingAt=now();room.results=[];
+        room.phase='loading';room.race=randomUUID();room.loadingAt=now();room.results=[];room.frame=null;
         for(const member of room.members.values()){member.loaded=member.finished=false;member.time=null;member.input=emptyInput();member.seq=-1;}
         broadcast(room);return snapshot(room);
       }

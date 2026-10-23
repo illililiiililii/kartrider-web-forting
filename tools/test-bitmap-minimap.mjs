@@ -5,8 +5,8 @@ import {createLiveMinimap,minimapRotation} from '../web-preview/live-minimap.mjs
 test('original black/white bigmap is drawn, centered and rotated without rendering track geometry',async t=>{
   const originals={document:globalThis.document,Image:globalThis.Image,fetch:globalThis.fetch};
   t.after(()=>Object.assign(globalThis,originals));
-  const rotations=[],translations=[],images=[];
-  const ctx={clearRect(){},save(){},restore(){},translate(...p){translations.push(p);},rotate(a){rotations.push(a);},scale(){},drawImage(image){images.push(image);},beginPath(){},moveTo(){},lineTo(){},closePath(){},fill(){},stroke(){}};
+  const rotations=[],translations=[],images=[],scales=[];
+  const ctx={clearRect(){},save(){},restore(){},translate(...p){translations.push(p);},rotate(a){rotations.push(a);},scale(...v){scales.push(v);},drawImage(image){images.push(image);},beginPath(){},moveTo(){},lineTo(){},closePath(){},fill(){},stroke(){}};
   const canvas={dataset:{},setAttribute(){},getContext(){return ctx;}};
   globalThis.document={createElement(){return canvas;}};
   globalThis.Image=class {naturalWidth=512;naturalHeight=512;async decode(){}};
@@ -18,4 +18,5 @@ test('original black/white bigmap is drawn, centered and rotated without renderi
   assert.match(canvas.dataset.source,/xt_bigmap.png/);assert.match(images[0].src,/xt_bigmap.png$/);
   assert.equal(rotations[0],minimapRotation(.7));assert.deepEqual(translations.slice(0,2),[[300,270],[-256,-256]]);
   assert.equal(image.hidden,true);assert.equal(canvas.hidden,false);
+  assert.deepEqual(scales[0],[600/512*2.6,600/512*2.6]);
 });

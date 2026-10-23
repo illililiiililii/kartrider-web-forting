@@ -30,3 +30,14 @@ test('game/login UI references unchanged original P5136 GUI assets', { skip: !ex
     assert.equal(digest(local), digest(source), `GUI sprite changed from original: ${relative}`);
   }
 });
+
+test('rank header and participant panels are byte-identical original XML resources',()=>{
+  const manifest=JSON.parse(readFileSync(join(preview,'assets/ui/rank-board.json')));
+  const digest=file=>createHash('sha256').update(readFileSync(file)).digest('hex');
+  for(const [name,sha]of Object.entries(manifest.sources))assert.equal(digest(join(original,'stage/speedIndiGame',name)),sha);
+  const panels=[...Object.values(manifest.header),...Object.values(manifest.slots).flatMap(s=>Object.values(s.panels))];
+  assert.ok(panels.length>=10);
+  for(const panel of panels)assert.equal(digest(join(preview,'assets/ui',panel.image)),digest(join(original,panel.image)));
+  assert.equal(manifest.header.myrank.attributes.fontSize,'64 80');
+  assert.equal(manifest.slots.self.attributes.windowRect,'0 0 245 31');
+});

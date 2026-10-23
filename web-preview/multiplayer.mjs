@@ -1,9 +1,10 @@
 const $=id=>document.getElementById(id);
 const messages={HOST_REQUIRED:'방장만 실행할 수 있습니다.',PLAYERS_NOT_READY:'두 명 이상 입장하고 모두 준비해 주세요.',ROOM_LOCKED:'경기 중이거나 가득 찬 방입니다.',ROOM_NOT_FOUND:'방이 없어졌습니다.',ALREADY_IN_ROOM:'먼저 현재 방에서 나가 주세요.',RACE_VERSION_MISMATCH:'게임 파일이 변경되었습니다. 새로고침해 주세요.',MULTIPLAYER_UNAVAILABLE:'멀티플레이 서버·로컬 에셋을 확인해 주세요.',SIGN_IN_REQUIRED:'다시 로그인해 주세요.',CHAT_RATE_LIMIT:'메시지를 잠시 후 보내 주세요.'};
 export function createMultiplayerClient({catalog,userId,getCharacter,getControls,onPrepare,onStart,onFrame,onResults,onLeave,onDisconnect,onRoster}){
-  let room=null,stream=null,preparedRace=null,runningRace=null,preparing=null,pendingFrame=null,sequence=0,sending=false,enabled=false;
+  let room=null,stream=null,preparedRace=null,runningRace=null,preparing=null,pendingFrame=null,sequence=0,sending=false,enabled=false,polling=false,lastTick=-1,lastRace=null,mutation=0;
   const panel=$('multi-dialog'),status=$('multi-status');
   async function request(action,fields){
+    if(fields!==undefined&&action!=='input')mutation++;
     const response=await fetch('/api/multi/'+action,{credentials:'same-origin',cache:'no-store',...(fields===undefined?{}:{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(fields)})});
     const result=await response.json();if(!response.ok)throw new Error(messages[result.error]??result.error);return result;
   }
@@ -41,6 +42,20 @@ export function createMultiplayerClient({catalog,userId,getCharacter,getControls
     if(room.phase==='lobby'&&runningRace){runningRace=null;preparedRace=null;onResults(room);panel.classList.remove('hidden');}
   }
   function connect(){
+    // Quick Tunnels cannot carry SSE. Short authenticated HTTP requests work
+    // through that proxy; LAN retains its existing low-latency event stream.
+    if(location.hostname.endsWith('.trycloudflare.com')||new URLSearchParams(location.search).get('transport')==='poll'){
+      if(polling)return;polling=true;enabled=true;
+      const poll=async()=>{try{
+        const revision=mutation,result=await request('sync');if(revision!==mutation)return;
+        if(result.room?.id!==room?.id||result.room?.revision!==room?.revision)await accept(result.room);
+        const frame=result.frame;
+        if(frame&&frame.race===room?.race&&(frame.race!==lastRace||frame.tick>lastTick)){
+          lastRace=frame.race;lastTick=frame.tick;if(runningRace===frame.race)onFrame(frame);else pendingFrame=frame;
+        }
+      }catch(error){onDisconnect();showError(error);}finally{if(polling)setTimeout(poll,50);}};
+      poll();return;
+    }
     if(stream)return;stream=new EventSource('/api/multi/events');enabled=true;
     stream.onopen=()=>{status.textContent='연결되었습니다.';};
     stream.addEventListener('room',event=>accept(JSON.parse(event.data)).catch(showError));
