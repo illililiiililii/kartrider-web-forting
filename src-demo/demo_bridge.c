@@ -14,11 +14,14 @@
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
+#include "race-progress.h"
 
 static KartSimulationState kart;
 static KartChaseCameraFollow chase;
 static KartSimulationWorld world;
-static float telemetry[47];
+static float telemetry[57];
+static unsigned int timed_boost_kind, airborne_ms;
+static float last_ground_z;
 static KartGaugeState gauge;
 static KartGaugeConfig gauge_config;
 /* V1's passive charger is a 5136-era feature absent from the 2004 demo.
@@ -116,6 +119,8 @@ static void reset_at(float x, float y, float heading) {
     kart_steering_input_reset(&steering_keys);
     clock_ms = 0;
     respawn_arm_ms = 0;
+    timed_boost_kind = airborne_ms = 0;
+    last_ground_z = kart.position.z;
     previous_throttle = false;
     boost_press_allowed = false;
     wall_hits = 0.0f;
@@ -166,7 +171,7 @@ static void update_race(float dt) {
         }
         lap = (float)(course_progress.lap ? course_progress.lap : 1u);
         next_gate = (float)course_progress.node_id;
-        if (course_progress.lap >= course.lap_count) {
+        if (race_finished(course_progress.lap, course.lap_count)) {
             race_phase = 3.0f;
             finish_time = race_time;
         }
@@ -265,6 +270,28 @@ static void publish(unsigned int elapsed_ms, KartSimulationStepResult step) {
     telemetry[44] = q.x;
     telemetry[45] = q.y;
     telemetry[46] = q.z;
+    telemetry[47] = kart.grounded ? 1.0f : 0.0f;
+    telemetry[48] = kart.instant_boost.active ? 3.0f :
+        kart.timed_boost.active ? (float)timed_boost_kind : 0.0f;
+    /* Read-only copy: query real rear-wheel surface contacts for skid decals.
+       Re-querying must not advance suspension compression in the simulation. */
+    KartWheelContactState wheels = kart.wheels;
+    KartWheelQueryInput wheel_input = {
+        .position = kart.position,
+        .body_right = {rx, ry, 2.0f*(q.x*q.z-q.w*q.y)},
+        .body_forward = {fx, fy, -2.0f*(q.y*q.z+q.w*q.x)},
+        .body_up = {2.0f*(q.x*q.z+q.w*q.y), 2.0f*(q.y*q.z-q.w*q.x),
+                    1.0f-2.0f*(q.x*q.x+q.y*q.y)},
+        .geometry = kart.geometry, .query = ground_query, .user_data = NULL,
+    };
+    KartWheelQueryOutput contacts = kart_query_wheel_contacts(&wheels, &wheel_input);
+    for (unsigned int rear=0; rear<2; ++rear) {
+        const unsigned int wheel=rear+2, offset=49+rear*4;
+        telemetry[offset] = contacts.contact_points[wheel].x;
+        telemetry[offset+1] = contacts.contact_points[wheel].y;
+        telemetry[offset+2] = contacts.contact_points[wheel].z;
+        telemetry[offset+3] = contacts.contacts[wheel].active ? 1.0f : 0.0f;
+    }
 }
 
 __attribute__((export_name("demo_state_count"))) unsigned int demo_state_count(void) {
@@ -505,9 +532,11 @@ __attribute__((export_name("demo_step"))) void demo_step(
         boost_press_allowed = kart_gauge_take_booster(&gauge);
     controls.boost_active = boost_pressed && boost_press_allowed;
     if (throttle_pressed && !previous_throttle &&
-        kart_countdown_start_boost_granted(&race_countdown, clock_ms))
+        kart_countdown_start_boost_granted(&race_countdown, clock_ms)) {
         kart_timed_boost_start(&kart.timed_boost, 1.0f,
                                KART_START_BOOST_DURATION_MS);
+        timed_boost_kind = 2u;
+    }
     const bool before_go = race_phase == 1.0f &&
         !kart_countdown_update(&race_countdown, clock_ms).released;
     if (before_go) {
@@ -515,7 +544,11 @@ __attribute__((export_name("demo_step"))) void demo_step(
         controls.boost_active = false;
     }
     previous_throttle = throttle_pressed;
+    if (!kart.timed_boost.active && controls.boost_active) timed_boost_kind = 1u;
     KartSimulationStepResult step = kart_simulate_milliseconds(&kart, &controls, &world, elapsed_ms);
+    if (!kart.timed_boost.active) timed_boost_kind = 0u;
+    if (kart.grounded) { last_ground_z = kart.position.z; airborne_ms = 0u; }
+    else airborne_ms += elapsed_ms;
     /* Original road-tagged triangles now supply ground/walls. Never rewind a
        natural fall/jump, teleport chassis height, or add a static-friction law. */
     if (track_enabled && kart.grounded && race_phase == 2.0f &&
@@ -536,6 +569,18 @@ __attribute__((export_name("demo_step"))) void demo_step(
     } else if (kart.position.z < kart_demo_track_fall_limit(&track_spec) && respawn_arm_ms == 0) {
         respawn_arm_ms = clock_ms ? clock_ms : 1u;
     }
+    /* Scene minimum may include distant scenery far below the course. Request
+       the same R recovery after a sustained fall with no road anywhere below.
+       A jump with a lower landing surface is left to the original physics. */
+    if (track_enabled && !kart.grounded && airborne_ms >= 1000u &&
+        kart.linear_velocity.z < 0.0f && kart.position.z < last_ground_z - 8.0f &&
+        respawn_arm_ms == 0u) {
+        KartGroundHit below;
+        const float bottom = kart_demo_track_fall_limit(&track_spec);
+        if (!ground_query(NULL, kart.position,
+            (KartVec3){0,0,fminf(-1.0f,bottom-kart.position.z)}, &below))
+            demo_request_reset();
+    }
     update_race(elapsed_ms * 0.001f);
     if (respawn_arm_ms != 0 && clock_ms - respawn_arm_ms >= 500u) {
         KartVec3 position;
@@ -554,6 +599,8 @@ __attribute__((export_name("demo_step"))) void demo_step(
             previous_x = position.x;
             previous_y = position.y;
             kart_chase_camera_follow_reset(&chase);
+            airborne_ms = 0u;
+            last_ground_z = position.z;
         }
         respawn_arm_ms = 0;
     }

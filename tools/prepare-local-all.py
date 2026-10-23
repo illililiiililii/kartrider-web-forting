@@ -2,6 +2,7 @@
 from pathlib import Path
 from concurrent.futures import ProcessPoolExecutor,as_completed
 import argparse,contextlib,hashlib,importlib.util,json,shutil,subprocess,uuid,xml.etree.ElementTree as ET
+from local_asset_paths import track_file, resource_file
 ROOT=Path(__file__).resolve().parent.parent
 TOOLS=ROOT/'tools'
 PRIORITY=['beach_I01','beach_I02','village_R01']
@@ -24,7 +25,7 @@ def prepare(job):
    converter.export(source,target/'model.mesh.json',.01,rho_root=rho)
    entry['ready']=True
    if kind=='tracks':
-    raw=rho/'track'/entry['id'];original=raw/'track.1s'
+    original=track_file(rho,entry['id']);raw=original.parent
     if not original.is_file():raise ValueError('Original track.1s missing')
     native=ROOT/'local-data/native-collision'/uuid.uuid4().hex/entry['id'];native.parent.mkdir(parents=True)
     tool=TOOLS/'native-collision-exporter/bin/Release/net8.0/NativeCollisionExporter.dll'
@@ -44,9 +45,9 @@ def main():
  parser=argparse.ArgumentParser();parser.add_argument('--rho-root',type=Path,required=True);parser.add_argument('--workers',type=int,default=3);args=parser.parse_args()
  for folder in ['catalog-cache','catalog-logs']:(ROOT/'local-data'/folder).mkdir(parents=True,exist_ok=True)
  metadata={}
- xml=args.rho_root/'track/common/track@zz.xml'
+ xml=resource_file(args.rho_root,'track/common/track@zz.xml')
  if xml.is_file():metadata={e.get('id'):e.attrib for e in ET.parse(xml).getroot().iter('track')}
- locale=args.rho_root/'track/common/trackLocale@kr.xml'
+ locale=resource_file(args.rho_root,'track/common/trackLocale@kr.xml')
  names={e.get('id'):e.get('name') for e in ET.parse(locale).getroot().iter('track') if e.get('name')} if locale.is_file() else {}
  script_hash=hashlib.sha256(b''.join((TOOLS/name).read_bytes() for name in ['convert-usd-local.py','usd_materials.py','align-native-collision.py'])).hexdigest()
  jobs=[];waiting=[]
@@ -64,7 +65,7 @@ def main():
     id=base if primary else base+'--'+source.stem
     entry={'id':id,'family':base,'label':LABELS.get(base,base)+((' · '+source.stem) if not primary else '')}
     if kind=='tracks':entry['laps']=int(metadata.get(base,{}).get('laps','0'))
-    raw=args.rho_root/'track'/base/'track.1s'
+    raw=track_file(args.rho_root,base)
     raw_signature=str((raw.stat().st_size,raw.stat().st_mtime_ns)) if kind=='tracks' and raw.is_file() else ''
     jobs.append((kind,entry,str(source),str(args.rho_root),script_hash+sibling_signature+raw_signature))
  catalog={'format':'p5136-local-catalog-v1','tracks':[],'karts':[],'characters':[],'waiting':waiting}
@@ -78,6 +79,8 @@ def main():
    for entry in catalog[kind]:entry['label']=names.get(entry['id'],entry['label'])
   priority=PRIORITY if kind=='tracks' else ['whiteKnightV1','saberV1'] if kind=='karts' else ['dao','bazzi','marid','run_dizini']
   catalog[kind].sort(key=lambda e:(priority.index(e['id']) if e['id'] in priority else 999,e['id']))
+ art=load_module('local_track_art',TOOLS/'prepare-local-track-art.py')
+ for entry in catalog['tracks']:art.prepare(args.rho_root,entry)
  path=ROOT/'web-preview/assets/catalog.json';path.parent.mkdir(parents=True,exist_ok=True);path.write_text(json.dumps(catalog,ensure_ascii=False,indent=2),encoding='utf-8')
  print(json.dumps({kind:{'ready':sum(e['ready'] for e in catalog[kind]),'total':len(catalog[kind])} for kind in ['tracks','karts','characters']}),flush=True)
 if __name__=='__main__':main()

@@ -11,7 +11,7 @@ $RhoRoot = Resolve-LocalRhoRoot $RhoRoot
 . (Join-Path $PSScriptRoot 'resolve-demo-build.ps1')
 $generatedCourse = Join-Path $root 'src-demo\generated_5136_course.c'
 $tracks = @('beach_I01', 'beach_I02', 'village_R01')
-$available = @($tracks | Where-Object { Test-Path -LiteralPath (Join-Path $RhoRoot "track\$_\track.1s") })
+$available = @($tracks | Where-Object { Test-Path -LiteralPath (Resolve-LocalTrackFile $RhoRoot $_) })
 if ($available.Count -eq 3) {
   $catalogArgs=@()
   $catalog=Join-Path $root 'web-preview\assets\catalog.json'

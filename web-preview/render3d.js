@@ -3,6 +3,8 @@ import { readChasePose } from './camera-pose.mjs';
 import { mountWheel } from './wheel-basis.mjs';
 import { applyKartOrientation } from './kart-pose.mjs';
 import { collisionPositions } from './collision-wireframe.mjs';
+import { addOpaqueDepthPass } from './material-depth.mjs';
+import { createRaceEffects } from './race-effects.mjs';
 
 // Rendering only: position and heading come from the C/Wasm demo state.
 export function createPreviewRenderer(canvas) {
@@ -120,15 +122,7 @@ export function createPreviewRenderer(canvas) {
   proxy.add(helmet);
   box(proxy, 0.6, 0.43, 0.6, -0.38, 0.99, 0, material(0x4562b5));
   box(proxy, 0.09, 0.16, 0.55, -0.03, 1.12, 0, dark);
-  const boostFlames = new THREE.Group();
-  for (const side of [-0.43, 0.43]) {
-    const flame = new THREE.Mesh(new THREE.ConeGeometry(0.22, 1.2, 12),
-      new THREE.MeshBasicMaterial({ color: 0xffd54f, transparent: true, opacity: 0.8 }));
-    flame.rotation.z = Math.PI / 2;
-    flame.position.set(-1.55, 0.45, side);
-    boostFlames.add(flame);
-  }
-  kart.add(boostFlames);
+  const raceEffects = createRaceEffects(renderer,scene,kart);
 
   async function loadAsset(name, type) {
     const usd = type !== 'kart' || !['whiteKnight1','cotton11'].includes(name);
@@ -196,6 +190,7 @@ export function createPreviewRenderer(canvas) {
       }));
       mesh.userData.sourceName = part.name;
       mesh.userData.textureName = part.texture || '';
+      addOpaqueDepthPass(THREE,mesh);
       if (type === 'kart' && partName.startsWith('wheel')) {
         const wheel = mountWheel(mesh);
         group.add(wheel.pivot);
@@ -218,6 +213,7 @@ export function createPreviewRenderer(canvas) {
     group.updateMatrixWorld(true);
     const modelBounds = new THREE.Box3().setFromObject(group);
     originalBase = -modelBounds.min.y;
+    raceEffects.mountKart(modelBounds,kartVisualScale);
     group.scale.setScalar(lobbyMode ? lobbyVisualScale : kartVisualScale);
     group.position.y = originalBase * (lobbyMode ? lobbyVisualScale : kartVisualScale);
     originalWheels = nextWheels;
@@ -441,7 +437,7 @@ export function createPreviewRenderer(canvas) {
       originalCharacter.rotation.x = originalCharacter.rotation.z = 0;
     }
     shell.color.setHex(boost > 0 ? 0xffcd4f : drifting ? 0xf779a8 : 0x33b6e4);
-    boostFlames.visible = boost > 0;
+    raceEffects.update(state,frameDeltaMs,!lobbyMode && !trackPreview);
     const localSpeed = vx * Math.cos(heading) + vy * Math.sin(heading);
     for (const wheel of wheels) wheel.rotation.z -= localSpeed * Math.min(frameDeltaMs, 50) / 1000 / 0.43;
     for (const wheel of originalWheels) {
@@ -494,7 +490,7 @@ export function createPreviewRenderer(canvas) {
     look.copy(smoothedLook);
     firstFrame = false;
     camera.lookAt(look);
-    renderer.render(scene, camera);
+    raceEffects.render(camera);
   }
 
   return {
@@ -506,7 +502,8 @@ export function createPreviewRenderer(canvas) {
     renderPreview,
     toggleTrackPreview,
     toggleCollision,
-    resetCamera: () => { firstFrame = true; },
+    resetCamera: () => { firstFrame = true; raceEffects.clear(); },
+    setBoostBlur: value => raceEffects.setBlurEnabled(value),
     toggleCamera: () => { overhead = !overhead; firstFrame = true; return overhead; },
   };
 }

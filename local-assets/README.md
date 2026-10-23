@@ -3,7 +3,9 @@
 Put the original PC KartRider **5136** resources here. No KartRider: Drift assets.
 
 - `rhoOut/`: unpacked resources, directly containing `gui/`, `stage/`, `sound/`, `track/`, etc.
-- `track/`: converted track folders, e.g. `beach_I01/beach_I01.usda`.
+- `track/`: track folders, e.g. `beach_I01/beach_I01.usda`, original
+  `track.1s` and `xt_bigmap.png` beside the model. Preparation prefers this
+  folder, then `rhoOut/track/<map>`, then the configured unpack root.
 - `kart/`: converted kart folders, e.g. `whiteKnightV1/whiteKnightV1_demo.usda`.
 - `character/`: converted character folders, e.g. `dao/dao.usda`.
 
@@ -72,3 +74,11 @@ The main game uses the source cotten5 dynamics/geometry. The requested 1.5x
 kart/character enlargement changes presentation only. Other themes' BGM stays
 silent until its exact original music selection is connected; Beach/Village
 BGM and original drift/boost effects remain connected.
+
+`prepare-local-all.ps1` also copies the selected original booster/flare/wave/
+blur images and both solo/team item icons with `prepare-local-effects.ps1`.
+The current single-player race uses the solo icon. All copied effects remain
+ignored. The settings button switches boost blur and remembers that choice.
+Original `ToMinimap` registration is extracted from each map's own `.1s`;
+the enlarged `xt_bigmap.png` pans beneath the vehicle marker. Missing mappings
+retain an explicitly labelled collision schematic, without guessed calibration.

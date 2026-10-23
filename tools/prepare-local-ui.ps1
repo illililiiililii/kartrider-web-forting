@@ -54,3 +54,5 @@ $slotSource = Join-Path $AssetRoot 'item\slot\slot_v1.png'
 $slotTarget = Join-Path $target 'item\slot'
 New-Item -ItemType Directory -Force -Path $slotTarget | Out-Null
 Copy-Item -LiteralPath $slotSource -Destination (Join-Path $slotTarget 'slot_v1.png') -Force
+
+& (Join-Path $PSScriptRoot 'prepare-local-effects.ps1') -AssetRoot $AssetRoot

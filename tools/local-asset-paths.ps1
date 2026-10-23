@@ -10,3 +10,16 @@ function Resolve-LocalRhoRoot([string]$Override) {
   }
   return (Join-Path $project 'local-assets\rhoOut')
 }
+
+function Resolve-LocalTrackFile([string]$RhoRoot, [string]$Track, [string]$Name = 'track.1s') {
+  $project = Split-Path -Parent $PSScriptRoot
+  foreach ($directory in @((Join-Path $project "local-assets\track\$Track"), (Join-Path $project "local-assets\rhoOut\track\$Track"), (Join-Path $RhoRoot "track\$Track"))) {
+    $names = @($Name)
+    if ($Name -eq 'track.1s') { $names += 'track.s1' }
+    foreach ($filename in $names) {
+      $candidate = Join-Path $directory $filename
+      if (Test-Path -LiteralPath $candidate -PathType Leaf) { return $candidate }
+    }
+  }
+  return (Join-Path $project "local-assets\track\$Track\$Name")
+}

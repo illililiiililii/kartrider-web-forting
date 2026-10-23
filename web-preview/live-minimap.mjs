@@ -40,30 +40,60 @@ export function mapProjection(triangles, width, height, padding = 8) {
   return (x,y) => [width/2+(x-(minX+maxX)/2)*scale, height/2-(y-(minY+maxY)/2)*scale];
 }
 
+// FUN_00467550 from the recovered demo, using THIS 5136 track's ToMinimap.
+// The map quad reverses V; xt_bigmap is the same mapping at twice resolution.
+export function bitmapProjection(mapping, width, height) {
+  if (!mapping || ![...mapping.origin,mapping.scale,mapping.width,mapping.height].every(Number.isFinite) || mapping.scale<=0 || mapping.width<=0 || mapping.height<=0) throw new Error('Invalid ToMinimap registration');
+  return (x,y) => [width*(.5+(x-mapping.origin[0])*mapping.scale/mapping.width),
+    height*(.5-(y-mapping.origin[1])*mapping.scale/mapping.height)];
+}
+
+export function lapAnnouncement(current, total) {
+  return current === total ? '마지막 바퀴!!' : `${current}번째 바퀴`;
+}
+
 export function createLiveMinimap(image) {
   const canvas=document.createElement('canvas');
-  canvas.id='live-minimap'; canvas.width=480; canvas.height=456;
+  canvas.id='live-minimap'; canvas.width=600; canvas.height=540;
   canvas.setAttribute('aria-label','실제 트랙 좌표 기반 지도 및 차량 방향');
   canvas.hidden=true; image.after(canvas);
   const ctx=canvas.getContext('2d');
-  let background, project;
+  let background, project, zoom=1.75, generation=0;
   return {
-    load(bytes) {
+    async load(bytes, name, hasOriginal=true) {
+      const serial=++generation;
+      background=null;
+      if (name && hasOriginal) {
+        const response=await fetch(`./assets/tracks/${name}/minimap.json`);
+        if (!response.ok) throw new Error(`${name} 원본 ToMinimap 좌표 없음`);
+        const mapping=await response.json();
+        const bitmap=new Image();bitmap.src=`./assets/tracks/${name}/xt_bigmap.png`;
+        await bitmap.decode();
+        if(serial!==generation)return;
+        project=bitmapProjection(mapping,bitmap.naturalWidth,bitmap.naturalHeight);
+        zoom=canvas.width/bitmap.naturalWidth*2;
+        background=bitmap;
+        canvas.dataset.source='xt_bigmap.png + track.1s/ToMinimap';
+        image.hidden=true;canvas.hidden=false;return;
+      }
       const triangles=readMapTriangles(bytes);
       project=mapProjection(triangles,canvas.width,canvas.height,16);
-      ctx.clearRect(0,0,canvas.width,canvas.height); ctx.fillStyle='#d9e5eb';
+      const fallback=document.createElement('canvas');fallback.width=canvas.width;fallback.height=canvas.height;
+      const draw=fallback.getContext('2d');draw.fillStyle='#d9e5eb';
       for (const tri of triangles) {
-        ctx.beginPath();
-        tri.forEach(([x,y],i) => { const p=project(x,y); i ? ctx.lineTo(...p) : ctx.moveTo(...p); });
-        ctx.closePath(); ctx.fill();
+        draw.beginPath();
+        tri.forEach(([x,y],i) => { const p=project(x,y); i ? draw.lineTo(...p) : draw.moveTo(...p); });
+        draw.closePath(); draw.fill();
       }
-      background=ctx.getImageData(0,0,canvas.width,canvas.height);
+      background=fallback;zoom=1.75;canvas.dataset.source='collision schematic (no original mapping)';
       image.hidden=true; canvas.hidden=false;
     },
     draw(state) {
       if (!background) return;
-      ctx.putImageData(background,0,0);
-      const [x,y]=project(state[0],state[1]);
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      const position=project(state[0],state[1]);
+      const x=canvas.width/2,y=canvas.height/2;
+      ctx.save();ctx.translate(x-position[0]*zoom,y-position[1]*zoom);ctx.scale(zoom,zoom);ctx.drawImage(background,0,0);ctx.restore();
       ctx.save(); ctx.translate(x,y); ctx.rotate(Math.PI/2-state[2]);
       ctx.beginPath(); ctx.moveTo(0,-12); ctx.lineTo(8,9); ctx.lineTo(0,5); ctx.lineTo(-8,9); ctx.closePath();
       ctx.fillStyle='#ffdf00'; ctx.strokeStyle='#151515'; ctx.lineWidth=3; ctx.fill(); ctx.stroke(); ctx.restore();

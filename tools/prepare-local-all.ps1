@@ -11,5 +11,6 @@ $conversionLog=Join-Path $root 'local-data\catalog-conversion.log'
 if ($LASTEXITCODE -ne 0) { throw 'Asset catalog preparation failed; see local-data/catalog-logs' }
 Write-Output "Local model catalog prepared; conversion details: $conversionLog"
 & (Join-Path $PSScriptRoot 'build-demo-physics.ps1') -RhoRoot $RhoRoot -PythonExe $PythonExe
+& (Join-Path $PSScriptRoot 'prepare-local-effects.ps1') -AssetRoot $RhoRoot
 & node (Join-Path $PSScriptRoot 'validate-local-catalog.mjs')
 if ($LASTEXITCODE -ne 0) { throw 'Catalog Wasm validation failed' }

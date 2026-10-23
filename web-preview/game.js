@@ -1,5 +1,6 @@
-import { createPreviewRenderer } from './render3d.js?v=native47-catalog';
-import { createLiveMinimap } from './live-minimap.mjs';
+import { createPreviewRenderer } from './render3d.js?v=race-effects57';
+import { boostLabel } from './race-effects.mjs';
+import { createLiveMinimap, lapAnnouncement } from './live-minimap.mjs';
 import { createRaceAudio } from './race-audio.mjs';
 import { createDemoInput, demoElapsedMilliseconds } from './demo-input.mjs';
 
@@ -40,6 +41,13 @@ async function loadLocalCatalog() {
 }
 let wasm, statePointer, current, previous, visual;
 let active = 'lobby';
+let announcedLap=0, lapNoticeUntil=0;
+let boostBlur=true;
+try {boostBlur=localStorage.getItem('kart.boostBlur')!=='false';} catch {}
+view.setBoostBlur(boostBlur);
+$('#boost-blur-setting').checked=boostBlur;
+$('#boost-blur-setting').addEventListener('change',event=>{boostBlur=event.target.checked;view.setBoostBlur(boostBlur);try{localStorage.setItem('kart.boostBlur',String(boostBlur));}catch{}});
+for(const button of document.querySelectorAll('[data-open-settings]'))button.addEventListener('click',()=>{input.clear();$('#settings-dialog').classList.remove('hidden');});
 let lastFrame = 0;
 let requestId = 0;
 let itemType = 'kart';
@@ -124,7 +132,8 @@ async function loadSelectedTrack() {
     new Uint8Array(wasm.memory.buffer, pointer, binary.byteLength).set(binary);
     const triangles = wasm.demo_track_load(pointer, binary.byteLength);
     if (!triangles) throw new Error('트랙 충돌 메시 파싱 실패');
-    liveMinimap.load(binary);
+    await liveMinimap.load(binary,name,info?.minimap!==false);
+    if (serial !== requestId) return;
     // The original ToRoad course supplies the actual spawn immediately below.
     // Enable the already-loaded triangle scene without an obsolete manual pose.
     if (!wasm.demo_track_enable(0, 0, 0, 0)) throw new Error('트랙 활성화 실패');
@@ -156,6 +165,7 @@ async function changeModel(kind) {
 function startRace() {
   if (!wasm || !signedIn || $('#start').disabled) return;
   raceAudio.start(trackChoice.value);
+  announcedLap=0;lapNoticeUntil=0;
   wasm.demo_start_race();
   syncState();
   view.setLobbyMode(false);
@@ -290,6 +300,10 @@ function draw(state, frameMs) {
   $('#gauge').style.width = `${Math.min(100, Math.max(0, state[7]))}%`;
   const nitroCount = Math.max(0, Math.floor(state[32]));
   $('#nitro-count').setAttribute('aria-label', `보유 부스터 ${nitroCount}개`);
+  if($('#nitro-count').dataset.count!==String(nitroCount)){
+    $('#nitro-count').dataset.count=String(nitroCount);
+    $('#nitro-count').replaceChildren(...Array.from({length:Math.min(2,nitroCount)},()=>{const icon=document.createElement('img');icon.src='./assets/effects/stage/timeAttackReady/boostTex_0.png';icon.alt='개인전 부스터';return icon;}));
+  }
   $('.nitro-inventory').classList.toggle('has-nitro', nitroCount > 0);
   const timeText = formatTime(state[23]);
   renderSpriteDigits($('#timer'), timeText, 'time-digit', 18, 11);
@@ -303,6 +317,16 @@ function draw(state, frameMs) {
   if (countdown) $('#countdown').style.backgroundPosition = `${-countdown * 64}px 0`;
   $('#lap').textContent = state[19] === 1 ? '출발 준비' :
     state[19] === 3 ? '완주' : '원본 체크포인트 레이스';
+  const currentLap=Math.max(1,Math.round(state[21]));
+  if(state[19]===2 && currentLap!==announcedLap && currentLap<=trackLaps[trackChoice.value]) {
+    announcedLap=currentLap;lapNoticeUntil=performance.now()+2200;
+    $('#lap-notice').textContent=lapAnnouncement(currentLap,trackLaps[trackChoice.value]);
+  }
+  $('#lap-notice').classList.toggle('hidden',state[19]!==2 || performance.now()>lapNoticeUntil);
+  const kind=Math.round(state[48]||0);
+  $('#boost-status').textContent=boostLabel(kind);
+  $('#boost-status').classList.toggle('hidden',!kind);
+  $('#boost-status').dataset.kind=kind;
   const finished = state[19] === 3;
   $('#race-result').classList.toggle('hidden', !finished);
   if (finished) {
@@ -330,7 +354,7 @@ for (const type of ['keydown', 'keyup']) {
     if (type === 'keydown' && event.code === 'F3') {
       event.preventDefault(); view.toggleCollision().catch(showError); return;
     }
-    if (active !== 'race') return;
+    if (active !== 'race' || !$('#settings-dialog').classList.contains('hidden')) return;
     if (type === 'keydown' && event.code === 'KeyR') {
       wasm.demo_request_reset();
       syncState();

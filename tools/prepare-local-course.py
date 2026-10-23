@@ -7,6 +7,7 @@ tenfold relative to the original-size conversion, so the same scale must be
 applied to the source checkpoints and to the KTRK/rendered track together.
 """
 
+from local_asset_paths import track_file
 import argparse
 import importlib.util
 import json
@@ -59,7 +60,7 @@ def main():
         name = entry['id']
         try:
             if entry['laps'] <= 0: raise ValueError('Original lap racing is not defined for this special course')
-            source = args.rho_root / 'track' / name / 'track.1s'
+            source = track_file(args.rho_root, name)
             roads, course_tag, _ = demo.read_track(str(source))
             sections = demo.collect_sections(course_tag, roads, str(source))
             used = collect_used(sections)

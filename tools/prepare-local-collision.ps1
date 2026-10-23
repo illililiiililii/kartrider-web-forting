@@ -30,7 +30,7 @@ New-Item -ItemType Directory -Force -Path $run | Out-Null
 Push-Location $root
 try {
   foreach ($track in @('beach_I01','beach_I02','village_R01')) {
-    $source=Join-Path $RhoRoot "track\$track\track.1s"
+    $source=Resolve-LocalTrackFile $RhoRoot $track
     if (-not (Test-Path -LiteralPath $source)) { throw "Original collision input missing: $source" }
     $prefix=Join-Path $run $track
     & dotnet $tool export $source $prefix *> (Join-Path $root "local-data\native-$track.log")
