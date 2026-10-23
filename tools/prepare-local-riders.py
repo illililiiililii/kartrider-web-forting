@@ -52,6 +52,14 @@ def prepare(entry):
         if raw:rig=json.loads(base64.b64decode(raw));break
     if not rig:raise ValueError(f'{name}: original skin data missing')
     skin=skin_matrices(rig);time=Usd.TimeCode(stage.GetStartTimeCode());cache=UsdGeom.XformCache(time)
+    bind=[]
+    for bone in rig['bones']:
+        matrix=np.eye(4);matrix[:3,:]=np.array(bone['lm']).reshape(3,4)
+        bind.append(bind[bone['p']]@matrix if bone['p']>=0 else matrix)
+    def point(indices):
+        p=sum((skin[i]@bind[i])[:3,3] for i in indices)/len(indices)
+        return [float(p[0])*.01,float(p[2])*.01,-float(p[1])*.01]
+    model['riderMounts']={'hips':point([16,20]),'head':point([5]),'hands':[point([9]),point([14])],'source':'original weighted joint hierarchy'}
     for part in model['parts']:
         prim=stage.GetPrimAtPath(part['name']);mesh=UsdGeom.Mesh(prim)
         vertices=mesh.GetPointsAttr().Get(time);transform=cache.GetLocalToWorldTransform(prim)

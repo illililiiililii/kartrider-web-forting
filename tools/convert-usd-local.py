@@ -13,6 +13,7 @@ from pathlib import Path
 from pxr import Gf, Usd, UsdGeom
 from usd_materials import material_info
 from usd_normals import world_normals, web_normals
+from usd_mounts import kart_mounts
 
 
 def texture_for(prim, source, output_dir, rho_root=None):
@@ -160,6 +161,8 @@ def export(source, output, scale, ktrk=None, rho_root=None):
     if not parts:
         raise ValueError(f"No meshes in {source}")
     result = {"format": "p5136-usd-mesh-v1", "source": source.name, "parts": parts}
+    mounts=kart_mounts(stage,cache)
+    if mounts:result['kartMounts']=mounts
     output.write_text(json.dumps(result, separators=(",", ":")), encoding="utf-8")
     if ktrk is not None:
         write_ktrk(ktrk, parts)

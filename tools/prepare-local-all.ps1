@@ -16,6 +16,8 @@ if ($LASTEXITCODE -ne 0) { throw 'Original normal preparation failed' }
 if ($LASTEXITCODE -ne 0) { throw 'Original sky preparation failed' }
 & $PythonExe (Join-Path $PSScriptRoot 'prepare-local-riders.py')
 if ($LASTEXITCODE -ne 0) { throw 'Weighted driving pose preparation failed' }
+& $PythonExe (Join-Path $PSScriptRoot 'prepare-local-mounts.py')
+if ($LASTEXITCODE -ne 0) { throw 'Original kart mount preparation failed' }
 & $PythonExe (Join-Path $PSScriptRoot 'prepare-local-hud.py') --rho-root $RhoRoot
 if ($LASTEXITCODE -ne 0) { throw 'Original lap GUI preparation failed' }
 & (Join-Path $PSScriptRoot 'build-demo-physics.ps1') -RhoRoot $RhoRoot -PythonExe $PythonExe

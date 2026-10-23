@@ -5,6 +5,7 @@ import { applyKartOrientation } from './kart-pose.mjs';
 import { collisionPositions } from './collision-wireframe.mjs';
 import { addOpaqueDepthPass } from './material-depth.mjs';
 import { createRaceEffects } from './race-effects.mjs';
+import {seatSurface,mountRider} from './rider-mount.mjs';
 
 // Rendering only: position and heading come from the C/Wasm demo state.
 export function createPreviewRenderer(canvas) {
@@ -92,6 +93,7 @@ export function createPreviewRenderer(canvas) {
   const trackCenter = new THREE.Vector3();
   let trackRadius = 100;
   let originalWheels = [];
+  let seatMount=null,riderMounts=null;
   // Presentation-only enlargement. Native C keeps its source kart geometry.
   const kartVisualScale = 1.25 * 1.5 * 0.6;
   const lobbyVisualScale = 0.75 * 1.5 * 0.6;
@@ -127,7 +129,7 @@ export function createPreviewRenderer(canvas) {
   box(proxy, 0.09, 0.16, 0.55, -0.03, 1.12, 0, dark);
   const raceEffects = createRaceEffects(renderer,scene,kart);
 
-  async function loadAsset(name, type) {
+  async function loadAsset(name, type, waitForTextures=false) {
     const usd = type !== 'kart' || !['whiteKnight1','cotton11'].includes(name);
     const path = usd ? `./assets/usd/${name}/model.mesh.json` : `./assets/${name}.mesh.json`;
     const response = await fetch(path,{cache:'no-store'});
@@ -139,6 +141,8 @@ export function createPreviewRenderer(canvas) {
     const group = new THREE.Group();
     const nextWheels = [];
     const textures = new Map();
+    const imageLoader=new THREE.TextureLoader();
+    const loadTexture=async file=>waitForTextures?await imageLoader.loadAsync(`./assets/usd/${name}/${file}`):imageLoader.load(`./assets/usd/${name}/${file}`);
     for (const part of data.parts) {
       // Missing referenced artwork is not replaced with unrelated images.
       if (part.missingTexture) continue;
@@ -165,7 +169,7 @@ export function createPreviewRenderer(canvas) {
       let texture = null;
       if (part.texture) {
         if (!textures.has(part.texture)) {
-          textures.set(part.texture, new THREE.TextureLoader().load(`./assets/usd/${name}/${part.texture}`));
+          textures.set(part.texture, await loadTexture(part.texture));
         }
         texture = textures.get(part.texture);
       }
@@ -178,8 +182,7 @@ export function createPreviewRenderer(canvas) {
       let alphaMap = null;
       if (part.alphaTexture) {
         if (!textures.has(part.alphaTexture)) {
-          textures.set(part.alphaTexture, new THREE.TextureLoader().load(
-            `./assets/usd/${name}/${part.alphaTexture}`));
+          textures.set(part.alphaTexture, await loadTexture(part.alphaTexture));
         }
         alphaMap = textures.get(part.alphaTexture);
       }
@@ -211,6 +214,12 @@ export function createPreviewRenderer(canvas) {
     return { group, nextWheels, data };
   }
 
+  function placeRider(group,scale){
+    const fitted=mountRider(group,seatMount,riderMounts,scale,.80*scale,originalBase);
+    group.userData.mountSource=fitted?seatMount.source:'missing original mount metadata';
+    return fitted;
+  }
+
   async function setKart(name) {
     const { group, nextWheels, data } = await loadAsset(name, 'kart');
     if (original) {
@@ -223,17 +232,19 @@ export function createPreviewRenderer(canvas) {
     group.updateMatrixWorld(true);
     const modelBounds = new THREE.Box3().setFromObject(group);
     originalBase = -modelBounds.min.y;
+    seatMount=seatSurface(data.parts,data.kartMounts?.seat);
     raceEffects.mountKart(modelBounds,kartVisualScale,0.6);
     group.scale.setScalar(lobbyMode ? lobbyVisualScale : kartVisualScale);
     group.position.y = originalBase * (lobbyMode ? lobbyVisualScale : kartVisualScale);
     originalWheels = nextWheels;
     kart.add(group);
+    if(originalCharacter)placeRider(originalCharacter,lobbyMode?lobbyVisualScale:kartVisualScale);
     proxy.visible = false;
     return `${data.source}: ${data.parts.length}개 부품`;
   }
 
   async function setCharacter(name) {
-    const { group } = await loadAsset(name, 'character');
+    const { group,data } = await loadAsset(name, 'character');
     if (originalCharacter) {
       kart.remove(originalCharacter);
       originalCharacter.traverse((node) => {
@@ -245,6 +256,8 @@ export function createPreviewRenderer(canvas) {
     group.scale.setScalar(0.80 * kartVisualScale);
     group.position.set(-0.25 * kartVisualScale, 0.5 * kartVisualScale, 0);
     originalCharacter = group;
+    riderMounts=data.riderMounts;
+    placeRider(group,lobbyMode?lobbyVisualScale:kartVisualScale);
     kart.add(group);
     if (lobbyMode) setLobbyMode(true);
   }
@@ -352,6 +365,7 @@ export function createPreviewRenderer(canvas) {
     if (originalCharacter) originalCharacter.position.set(
       -0.25 * (enabled ? lobbyVisualScale : kartVisualScale),
       0.5 * (enabled ? lobbyVisualScale : kartVisualScale), 0);
+    if(originalCharacter)placeRider(originalCharacter,enabled?lobbyVisualScale:kartVisualScale);
     if (originalTrack && trackDrive) originalTrack.visible = !enabled;
     if (lobbyCharacter) {
       kart.remove(lobbyCharacter);
@@ -438,6 +452,7 @@ export function createPreviewRenderer(canvas) {
       characterCopy.visible = true;
       characterCopy.scale.setScalar(0.80 * lobbyVisualScale);
       characterCopy.position.set(-0.25 * lobbyVisualScale, 0.5 * lobbyVisualScale, 0);
+      placeRider(characterCopy,lobbyVisualScale);
       display.add(characterCopy);
     }
     preview.scene.add(display);
@@ -456,6 +471,34 @@ export function createPreviewRenderer(canvas) {
   }
   const lobbyRight = new THREE.Vector3();
   const up = new THREE.Vector3(0, 1, 0);
+  let thumbnailRenderer,thumbnailScene,thumbnailCamera,thumbnailQueue=Promise.resolve();
+  const thumbnailCache=new Map();
+  function renderAssetThumbnail(name,type,needed=()=>true){
+    const key=type+':'+name;
+    if(thumbnailCache.has(key))return Promise.resolve(thumbnailCache.get(key));
+    const job=thumbnailQueue.catch(()=>{}).then(async()=>{
+      if(!needed())return null;
+      if(thumbnailCache.has(key))return thumbnailCache.get(key);
+      if(!thumbnailRenderer){
+        thumbnailRenderer=new THREE.WebGLRenderer({alpha:true,antialias:true});thumbnailRenderer.setSize(240,156);thumbnailRenderer.outputColorSpace=THREE.SRGBColorSpace;
+        thumbnailScene=new THREE.Scene();thumbnailScene.add(new THREE.HemisphereLight(0xffffff,0x55667d,3));
+        const light=new THREE.DirectionalLight(0xffffff,2);light.position.set(3,6,4);thumbnailScene.add(light);
+        thumbnailCamera=new THREE.PerspectiveCamera(38,240/156,.01,1000);
+      }
+      const {group}=await loadAsset(name,type,true);
+      try{
+        thumbnailScene.add(group);group.updateMatrixWorld(true);
+        const bounds=new THREE.Box3().setFromObject(group),center=bounds.getCenter(new THREE.Vector3()),radius=bounds.getSize(new THREE.Vector3()).length()/2;
+        thumbnailCamera.position.copy(center).add(new THREE.Vector3(1.8,1.1,1.8).multiplyScalar(radius));thumbnailCamera.lookAt(center);
+        thumbnailRenderer.render(thumbnailScene,thumbnailCamera);
+        const image=thumbnailRenderer.domElement.toDataURL('image/png');thumbnailCache.set(key,image);return image;
+      }finally{
+        thumbnailScene.remove(group);const geometries=new Set(),materials=new Set(),textures=new Set();
+        group.traverse(node=>{if(node.isMesh){geometries.add(node.geometry);materials.add(node.material);if(node.material.map)textures.add(node.material.map);if(node.material.alphaMap)textures.add(node.material.alphaMap);}});
+        geometries.forEach(g=>g.dispose());materials.forEach(m=>m.dispose());textures.forEach(t=>t.dispose());
+      }
+    });thumbnailQueue=job;return job;
+  }
   // Share original geometry/materials; no duplicate track conversion or guessed
   // bitmap scale. Layer 2 excludes the rider, sky, skids and effect sprites.
   let mapRenderer,mapCamera,lastMapTime=0;
@@ -488,11 +531,6 @@ export function createPreviewRenderer(canvas) {
     kart.position.set(x, state[14] || 0, -y);
     if (lobbyMode) kart.rotation.y = heading - Math.PI / 2;
     else applyKartOrientation(kart, state);
-    if (originalCharacter && !lobbyMode) {
-      // Pose the imported original mesh as a single rigid rider until its
-      // 1s skeleton/bind animation can be recovered from the local archive.
-      originalCharacter.rotation.x = originalCharacter.rotation.z = 0;
-    }
     shell.color.setHex(boost > 0 ? 0xffcd4f : drifting ? 0xf779a8 : 0x33b6e4);
     raceEffects.update(state,frameDeltaMs,!lobbyMode && !trackPreview);
     const localSpeed = vx * Math.cos(heading) + vy * Math.sin(heading);
@@ -534,6 +572,11 @@ export function createPreviewRenderer(canvas) {
       // C already smooths orientation, speed, height and FOV. Map Z-up to Y-up.
       const pose = readChasePose(state);
       desired.fromArray(pose.position);
+      if(originalCharacter&&riderMounts?.head){
+        kart.updateMatrixWorld(true);
+        const riderFocus=originalCharacter.localToWorld(new THREE.Vector3(...riderMounts.head));
+        desired.lerp(riderFocus,.25); // User-requested close view; source FOV/filter stay intact.
+      }
       cameraDirection.fromArray(pose.forward).normalize();
       targetLook.copy(desired).add(cameraDirection);
       camera.up.fromArray(pose.up).normalize();
@@ -562,6 +605,7 @@ export function createPreviewRenderer(canvas) {
     setTrackDrive,
     setLobbyMode,
     renderPreview,
+    renderAssetThumbnail,
     renderMinimap,
     toggleTrackPreview,
     toggleCollision,
