@@ -1,158 +1,53 @@
-# KartRider 5136 web port — local playable work in progress
+# 카트라이더 5136 웹 포트 — 로컬 플레이 가능 (개발 중)
 
-Main game: [http://127.0.0.1:4174/](http://127.0.0.1:4174/).
-Physics/telemetry test page: [http://127.0.0.1:4174/debug.html](http://127.0.0.1:4174/debug.html).
-The main page now composes unchanged P5136 GUI PNGs according to the supplied
-lobby/race screenshots and `stage/mainMenu`, `stage/timeAttackReady`,
-`dialog/garageDialog`, `dialog2/selectTrackEx`, and `stage/speedIndiGame`
-layouts. Its mountain/clock-tower/roof backdrop and
-decorative riders come from `myRoom/2022_Facelift_main`, and its white bottom
-taskbar comes from `gui/window/menu`. It uses
-the supplied kart/character/track meshes, track cards, minimap, speed-number
-sheet, timer-number sheet, V1 N₂O slot/gauge and tachometer, and taskbar icons. Dynamic labels and
-native account fields are text, not newly drawn UI art. The account-entry
-layout remains provisional because an original account-login screen was not
-found in the extracted files.
-Validated local tracks use original `.1s` road-tagged collision
-triangles. Full wall-contact stability remains under investigation. Their original `.1s` ToRoad checkpoint routes, lap counts and a
-basic finish result are connected to C/Wasm. Multiplayer is not implemented.
+메인 게임: [http://127.0.0.1:4174/](http://127.0.0.1:4174/)
+물리/텔레메트리 테스트 페이지: [http://127.0.0.1:4174/debug.html](http://127.0.0.1:4174/debug.html)
+메인 페이지는 제공된 로비/레이스 스크린샷과 `stage/mainMenu`, `stage/timeAttackReady`, `dialog/garageDialog`, `dialog2/selectTrackEx`, `stage/speedIndiGame` 레이아웃을 바탕으로, 원본 P5136 GUI PNG 파일들을 그대로 조합하여 구성되었습니다. 배경의 산, 시계탑, 지붕 및 장식용 캐릭터는 `myRoom/2022_Facelift_main`에서 가져왔으며, 하단의 흰색 작업 표시줄은 `gui/window/menu`에서 가져왔습니다. 또한 카트/캐릭터/트랙 메시, 트랙 카드, 미니맵, 속도 및 타이머 숫자 이미지, V1 엔진 N₂O 슬롯/게이지, 타코미터, 작업 표시줄 아이콘 등이 포함되어 있습니다. 동적 라벨과 계정 관련 필드는 별도로 새로 그려진 UI 아트가 아닌 텍스트로 구현되었습니다. 계정 로그인 화면은 추출된 파일 내에서 발견되지 않아, 현재의 계정 입력 레이아웃은 임시로 구성된 상태입니다.
+로컬에서 검증된 트랙들은 원본 `.1s` 파일의 도로 충돌 판정(collision triangles) 데이터를 사용합니다. 벽 충돌 시의 안정성은 현재 추가 확인 중입니다. 원본 `.1s` 파일의 체크포인트 경로(ToRoad), 랩 카운트, 그리고 기본적인 결승 결과 처리 로직은 C/Wasm을 통해 연결되어 있습니다. 멀티플레이어 기능은 구현되지 않았습니다. 이 브라우저 게임은 [KartriderDemoPhysics](https://github.com/overjoy1008/KartriderDemoPhysics)에서 가져온 **수정되지 않은** C 모듈들(`kart_dynamics.c`, `kart_simulation.c`, `kart_camera.c`, `kart_countdown.c`, `kart_course.c`, `kart_course_data.c`, `kart_engine_sound.c`, `kart_input.c` 및 트랙 관련 C 모듈)과 `kart_demo_data.c`, `kart_track_texture.c`, `demo/kart_gauge.h`를 WebAssembly로 연결(링크)합니다. 로컬 빌드 시스템은 KTEX/KTXZ 텍스처 리더를 포함하여 제공된 `src` 디렉토리 내의 13개 C 파일을 모두 컴파일하며, 검토되지 않은 소스 파일 개수 변경 사항이 발생할 경우 빌드를 거부합니다. 시뮬레이션은 데모에서 사용된 5ms 최대 서브스텝(substep)을 비롯하여, 4륜 접지, 서스펜션, 종방향 및 횡방향(드리프트) 힘 계산, 공기 저항, 자세 통합(pose integration), 충돌 반응, 그리고 추적 카메라(chase-camera) 업데이트 로직을 활용합니다. `src-demo/demo_bridge.c`는 테스트를 위한 임시 평면 환경과 사각형 벽을 제공하며, 원본 데이터의 도로 태그가 지정된 삼각형 충돌 처리를 위한 어댑터 역할을 합니다. 또한 데모의 7초 카운트다운, 스타트 부스트 타이밍, 조향 키 제어권, 게이지 시스템(200 유닛/2개 슬롯 구조), 코스 게이트 그래프, 워프(순간 이동), 복구 로직, 그리고 사운드 재생 규칙 등이 모두 통합되어 있습니다. 이는 **2004년형 데모 물리 엔진**이며, P5136 버전의 물리 엔진과는 다릅니다. 렌더링되는 추적 카메라는 C 코드에서 계산된 위치, 전방/상방 벡터, 그리고 75~110도의 시야각(FOV)을 사용하며, 카메라의 부드러운 움직임(smoothing) 또한 C 코드 측에서 처리됩니다. 레이스 카메라 위치는 웹 환경에서의 별도 가림(occlusion) 처리 없이 그대로 적용됩니다. 로비 화면과 탑다운(top-down) 뷰는 별도로 구현되어 있습니다. 카트와 캐릭터는 1.5배 확대되어 표시되지만, 물리 엔진은 원본 'cotten5' 지오메트리와 역학(dynamics)을 그대로 유지합니다. 카트를 변경하면 모델만 바뀔 뿐, V1 물리 역학이 새로 적용되지는 않습니다. 입력 방식(조작 방향 등)은 브라우저 경계에서 한 번 변환 과정을 거칩니다. Windows용 렌더러/재생 기능과 실험적인 다단 기어(multi-gear) 사운드 시스템은 물리 연산용 Wasm(WebAssembly)에 포함되어 있지 않습니다. 데모 버전의 2004년형 코스 테이블은 5136 트랙에 자동으로 적용되지 않으며, 5136 트랙 고유의 'ToRoad' 게이트 데이터는 제공된 `track.1s` 파일과는 별도로 디코딩됩니다. 이전의 Rust 기반 물리 연산 연구 자료는 [`OLD_PYS`](OLD_PYS/README.md) 디렉토리에 보관되어 있으나, 브라우저에서 실행될 때는 로드되지 않습니다.
 
-The browser game now links the **unmodified** `kart_dynamics.c`,
-`kart_simulation.c`, `kart_camera.c`, `kart_countdown.c`, `kart_course.c`,
-`kart_course_data.c`, `kart_engine_sound.c`, `kart_input.c`, and track C modules from
-[KartriderDemoPhysics](https://github.com/overjoy1008/KartriderDemoPhysics)
-plus `kart_demo_data.c`, `kart_track_texture.c` and `demo/kart_gauge.h` into WebAssembly. The local builder compiles all 13 C files in the supplied `src` directory, including the KTEX/KTXZ texture reader, and rejects an unreviewed source-count change. Its simulation uses the demo's 5ms maximum substep, four
-wheel contacts, suspension, longitudinal and lateral/drift force pipeline,
-drag, pose integration, collision response, and chase-camera update. Our
-`src-demo/demo_bridge.c` supplies a temporary flat debug test world, square walls,
-and an adapter for original `.1s` road-tagged triangle collision. The demo's
-7-second countdown, start-boost window, steering-key ownership, gauge's
-200-unit/two-slot hypothesis, course-gate graph, warp, recovery, and sound
-driving laws are linked. This is **2004 demo physics**, not verified P5136
-physics. The rendered chase camera now consumes the C position, forward/up vectors and
-full 75–110 degree FOV; C performs the follow smoothing. The race camera position is applied without a web occlusion override. Lobby and top-down presentation remain separate. Kart and character presentation is enlarged by 1.5x, while the physics keeps
-the source cotten5 geometry and dynamics. Kart selection changes the model,
-not invented V1 dynamics. Input handedness is converted once at the browser boundary.
-Its Windows renderer/playback and experimental multi-gear sound are
-not part of the physics Wasm. The demo's 2004 course tables are not silently
-applied to the 5136 tracks: local 5136 ToRoad gates are decoded separately
-from the supplied `track.1s`. The former Rust physics investigation
-is preserved in [`OLD_PYS`](OLD_PYS/README.md) and is not loaded in the browser.
+## 로컬 환경에서의 빌드 및 실행 (Windows)
 
-## Build and play locally (Windows)
-
-The tested demo C sources are now included at `third_party/KartriderDemoPhysics`
-(revision and hashes in `SOURCE.json`); no Downloads checkout is needed.
-Install Node.js (with `node:sqlite`; Node 22.13+ or newer) and, for original course/model conversion, Python 3.
-From a fresh checkout:
+테스트를 거친 데모 버전의 C 소스 코드는 현재 `third_party/KartriderDemoPhysics` 디렉토리에 포함되어 있습니다(리비전 및 해시 정보는 `SOURCE.json` 파일 참조). 별도의 다운로드 과정은 필요하지 않습니다. Node.js(`node:sqlite` 포함, 버전 22.13 이상 권장)를 설치해야 하며, 원본 코스 및 모델 데이터를 변환하려면 Python 3가 필요합니다. 프로젝트를 새로 체크아웃한 후, 다음 명령어를 실행하세요:
 
 ```powershell
 .\tools\build-demo-physics.ps1 -Bootstrap
 node server.mjs
 ```
 
-`-Bootstrap` downloads Zig 0.13.0 into ignored `.tools/` and verifies its official
-SHA-256. Existing Zig can be supplied with `-ZigExe`. Without game assets,
-`/debug.html` runs standalone physics; the original game/lobby needs local assets.
-The builder emits no 5136 gates when resources are absent and rejects partial
-three-track inputs. It never substitutes the demo's 2004 gates for 5136 tracks.
-Original files go in [`local-assets/`](local-assets/README.md); all prepare scripts
-default there. Empty inputs report `WAITING` without scanning former Downloads.
-
-Before starting the server, prepare the track cards and minimaps from the
-user's unpacked original files in `local-assets/rhoOut/`:
+`-Bootstrap` 옵션을 사용하면 Zig 0.13.0 버전이 `.tools/` 디렉토리(Git 관리 대상에서 제외됨)로 다운로드되며, 공식 SHA-256 해시값을 통해 무결성이 검증됩니다. 이미 설치된 Zig를 사용하려면 `-ZigExe` 옵션을 통해 경로를 지정할 수 있습니다. 게임 에셋이 없는 경우 `/debug.html`을 통해 물리 연산만 단독으로 실행할 수 있으며, 전체 게임 및 로비 기능을 사용하려면 로컬 에셋이 필요합니다. 빌드 도구는 리소스가 없을 경우 5136 게이트를 생성하지 않으며, 3개 트랙 중 일부만 입력되는 경우 처리를 거부합니다. 데모 버전의 2004년형 게이트 데이터를 5136 트랙에 대신 사용하는 일은 결코 발생하지 않습니다. 원본 파일은 [`local-assets/`](local-assets/README.md) 디렉토리에 배치해야 하며, 모든 준비(prepare) 스크립트는 기본적으로 이 디렉토리를 참조합니다. 입력 데이터가 없는 경우, 과거 다운로드 데이터를 검색하지 않고 `WAITING` 상태를 표시합니다. 서버를 시작하기 전에, 사용자가 압축을 해제한 원본 파일(`local-assets/rhoOut/` 경로)에서 트랙 카드와 미니맵을 준비해야 합니다:
 
 ```powershell
 .\tools\prepare-local-tracks.ps1
 .\tools\prepare-local-ui.ps1
 .\tools\prepare-local-audio.ps1
-# Required for model conversion (not for standalone debug physics):
+# 모델 변환을 위해 필요함 (독립형 디버그 물리 모드에서는 불필요):
 python -m pip install usd-core==25.5.1 Pillow numpy==2.3.5
-# Native collision conversion additionally requires the .NET 8 SDK and Git.
+# 네이티브 충돌(collision) 변환을 수행하려면 .NET 8 SDK와 Git이 추가로 필요합니다.
 .\tools\prepare-local-all.ps1
 ```
 
-The locally copied artwork, 5136-derived C gate table, and collision outputs
-are Git-ignored. The new
-main page drives on `beach_I01`, `beach_I02`, and `village_R01` visual meshes
-with KTRK collision selected by original inherited `property/road` metadata.
-`prepare-local-all.ps1` discovers every supplied USDA model, retains original
-Korean track labels/lap data, builds all valid ToRoad tables and verifies each
-advertised start through Wasm. Unsupported inputs stay disabled with a reason
-in ignored `assets/catalog.json`. It caches unchanged successes and failures.
-.NET 8 SDK, Git, usd-core 25.5.1, Pillow and NumPy 2.3.5 are required for full preparation. Its checkpoint gates are decoded
-from those tracks' original `.1s` ToRoad records and use 3/3/2 laps
-respectively. The web track, collision triangles, and `.1s` gates are all
-enlarged tenfold relative to the earlier prototype while the kart/character
-and its C body originally remained the same size. The later 1.5x model-only
-enlargement leaves native physics unchanged. This deliberately changes the prototype
-world scale; it is **not** a claim about original 5136 physical metres. The
-original-scale start heights had agreed with KTRK within 0.005 m before this
-uniform enlargement. The square test course
-remains on `/debug.html`. Model inputs are detected by signature (USD ASCII/binary or FBX); FBX uses
-Blender before the existing USD converter. Full FBX conversion awaits input files.
-See [`DEVELOPMENT_PROGRESS.md`](DEVELOPMENT_PROGRESS.md).
+로컬로 복사된 아트워크, 5136 버전에서 파생된 C 게이트 테이블, 그리고 충돌 데이터 출력물은 Git 추적 대상에서 제외(Git-ignored)됩니다. 새로운
+메인 페이지는 `beach_I01`, `beach_I02`, `village_R01` 비주얼 메시를 기반으로 하며,
+원본에 포함된 `property/road` 메타데이터를 통해 KTRK 충돌 데이터가 선택됩니다.
+`prepare-local-all.ps1`은 다음을 탐색합니다.
+제공된 모든 USDA 모델은 원본의 트랙 라벨 및 랩 데이터를 그대로 유지하며, 유효한 모든 'ToRoad' 테이블을 생성하고 Wasm을 통해 각 시작 지점의 유효성을 검증합니다. 지원되지 않는 입력 데이터는 `assets/catalog.json` 파일에서 제외되며, 제외된 이유가 함께 기록됩니다. 처리 결과(성공 또는 실패) 중 변경되지 않은 항목은 캐시됩니다. 전체 준비 과정을 수행하려면 .NET 8 SDK, Git, usd-core 25.5.1, Pillow, NumPy 2.3.5가 필요합니다. 체크포인트 게이트는 해당 트랙의 원본 `.1s` ToRoad 레코드에서 디코딩되며, 각각 3/3/2 랩으로 설정됩니다. 웹 트랙, 충돌 삼각형, 그리고 `.1s` 게이트는 이전 프로토타입 대비 10배 확대되었으나, 카트/캐릭터 및 그 'C 바디(C body)'는 원래 크기를 유지합니다. 이후 모델만 1.5배 확대하는 과정이 추가되었지만, 고유 물리 엔진은 변경되지 않았습니다. 이는 의도적으로 프로토타입의 월드 스케일을 조정한 것이며, 원본의 물리적 크기(5136미터)를 그대로 재현하려는 것은 아닙니다. 이번 일괄 확대 전, 원본 스케일에서의 시작 지점 높이는 KTRK 데이터와 0.005m 오차 범위 내에서 일치했습니다. 정사각형 테스트 코스는 `/debug.html`에서 확인할 수 있습니다. 모델 입력 데이터는 파일 서명(USD ASCII/바이너리 또는 FBX)을 통해 감지되며, FBX 파일은 기존 USD 변환기 사용 전 Blender를 거쳐 처리됩니다. 전체 FBX 변환은 입력 파일이 준비되는 대로 진행될 예정입니다. 자세한 내용은 [`DEVELOPMENT_PROGRESS.md`](DEVELOPMENT_PROGRESS.md)를 참조하십시오.
 
-Open [http://127.0.0.1:4174/](http://127.0.0.1:4174/). The generated
-`web-preview/demo_physics.wasm` is ignored by Git and must be built locally.
-The pinned upstream snapshot has no license file; its notices and provenance
-are preserved in [`third_party/README.md`](third_party/README.md). Original game
-assets and generated Wasm/course tables remain ignored.
+[http://127.0.0.1:4174/](http://127.0.0.1:4174/)에 접속하십시오. 생성된 `web-preview/demo_physics.wasm` 파일은 Git 관리 대상에서 제외되어 있으므로, 로컬 환경에서 직접 빌드해야 합니다. 사용된 업스트림 스냅샷에는 별도의 라이선스 파일이 포함되어 있지 않으나, 관련 고지 사항 및 출처 정보는 [`third_party/README.md`](third_party/README.md)에 보존되어 있습니다. 원본 게임 에셋과 생성된 Wasm 및 코스 테이블은 Git 관리 대상에서 제외됩니다. 조작 방법: 방향키 또는 숫자 키패드 8/2/4/6(W/A/S/D 키도 사용 가능), Shift 키로 드리프트, Ctrl 키로 부스터(드리프트 종료 시 게이지가 가득 차 있을 경우 사용 가능), R 키로 초기화, F3 키로 충돌 와이어프레임 표시. `/debug.html` 페이지에서 슬라이더를 사용해 데모의 `max_steer_angle_deg`(최대 조향 각도)를 1°에서 30°까지 0.1° 단위로 설정할 수 있습니다. 옆의 입력란에 정확한 값을 직접 입력할 수도 있으며, 설정값은 로컬에 저장됩니다. 기본값은 10°입니다. 'Space' 키를 이용한 'Exceed(익시드)' 기능은 향후 P5136 통합 전까지 비활성화되어 있습니다. 별도의 데모 물리 엔진 선택기를 통해 `cotten5`, `practice1`, `saber5`, `solid5` 등 원본의 역학(dynamics) 및 차체 형상을 불러올 수 있습니다. P5136 V1 메시(mesh) 선택은 시각적인 요소일 뿐이며, 해당 데모 카트의 실제 물리적 특성을 재현하는 것은 아닙니다. 시작 시에는 데모와 동일하게 7초 카운트다운이 진행되며, ±100ms 타이밍에 맞춰 가속 키를 누르면 부스터가 발동합니다. 사각형 형태의 디버그 테스트 코스는 P5136 원본 레이스에 포함된 것이 아닙니다. 데모의 게이지 규칙은 원본의 충전 공식을 복원한 것이 아니라, 가설에 기반한 것입니다. V1 패시브 충전 API는 아직 실험적인 단계이므로 메인 게임에서는 비활성화되어 있으며, 대신 기존 데모의 SLIP 게이지가 사용됩니다. 디버그 모드에서 저장한 조향 각도 설정은 메인 게임의 기본 설정값을 덮어쓰지 않습니다. 모든 입력 방식은 '마지막으로 누른 키'를 우선하는 원본 로직을 따르며, 별칭(alias)이나 터치 입력도 동일한 상태를 공유합니다. 화면에 표시되는 랩(바퀴 수) 정보는 원본 `track@zz.xml` 파일에서 가져오며, 원본의 'ToRoad' 체크포인트(0.1초 단위)를 통해 랩 카운트와 결승 통과 상태가 결정됩니다. 외부에서 불러온 트랙의 경우, 'R' 키를 누르면 코스 체크포인트에서 재시작(리스폰)됩니다. 깊은 곳으로 추락했을 때는 타이머를 초기화하지 않고도 임시로 안전한 지상 위치로 복귀할 수 있습니다. `server.mjs`는 (넥슨/P5136 계정이 아닌) 독립적인 웹 게임 계정 기능을 제공합니다:
+`POST /api/auth/register`, `POST /api/auth/login`, `GET /api/auth/me`,
+`POST /api/auth/logout` 등이 이에 해당합니다. `/login.html`은 원본 메뉴 패널과 일반적인 빨간색 버튼 스프라이트를 사용한 로컬 계정 로그인 폼을 제공합니다. 비밀번호는 scrypt 알고리즘으로 해싱되며, 해싱된 세션 토큰은 (Git 등에서) 무시되도록 설정된 `local-data/accounts-4174.sqlite` 파일에 저장됩니다. 쿠키는 `HttpOnly` 및 `SameSite=Strict` 속성이 적용되어 있습니다. HTTPS 환경에서는 `KART_COOKIE_SECURE=1`로 설정하십시오. 원본 게임 내 `stage/authenStage`는 별도의 챌린지 화면일 뿐이며, P5136 계정 로그인 레이아웃의 근거가 아닙니다.
 
-Controls: arrows or numpad 8/2/4/6 (W/A/S/D also work), Shift drift, Ctrl
-booster after a full gauge is banked at drift end, R reset, F3 collision wireframe. On `/debug.html`, use the slider to set the demo's
-`max_steer_angle_deg` from 1° to 30° in 0.1° increments; the adjacent number
-box accepts an exact value and the setting is saved locally. The source
-default is 10°. `Space`/Exceed is disabled until later P5136 integration.
-The separate demo physics selector loads the source's `cotten5`, `practice1`,
-`saber5`, or `solid5` dynamics and body geometry; the P5136 V1 mesh selection
-is visual only and does not pretend to be that demo kart. The start has the
-demo's 7-second countdown and ±100 ms acceleration-press boost window. The
-square debug test course is not an original P5136 race. The demo gauge rule is
-explicitly a hypothesis, not a recovered original charging formula. The two
-V1 passive-charger API remains experimental and is disabled in the main game;
-the original demo SLIP gauge is used. Stored debug steering-angle settings do
-not override the main game's source preset. Both input paths use the original
-last-key ownership; aliases and touch inputs share that same state. The visible lap
-totals come from original `track@zz.xml`; original `.1s` ToRoad checkpoints
-drive the Wasm lap and finish state. On imported tracks, `R` requests a
-course checkpoint respawn; deep-fall recovery can still use a temporary
-grounded safety pose without clearing the timer.
-
-`server.mjs` provides independent web-game accounts (not Nexon/P5136 accounts):
-`POST /api/auth/register`, `POST /api/auth/login`, `GET /api/auth/me`, and
-`POST /api/auth/logout`. `/login.html` provides a local account form using the
-original menu panel and generic red button sprites. Passwords are scrypt-hashed; hashed session tokens
-are stored in ignored `local-data/accounts-4174.sqlite`; cookies are HttpOnly and
-SameSite=Strict. Set `KART_COOKIE_SECURE=1` behind HTTPS. The original
-`stage/authenStage` is a separate challenge screen, not evidence for a P5136
-account-login layout.
-
-The local original `.1s` kart geometry can be converted without committing
-copyrighted assets:
+저작권이 포함된 에셋을 직접 저장소에 올리지 않고도, 원본 `.1s` 형식의 카트 지오메트리(형태 데이터)를 다음과 같이 변환할 수 있습니다:
 
 ```powershell
 python .\tools\convert-1s-preview.py '..\..\work\original-assets\whiteKnight1-model.1s' '.\web-preview\assets\whiteKnight1.mesh.json'
 python .\tools\convert-1s-preview.py '..\..\work\original-assets\cotton11-model.1s' '.\web-preview\assets\cotton11.mesh.json'
 ```
 
-If those ignored local meshes are absent, the 3D renderer shows a temporary
-geometric kart. Converted kart wheels now steer/spin from the C physics state,
-and timed boost shows a basic exhaust effect. The newer USD path additionally
-loads original kart/character textures and three original track scenes. The
-main page uses original collision metadata; skeletal animation and
-full wall-contact stability remain unfinished. After changing track conversion
-scale, rerun `prepare-local-usd.ps1` and `build-demo-physics.ps1` together so
-visual road, KTRK hitboxes and ToRoad checkpoint gates stay aligned.
+해당 로컬 메시(mesh) 파일이 없을 경우, 3D 렌더러는 임시 형태의 카트를 표시합니다. 변환된 카트의 바퀴는 이제 C 언어로 작성된 물리 상태에 따라 조향 및 회전하며, 부스트 사용 시 기본적인 배기 효과가 나타납니다. 새로운 USD 경로를 사용하면 원본 카트/캐릭터 텍스처와 세 가지 원본 트랙 장면이 추가로 로드됩니다. 메인 페이지는 원본 충돌(collision) 메타데이터를 사용하지만, 스켈레탈 애니메이션과 벽면 접촉 시의 안정적인 물리 처리는 아직 구현되지 않았습니다. 트랙 변환 스케일을 변경한 후에는 `prepare-local-usd.ps1`과 `build-demo-physics.ps1`을 함께 다시 실행하여, 시각적인 도로와 KTRK 히트박스, 그리고 ToRoad 체크포인트 게이트가 서로 일치하도록 조정해야 합니다. ## 검증
 
-## Verification
-
-The demo C speed-steering formula is linked unchanged:
-`maxSteer × exp(-abs(forwardVelocity / steer_constraint))`. Direct Wasm
-measurements at the same 10° slider setting yielded 10.00° at 0 m/s,
-5.77° at 15.50 m/s, and 3.54° at 29.15 m/s. The new regression test checks
-this trend. Drift slip calculation can use a separate maximum-steer path,
-so this evidence applies to non-drift steering only.
+데모 C의 속도 기반 조향 공식은 변경 없이 그대로 적용되었습니다:
+`maxSteer × exp(-abs(forwardVelocity / steer_constraint))`. 슬라이더를 10°로 설정한 상태에서 Wasm을 통해 직접 측정한 결과, 0 m/s에서 10.00°, 15.50 m/s에서 5.77°, 29.15 m/s에서 3.54°의 값이 도출되었습니다. 새로운 회귀 테스트는 이러한 경향을 확인합니다. 드리프트 슬립(drift slip) 계산 시에는 별도의 최대 조향 경로를 사용할 수 있으므로,
+이 증거는 드리프트가 없는 조향(non-drift steering)에만 해당합니다.
 
 ```powershell
 .\tools\build-demo-physics.ps1
@@ -162,36 +57,13 @@ python tools/test-usd-conversion.py
 node --test tools\test-auth-server.mjs tools\test-demo-physics.mjs tools\test-frame-interpolation.mjs tools\test-local-ui-assets.mjs tools\test-recovery.mjs tools\test-wheel-basis.mjs tools\test-track-collision.mjs tools\test-local-models.mjs tools\test-demo-input.mjs tools\test-kart-pose.mjs tools\test-local-catalog.mjs
 ```
 
-The recovery run passes 17 Node checks and one Python format check; eight
-asset-dependent checks are skipped. Zig bootstrap and identical offline rebuilds
-are verified. The historical asset-backed run passed 22 Node checks plus native synthetic traversal
-of all three complete original routes. These checks include V1 speed-threshold
-charging, original GUI asset
-hash verification, imported track
-collision, clear launch directions on all three tracks, speed-dependent steering, demo gauge/countdown/input/course
-behavior, and register/login/logout.
-In direct Wasm tests, the default
-demo kart accelerated to about 156 km/h after 1.6 seconds on the flat test world; with
-identical short inputs, 5°/10°/20° steering produced increasing heading
-changes. Browser QA confirmed Wasm loading, the actual `.1s` kart, the slider,
-and the race countdown; browser QA also confirmed Beach I01's corrected
-original start-line direction. Native traversal tests feed the gate quads
-directly and do **not** establish that a human can drive full laps through
-every original collision route. Full human-driven lap completion and original-client
-trajectory equivalence are **not** verified. See [`reader.md`](reader.md) for
-remaining work and limitations.
+복구 실행(recovery run)은 17개의 Node 검사와 1개의 Python 형식 검사를 통과했으며, 에셋 의존적 검사 8개는 건너뛰었습니다. Zig 부트스트랩과 오프라인에서의 동일한 재빌드 과정이 검증되었습니다. 과거 에셋 기반 실행(historical asset-backed run)은 22개의 Node 검사를 통과했으며, 원본 전체 경로 3개에 대한 네이티브 합성 주행(native synthetic traversal) 테스트도 완료했습니다. 이러한 검사 항목에는 V1 속도 임계값 충전, 원본 GUI 에셋 해시 검증, 가져온 트랙의 충돌 처리, 3개 트랙 모두에서의 명확한 출발 방향, 속도에 따른 조향, 데모용 게이지/카운트다운/입력/코스 동작, 그리고 회원가입/로그인/로그아웃 기능이 포함됩니다.
+직접적인 Wasm 테스트에서, 기본 데모 카트는 평탄한 테스트 환경에서 1.6초 만에 약 156km/h까지 가속되었습니다. 동일한 짧은 입력값을 주었을 때, 5°/10°/20°의 조향 각도에 따라 진행 방향이 그에 맞춰 변화하는 것을 확인했습니다. 브라우저 QA를 통해 Wasm 로딩, 실제 카트 모델, 슬라이더, 그리고 레이스 카운트다운이 정상적으로 작동함을 확인했습니다. 또한 'Beach I01' 트랙에서 수정된 원본 출발선 방향도 브라우저 QA를 통해 검증되었습니다. 네이티브 주행 테스트는 게이트 쿼드(gate quads)에 직접 데이터를 입력하는 방식이며, 사람이 모든 원본 충돌 경로를 따라 전체 랩을 주행할 수 있다는 점까지 보장하지는 **않습니다**. 사용자가 직접 조작하여 랩을 완전히 완주하는 기능이나, 원본 클라이언트와 동일한 이동 경로(궤적)를 구현하는 기능은 아직 검증되지 않았습니다. 남은 과제와 제한 사항에 대해서는 [`reader.md`](reader.md)를 참조하십시오.
 
-The official local server now defaults to port **4174** and the persistent
-`local-data/accounts-4174.sqlite` database. `KART_PORT`/`KART_DATABASE_PATH`
-can explicitly select another port/database. The old port-4173 database
-`local-data/accounts.sqlite` is retained separately; it is not overwritten.
-Session cookies are isolated by port to prevent test servers replacing a login.
-To back up users/progress safely while the server is running:
+공식 로컬 서버는 이제 기본적으로 **4174** 포트를 사용하며, `local-data/accounts-4174.sqlite` 데이터베이스 파일을 사용합니다. `KART_PORT` 및 `KART_DATABASE_PATH` 환경 변수를 설정하여 다른 포트나 데이터베이스를 지정할 수 있습니다. 기존의 4173 포트용 데이터베이스인 `local-data/accounts.sqlite`는 그대로 유지되며, 덮어쓰이지 않습니다. 세션 쿠키는 포트별로 분리되어 있어, 테스트 서버가 기존 로그인 세션을 덮어쓰는 일을 방지합니다. 서버가 실행 중인 상태에서 사용자 데이터나 진행 상황을 안전하게 백업하려면 다음 명령어를 사용하십시오.
 
 ```powershell
 node tools/backup-user-db.mjs
 ```
 
-This writes a consistent SQLite snapshot including WAL contents into ignored
-`local-data/backups/`. Do not back up only the live `.sqlite` file without its
-WAL. Account databases/backups contain private account records and stay out of Git.
+이 명령어를 실행하면 WAL(Write-Ahead Logging) 내용을 포함한 일관된 상태의 SQLite 스냅샷이 `local-data/backups/` 디렉토리에 생성됩니다(해당 디렉토리는 Git 추적에서 제외되어 있습니다). 라이브 상태인 `.sqlite` 파일만 단독으로 백업하지 마십시오(WAL 파일이 반드시 함께 포함되어야 합니다). 계정 데이터베이스 및 백업 파일에는 개인 계정 정보가 포함되어 있으므로, Git 저장소에 포함하지 않도록 주의하십시오.
