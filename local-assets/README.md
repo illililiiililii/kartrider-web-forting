@@ -89,5 +89,7 @@ joints/weights for the supplied character families, preserving the rest mesh.
 The main account store grants only practiceV1 and cottonV1. Other prepared karts
 remain available in the local Lucci shop; prices/rewards are provisional local
 policy in player-store.mjs, not extracted original 5136 economy data. Accounts,
-owned items and balances live in ignored local-data/accounts.sqlite. Back up
+owned items and balances live in ignored local-data/accounts-4174.sqlite. Back up
 that database separately to retain progress after a PC format.
+
+For a consistent live account backup, run `node tools/backup-user-db.mjs`.

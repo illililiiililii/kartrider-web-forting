@@ -1,7 +1,7 @@
 # KartRider 5136 web port — local playable work in progress
 
-Main game: [http://127.0.0.1:4173/](http://127.0.0.1:4173/).
-Physics/telemetry test page: [http://127.0.0.1:4173/debug.html](http://127.0.0.1:4173/debug.html).
+Main game: [http://127.0.0.1:4174/](http://127.0.0.1:4174/).
+Physics/telemetry test page: [http://127.0.0.1:4174/debug.html](http://127.0.0.1:4174/debug.html).
 The main page now composes unchanged P5136 GUI PNGs according to the supplied
 lobby/race screenshots and `stage/mainMenu`, `stage/timeAttackReady`,
 `dialog/garageDialog`, `dialog2/selectTrackEx`, and `stage/speedIndiGame`
@@ -93,7 +93,7 @@ remains on `/debug.html`. Model inputs are detected by signature (USD ASCII/bina
 Blender before the existing USD converter. Full FBX conversion awaits input files.
 See [`DEVELOPMENT_PROGRESS.md`](DEVELOPMENT_PROGRESS.md).
 
-Open [http://127.0.0.1:4173/](http://127.0.0.1:4173/). The generated
+Open [http://127.0.0.1:4174/](http://127.0.0.1:4174/). The generated
 `web-preview/demo_physics.wasm` is ignored by Git and must be built locally.
 The pinned upstream snapshot has no license file; its notices and provenance
 are preserved in [`third_party/README.md`](third_party/README.md). Original game
@@ -123,7 +123,7 @@ grounded safety pose without clearing the timer.
 `POST /api/auth/register`, `POST /api/auth/login`, `GET /api/auth/me`, and
 `POST /api/auth/logout`. `/login.html` provides a local account form using the
 original menu panel and generic red button sprites. Passwords are scrypt-hashed; hashed session tokens
-are stored in ignored `local-data/accounts.sqlite`; cookies are HttpOnly and
+are stored in ignored `local-data/accounts-4174.sqlite`; cookies are HttpOnly and
 SameSite=Strict. Set `KART_COOKIE_SECURE=1` behind HTTPS. The original
 `stage/authenStage` is a separate challenge screen, not evidence for a P5136
 account-login layout.
@@ -180,3 +180,18 @@ directly and do **not** establish that a human can drive full laps through
 every original collision route. Full human-driven lap completion and original-client
 trajectory equivalence are **not** verified. See [`reader.md`](reader.md) for
 remaining work and limitations.
+
+The official local server now defaults to port **4174** and the persistent
+`local-data/accounts-4174.sqlite` database. `KART_PORT`/`KART_DATABASE_PATH`
+can explicitly select another port/database. The old port-4173 database
+`local-data/accounts.sqlite` is retained separately; it is not overwritten.
+Session cookies are isolated by port to prevent test servers replacing a login.
+To back up users/progress safely while the server is running:
+
+```powershell
+node tools/backup-user-db.mjs
+```
+
+This writes a consistent SQLite snapshot including WAL contents into ignored
+`local-data/backups/`. Do not back up only the live `.sqlite` file without its
+WAL. Account databases/backups contain private account records and stay out of Git.

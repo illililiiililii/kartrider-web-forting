@@ -1,3 +1,4 @@
+import {readAccountSession} from './account-session.mjs';
 const form = document.querySelector('#account-form');
 const message = document.querySelector('#message');
 const buttons = [...document.querySelectorAll('button')];
@@ -22,13 +23,14 @@ async function submitAccount(action) {
     const result = await response.json();
     if (!response.ok) {
       const errors = {
-        HANDLE_TAKEN: '이미 사용 중인 라이더 이름입니다.',
-        INVALID_CREDENTIALS: '이름 또는 비밀번호가 맞지 않습니다.',
+        HANDLE_TAKEN: '이미 사용 중인 로그인 아이디입니다.',
+        INVALID_CREDENTIALS: '로그인 아이디 또는 비밀번호가 맞지 않습니다. 닉네임 변경 후에도 가입할 때의 아이디를 사용하세요.',
         RATE_LIMITED: '시도가 너무 많습니다. 잠시 후 다시 시도하세요.',
         INVALID_CREDENTIAL_FORMAT: '이름은 3~20자, 비밀번호는 8~128자로 입력하세요.',
       };
       throw new Error(errors[result.error] || `로그인 요청 실패 (${response.status})`);
     }
+    if(!await readAccountSession())throw new Error('로그인 쿠키가 저장되지 않았습니다. 브라우저의 쿠키 설정을 확인해 주세요.');
     location.assign('/');
   } catch (error) {
     message.textContent = error.message;

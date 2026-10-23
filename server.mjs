@@ -49,9 +49,10 @@ async function bodyJson(request) {
   catch { throw new Error('INVALID_JSON'); }
 }
 
-function cookieToken(request) {
-  const match = /(?:^|;\s*)kart_session=([a-f0-9]{64})(?:;|$)/.exec(request.headers.cookie ?? '');
-  return match?.[1] ?? null;
+function cookieToken(request,name='kart_session') {
+  const cookies=new Map((request.headers.cookie??'').split(';').map(value=>value.trim().split('=')));
+  const token=cookies.get(name);
+  return typeof token==='string'&&/^[a-f0-9]{64}$/.test(token)?token:null;
 }
 
 function tokenHash(token) {
@@ -64,7 +65,9 @@ export function createKartServer({
   secureCookies = false,
   catalogPath = resolve(webRoot,'assets','catalog.json'),
   now = Date.now,
+  sessionCookieName = 'kart_session',
 } = {}) {
+  if(!/^[A-Za-z0-9_]+$/.test(sessionCookieName))throw new Error('Invalid session cookie name');
   const resolvedRoot = resolve(root);
   mkdirSync(dirname(databasePath), { recursive: true });
   const database = new DatabaseSync(databasePath);
@@ -85,9 +88,11 @@ export function createKartServer({
   const addSession = database.prepare('INSERT INTO sessions VALUES (?, ?, ?)');
   const deleteSession = database.prepare('DELETE FROM sessions WHERE token_hash = ?');
   const players=createPlayerStore(database,{catalogPath,now});
+  // Existing login records gain persistent profiles without changing credentials.
+  for(const user of database.prepare('SELECT id,handle FROM users').all())players.profile(user);
 
   function currentUser(request) {
-    const token = cookieToken(request);
+    const token = cookieToken(request,sessionCookieName);
     return token ? findSession.get(tokenHash(token), Date.now()) : null;
   }
 
@@ -106,10 +111,10 @@ export function createKartServer({
       return json(response, 403, { error: 'ORIGIN_DENIED' });
     }
     if (pathname === '/api/auth/logout') {
-      const token = cookieToken(request);
+      const token = cookieToken(request,sessionCookieName);
       if (token) deleteSession.run(tokenHash(token));
       return json(response, 200, { user: null }, {
-        'Set-Cookie': `kart_session=; Path=/; HttpOnly; SameSite=Strict; Max-Age=0${secureCookies ? '; Secure' : ''}`,
+        'Set-Cookie': `${sessionCookieName}=; Path=/; HttpOnly; SameSite=Strict; Max-Age=0${secureCookies ? '; Secure' : ''}`,
       });
     }
     if (limited(request.socket.remoteAddress ?? 'unknown')) {
@@ -142,9 +147,10 @@ export function createKartServer({
       user = { id: record.id, handle: record.handle };
     } else return json(response, 404, { error: 'NOT_FOUND' });
     const token = randomBytes(32).toString('hex');
+    players.profile(user);
     addSession.run(tokenHash(token), user.id, Date.now() + sessionAgeSeconds * 1000);
     return json(response, 200, { user }, {
-      'Set-Cookie': `kart_session=${token}; Path=/; HttpOnly; SameSite=Strict; Max-Age=${sessionAgeSeconds}${secureCookies ? '; Secure' : ''}`,
+      'Set-Cookie': `${sessionCookieName}=${token}; Path=/; HttpOnly; SameSite=Strict; Max-Age=${sessionAgeSeconds}${secureCookies ? '; Secure' : ''}`,
     });
   }
 
@@ -195,8 +201,9 @@ export function createKartServer({
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
-  const server = createKartServer({ secureCookies: process.env.KART_COOKIE_SECURE === '1' });
-  const port = Number(process.env.KART_PORT || 4173);
+  const port = Number(process.env.KART_PORT || 4174);
+  const databasePath=process.env.KART_DATABASE_PATH||resolve(webRoot,'..','local-data',port===4174?'accounts-4174.sqlite':'accounts.sqlite');
+  const server = createKartServer({databasePath,sessionCookieName:`kart_session_${port}`,secureCookies:process.env.KART_COOKIE_SECURE === '1'});
   const host = process.env.KART_HOST || '127.0.0.1';
-  server.listen(port, host, () => console.log(`Kart web: http://${host}:${port}/`));
+  server.listen(port, host, () => console.log(`Kart web: http://${host}:${port}/\nUser DB: ${databasePath}`));
 }

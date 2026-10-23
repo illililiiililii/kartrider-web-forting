@@ -2,6 +2,7 @@ import { createPreviewRenderer } from './render3d.js?v=player-profile-v1';
 import { createLiveMinimap } from './live-minimap.mjs';
 import { createRaceAudio } from './race-audio.mjs';
 import { createDemoInput, demoElapsedMilliseconds } from './demo-input.mjs';
+import {readAccountSession} from './account-session.mjs';
 
 const $ = (selector) => document.querySelector(selector);
 const view = createPreviewRenderer($('#world'));
@@ -67,21 +68,15 @@ const keyMap = {
 
 async function refreshAccount() {
   try {
-    const response = await fetch('/api/auth/me', { credentials: 'same-origin', cache: 'no-store' });
-    if (!response.ok || !response.headers.get('content-type')?.includes('application/json')) {
-      location.replace('login.html');
-      return;
-    }
-    const { user } = await response.json();
-    if (!user) { location.replace('login.html'); return; }
+    const session=await readAccountSession();
+    if(!session){location.replace('login.html');return;}
+    applyProfile(session.profile);
     signedIn = true;
-    playerProfile=await playerRequest('profile');
-    applyProfile(playerProfile);
 
     accountLink.textContent = '로그아웃';
     accountLink.href = '#';
     accountLink.dataset.loggedIn = 'true';
-  } catch { location.replace('login.html'); }
+  } catch(error) { signedIn=false;showError(error); }
 }
 
 accountLink.addEventListener('click', async (event) => {
