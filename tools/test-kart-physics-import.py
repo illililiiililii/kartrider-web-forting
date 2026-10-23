@@ -9,14 +9,17 @@ base=Path.home()/'Documents/kart web'
 
 class ImportTests(unittest.TestCase):
  @unittest.skipUnless((base/'P5136_Rust-main').exists(),'local reference source missing')
- def test_final_korean_s1_logs(self):
-  speed,rules,_=module.source_tables(base/'P5136_Rust-main')
+ def test_final_korean_s1_logs(self):self.check_logs(0)
+ @unittest.skipUnless((base/'P5136_Rust-main').exists(),'local reference source missing')
+ def test_final_korean_s7_logs(self):self.check_logs(7)
+ def check_logs(self,speed_type):
+  speed,rules,_=module.source_tables(base/'P5136_Rust-main',speed_type)
   import xml.etree.ElementTree as ET
   for name,id in [('whiteKnightV1',1440),('saberV1',1364),('practiceV1',0),('cottonV1',1336)]:
    source=base/'kartrider_5136/E/_rho5Out/kart_'/name/'param@kr.xml'
    if not source.exists():source=source.with_name('param.xml')
    actual=module.project(ET.parse(source).getroot().attrib,speed,rules)
-   text=(base/f'kartrider_5136/Profile/KartSpac.kr/Speed_00/kr.Kart_{id}.txt').read_text(encoding='utf-8-sig')
+   text=(base/f'kartrider_5136/Profile/KartSpac.kr/Speed_{speed_type:02d}/kr.Kart_{id}.txt').read_text(encoding='utf-8-sig')
    oracle={k:float(v) for k,v in re.findall(r'Kart\.(\w+)\s*=\s*(-?[\d.]+)f?;',text)}
    keys=set(oracle)&set(actual)
    self.assertGreaterEqual(len(keys),50)

@@ -6,6 +6,7 @@ import { createDemoInput, demoElapsedMilliseconds } from './demo-input.mjs';
 import {readAccountSession} from './account-session.mjs';
 import {applyKartPhysics} from './kart-physics.mjs';
 import {updateExceedDashboard} from './v1-dashboard.mjs';
+import {createMultiplayerClient} from './multiplayer.mjs';
 
 const $ = (selector) => document.querySelector(selector);
 const view = createPreviewRenderer($('#world'));
@@ -26,6 +27,8 @@ const trackLaps = { beach_I01: 3, beach_I02: 3, village_R01: 2 };
 const courseIndices = { beach_I01: 0, beach_I02: 1, village_R01: 2 };
 let localCatalog, playerProfile, lapNotices;
 let kartPhysics;
+let multiplayer,multiRace=false,accountUserId,resetRequested=false;
+function requestReset(){if(multiRace)resetRequested=true;else{wasm.demo_request_reset();syncState();}}
 function applySelectedKartPhysics(){
   applyKartPhysics(wasm,kartPhysics.karts[kartChoice.value]);
   const fit=view.getKartCollisionFit();
@@ -83,6 +86,7 @@ async function refreshAccount() {
     const session=await readAccountSession();
     if(!session){location.replace('login.html');return;}
     applyProfile(session.profile);
+    accountUserId=session.user.id;
     signedIn = true;
 
     accountLink.textContent = '로그아웃';
@@ -236,7 +240,13 @@ async function startRace() {
   active = 'race';
 }
 
-function goLobby() {
+function goLobby(keepRoom=false) {
+  if(multiRace&&keepRoom!==true)multiplayer?.leave().catch(showError);
+  multiRace=false;
+  view.setPeers([]).catch(showError);
+  $('#multi-race-board').classList.add('hidden');
+  $('#multi-chat-open').classList.add('hidden');
+  $('.race-standing').style.visibility='';
   raceAudio.stop();
   active = 'lobby';
   input.clear();
@@ -257,6 +267,7 @@ function closeAllDialogs() {
 }
 
 function openSetup() {
+  if(multiplayer?.room){multiplayer.show();return;}
   closeAllDialogs();
   $('#single-setup').classList.remove('hidden');
   view.renderPreview($('#setup-model'));
@@ -417,7 +428,7 @@ function draw(state, frameMs) {
   }
   $('#lap-notice').classList.toggle('hidden',state[19]!==2 || performance.now()>lapNoticeUntil);
   const finished = state[19] === 3;
-  $('#race-result').classList.toggle('hidden', !finished);
+  $('#race-result').classList.toggle('hidden', !finished||multiRace);
   if (finished) {
     if(!rewardSubmitted){rewardSubmitted=true;claimRaceReward(state).catch(error=>{$('#result-reward').textContent=error.message;});}
     $('#result-time').textContent = formatTime(state[24]);
@@ -429,7 +440,7 @@ function frame(time) {
   if (!lastFrame) lastFrame = time;
   const elapsed = demoElapsedMilliseconds(lastFrame, time);
   lastFrame = time;
-  if (active === 'race' && elapsed > 0) {
+  if (active === 'race' && elapsed > 0 && !multiRace) {
     wasm.demo_exceed_input(+controls.exceed);
     wasm.demo_step(elapsed, +controls.throttle, +controls.brake,
       input.steering(), +controls.drift, +controls.boost);
@@ -442,13 +453,13 @@ function frame(time) {
 
 for (const type of ['keydown', 'keyup']) {
   window.addEventListener(type, (event) => {
+    if(event.target.closest?.('input,textarea,[contenteditable="true"]'))return;
     if (type === 'keydown' && event.code === 'F3') {
       event.preventDefault(); view.toggleCollision().catch(showError); return;
     }
     if (active !== 'race' || !$('#settings-dialog').classList.contains('hidden')) return;
     if (type === 'keydown' && event.code === 'KeyR') {
-      wasm.demo_request_reset();
-      syncState();
+      requestReset();
       return;
     }
     const control = keyMap[event.code];
@@ -512,6 +523,7 @@ for (const item of document.querySelectorAll('[data-lobby-action]')) {
     if (action === 'kart') { itemType = 'kart'; openItems(); }
     if (action === 'character') { itemType = 'character'; openItems(); }
     if (action === 'shop') openShop().catch(showError);
+    if (action === 'multi') {input.clear();closeAllDialogs();multiplayer?.open().catch(showError);}
   });
 }
 $('#close-selection').addEventListener('click', () => $('#selection-panel').classList.add('hidden'));
@@ -526,7 +538,8 @@ for (const button of document.querySelectorAll('[data-cycle]')) {
 $('#back-lobby').addEventListener('click', goLobby);
 $('#result-retry').addEventListener('click', startRace);
 $('#result-lobby').addEventListener('click', goLobby);
-$('#reset').addEventListener('click', () => { wasm.demo_request_reset(); syncState(); });
+$('#reset').addEventListener('click', requestReset);
+$('#multi-chat-open').addEventListener('click',()=>{input.clear();multiplayer?.show();});
 
 try {
   const response = await fetch('./demo_physics.wasm', { cache: 'no-store' });
@@ -552,6 +565,30 @@ try {
   await Promise.all([view.setKart(kartChoice.value), view.setCharacter(characterChoice.value)]);
   applySelectedKartPhysics();
   await loadSelectedTrack();
+  multiplayer=createMultiplayerClient({catalog:localCatalog,userId:accountUserId,getCharacter:()=>characterChoice.value,
+    getControls:()=>{const reset=resetRequested;resetRequested=false;return {...controls,steer:input.steering(),reset};},
+    async onPrepare(room){
+      input.clear();multiRace=true;
+      const self=room.players.find(p=>p.id===accountUserId);kartChoice.value=self.kart;characterChoice.value=self.character;trackChoice.value=room.track;
+      if(room.speed!==kartPhysics.speed)throw new Error('서버 속도 설정이 다릅니다. 새로고침해 주세요.');
+      await Promise.all([view.setKart(self.kart),view.setCharacter(self.character)]);applySelectedKartPhysics();
+      await loadSelectedTrack();await view.setPeers(room.players.filter(p=>p.id!==accountUserId));
+    },
+    onStart(){
+      rewardSubmitted=true;announcedLap=0;lapNoticeUntil=0;resetRequested=false;input.clear();raceAudio.start(trackChoice.value);
+      view.setLobbyMode(false);$('#lobby-backdrop').classList.add('hidden');closeAllDialogs();lobby.classList.add('hidden');raceUi.classList.remove('hidden');active='race';
+      $('.race-standing').style.visibility='hidden';$('#multi-race-board').classList.remove('hidden');
+      $('#multi-chat-open').classList.remove('hidden');
+    },
+    onFrame(frame){
+      const self=frame.players.find(p=>p.id===accountUserId);if(self&&self.state.length===current.length&&self.state.every(Number.isFinite))current.set(self.state);
+      view.updatePeers(frame.players.filter(p=>p.id!==accountUserId));
+      $('#multi-race-board').textContent=frame.players.map(p=>`${multiplayer.room?.players.find(m=>m.id===p.id)?.nickname??''} · ${p.state[19]===3?'완주':`${Math.max(1,Math.round(p.state[21]))}바퀴`}`).join('\n');
+    },
+    onResults(){goLobby(true);closeAllDialogs();},
+    onRoster(room){view.setPeers(room.players.filter(p=>p.id!==accountUserId)).catch(showError);},
+    onLeave(){if(multiRace){goLobby(true);closeAllDialogs();}},onDisconnect(){input.clear();}
+  });
   requestAnimationFrame(frame);
 } catch (error) {
   showError(error);

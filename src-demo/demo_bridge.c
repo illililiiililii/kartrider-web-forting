@@ -363,6 +363,17 @@ __attribute__((export_name("demo_start_race"))) void demo_start_race(void) {
     publish(0, (KartSimulationStepResult){0});
 }
 
+__attribute__((export_name("demo_start_race_slot"))) unsigned int demo_start_race_slot(unsigned int slot) {
+    if(!course_enabled || slot>=8u)return 0u;
+    KartVec3 start={0};KartQuat orientation={1,0,0,0};
+    kart_course_start_pose(&course,slot,&start,&orientation);
+    const float height=demo_track_ground_height(start.x,start.y,start.z+10.0f);
+    if(!isfinite(height))return 0u;
+    spawn_x=start.x;spawn_y=start.y;spawn_z=height;
+    spawn_heading=atan2f(-(1-2*(orientation.x*orientation.x+orientation.z*orientation.z)),2*(orientation.w*orientation.z-orientation.x*orientation.y));
+    demo_start_race();return 1u;
+}
+
 __attribute__((export_name("demo_set_steer_angle"))) void demo_set_steer_angle(float degrees) {
     if (isfinite(degrees) && degrees >= 1.0f && degrees <= 30.0f)
         kart.config.max_steer_angle_deg = degrees;

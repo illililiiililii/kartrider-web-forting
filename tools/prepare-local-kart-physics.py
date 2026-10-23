@@ -1,7 +1,7 @@
 """Read local Korean BodyParam XML and the supplied Rust server's composition table.
 
 No client resources or third-party Rust source are copied into Git. These are
-stock, untuned S1 parameters, NOT a port of the closed 5136 client integrator.
+stock, untuned parameters, NOT a port of the closed 5136 client integrator.
 """
 import argparse, hashlib, json, re, xml.etree.ElementTree as ET
 from decimal import Decimal
@@ -21,12 +21,16 @@ def decimal_expr(value):
     if not match: raise ValueError('Unsupported source decimal expression: '+value)
     return Decimal(match[1].replace('_','')) * Decimal(10)**-int(match[2]) * (-1 if match[3]=='true' else 1)
 
-def source_tables(rust):
+def source_tables(rust,speed_type=7):
     core = rust/'crates/p5136-core/src/kart_physics.rs'
     catalog = rust/'crates/p5136-profile/src/catalog.rs'
     text = core.read_text(encoding='utf-8')
-    # Explicit stock room S1 (wire byte 0); never interpret Speed_01 as S1.
-    block = re.search(r'\n\s+0 => Self \{(.*?)\.\.Self::csharp_zero\(\)', text, re.S)[1]
+    # Rust's default is S7 (wire 7); S1 (wire 0) remains available for audits.
+    if speed_type==7:
+        block=re.search(r'impl P5136SpeedSpecSnapshot.*?pub const fn csharp_default\(\) -> Self \{\s*Self \{(.*?)\n\s*\}',text,re.S)[1]
+    elif speed_type==0:
+        block=re.search(r'\n\s+0 => Self \{(.*?)\.\.Self::csharp_zero\(\)',text,re.S)[1]
+    else: raise ValueError('Only audited stock S1/S7 supported')
     speed = {key: Decimal(value.replace('_','')) for key,value in re.findall(r'(\w+):\s*(-?[\d_.]+)',block)}
     rules = {}
     text = catalog.read_text(encoding='utf-8')
@@ -52,9 +56,10 @@ def project(attributes, speed, rules):
     resolved['StartForwardAccelForceSpeed'] = float(force if factor==0 else force*factor-offsets.get(factor,Decimal('58.8')*factor*factor))
     return resolved
 
-def prepare(client,rust):
-    speed,rules,hashes=source_tables(rust)
-    output={'format':'p5136-kart-physics-v1','speed':'S1','speedByte':0,
+def prepare(client,rust,speed_type=7):
+    speed,rules,hashes=source_tables(rust,speed_type)
+    label='S7' if speed_type==7 else 'S1'
+    output={'format':'p5136-kart-physics-v1','speed':label,'speedByte':speed_type,
             'source':'Korean param@kr.xml + P5136_Rust stock composition; no upgrades/pets/tuning',
             'sourceHashes':hashes,'runtime':'2004 C dynamics + web Exceed adapter; 5136 runtime not recovered','karts':{},'waiting':[]}
     catalog=json.loads((ROOT/'web-preview/assets/catalog.json').read_text(encoding='utf-8'))
@@ -72,10 +77,11 @@ def prepare(client,rust):
             'source':str(source.relative_to(client)).replace('\\','/'),'sha256':hashlib.sha256(source.read_bytes()).hexdigest()}
     destination=ROOT/'web-preview/assets/kart-physics.json'
     destination.write_text(json.dumps(output,ensure_ascii=False,indent=2),encoding='utf-8')
-    print('Kart physics:',len(output['karts']),'resolved;',len(output['waiting']),'waiting; stock S1')
+    print('Kart physics:',len(output['karts']),'resolved;',len(output['waiting']),'waiting; stock',label)
 
 if __name__=='__main__':
     parser=argparse.ArgumentParser()
     parser.add_argument('--client',type=Path,default=Path.home()/'Documents/kart web/kartrider_5136')
     parser.add_argument('--rust',type=Path,default=Path.home()/'Documents/kart web/P5136_Rust-main')
-    args=parser.parse_args();prepare(args.client,args.rust)
+    parser.add_argument('--speed',choices=['S1','S7'],default='S7')
+    args=parser.parse_args();prepare(args.client,args.rust,7 if args.speed=='S7' else 0)

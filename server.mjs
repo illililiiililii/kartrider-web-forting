@@ -7,6 +7,7 @@ import { mkdirSync } from 'node:fs';
 import { dirname, extname, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {createPlayerStore} from './player-store.mjs';
+import {createMultiplayer} from './multiplayer-server.mjs';
 
 const scrypt = promisify(scryptCallback);
 const webRoot = resolve(dirname(fileURLToPath(import.meta.url)), 'web-preview');
@@ -66,6 +67,7 @@ export function createKartServer({
   catalogPath = resolve(webRoot,'assets','catalog.json'),
   now = Date.now,
   sessionCookieName = 'kart_session',
+  multiplayerPhysicsFactory,
 } = {}) {
   if(!/^[A-Za-z0-9_]+$/.test(sessionCookieName))throw new Error('Invalid session cookie name');
   const resolvedRoot = resolve(root);
@@ -88,6 +90,10 @@ export function createKartServer({
   const addSession = database.prepare('INSERT INTO sessions VALUES (?, ?, ?)');
   const deleteSession = database.prepare('DELETE FROM sessions WHERE token_hash = ?');
   const players=createPlayerStore(database,{catalogPath,now});
+  database.exec(`CREATE TABLE IF NOT EXISTS multiplayer_results(race_id TEXT NOT NULL,user_id TEXT NOT NULL,track TEXT NOT NULL,rank INTEGER,time_ms INTEGER,dnf INTEGER NOT NULL,created_at INTEGER NOT NULL,PRIMARY KEY(race_id,user_id));`);
+  const saveMultiplayerResult=database.prepare('INSERT OR IGNORE INTO multiplayer_results VALUES(?,?,?,?,?,?,?)');
+  const multiplayer=createMultiplayer({players,root:resolvedRoot,catalogPath,now,createPhysics:multiplayerPhysicsFactory,
+    recordResult:r=>saveMultiplayerResult.run(r.race,r.id,r.track,r.rank,r.time,+r.dnf,now())});
   // Existing login records gain persistent profiles without changing credentials.
   for(const user of database.prepare('SELECT id,handle FROM users').all())players.profile(user);
 
@@ -111,6 +117,7 @@ export function createKartServer({
       return json(response, 403, { error: 'ORIGIN_DENIED' });
     }
     if (pathname === '/api/auth/logout') {
+      const user=currentUser(request);if(user)multiplayer.command(user,'leave',{});
       const token = cookieToken(request,sessionCookieName);
       if (token) deleteSession.run(tokenHash(token));
       return json(response, 200, { user: null }, {
@@ -158,6 +165,20 @@ export function createKartServer({
     try {
       const pathname = new URL(request.url ?? '/', 'http://localhost').pathname;
       if (pathname.startsWith('/api/auth/')) return await auth(request, response, pathname);
+      if(pathname.startsWith('/api/multi/')){
+        const user=currentUser(request);if(!user)return json(response,401,{error:'SIGN_IN_REQUIRED'});
+        let allowed=request.headers['sec-fetch-site']!=='cross-site';
+        try{if(request.headers.origin)allowed=allowed&&new URL(request.headers.origin).host===request.headers.host;}catch{allowed=false;}
+        if(!allowed)return json(response,403,{error:'ORIGIN_DENIED'});
+        const action=pathname.slice('/api/multi/'.length);
+        try{
+          if(request.method==='GET'&&action==='events')return multiplayer.connect(user,response,()=>Boolean(currentUser(request)));
+          if(request.method==='GET'&&action==='rooms')return json(response,200,multiplayer.list());
+          if(request.method==='GET'&&action==='current')return json(response,200,multiplayer.current(user));
+          if(request.method!=='POST')return json(response,405,{error:'METHOD_NOT_ALLOWED'});
+          return json(response,200,multiplayer.command(user,action,await bodyJson(request)));
+        }catch(error){return json(response,error.status??503,{error:error.status?error.message:'MULTIPLAYER_UNAVAILABLE'});}
+      }
       if(pathname.startsWith('/api/player/')) {
         const user=currentUser(request);
         if(!user)return json(response,401,{error:'SIGN_IN_REQUIRED'});
@@ -196,6 +217,8 @@ export function createKartServer({
         { error: error.code === 'ENOENT' ? 'NOT_FOUND' : 'SERVER_ERROR' });
     }
   });
+  const closeServer=server.close.bind(server);
+  server.close=(callback)=>{multiplayer.close();return closeServer(callback);};
   server.on('close', () => database.close());
   return server;
 }

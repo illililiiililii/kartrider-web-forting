@@ -81,7 +81,7 @@ and tests all enabled spawns in Wasm. Logs and incremental caches stay in
 track names and lap counts come from the supplied XML. Missing lap data,
 unsupported native types, non-finite source geometry and coordinate mismatches
 remain disabled; no guessed start, collision flags or lap counts are invented.
-The main game imports per-kart Korean stock S1 parameters into the recovered
+The main game imports per-kart Korean stock S7 parameters into the recovered
 2004 C dynamics. Suspension geometry remains the demo's; the body collision box
 fits the selected visible model at its existing presentation scale. Other themes' BGM stays
 silent until its exact original music selection is connected; Beach/Village
@@ -115,9 +115,10 @@ python tools/prepare-local-kart-physics.py --client "$env:USERPROFILE/Documents/
 `prepare-local-all.ps1` calls this automatically when these folders exist;
 `-PhysicsClient` / `-PhysicsReference` select different locations. It reads
 Korean `E/_rho5Out/kart_/<kart>/param@kr.xml` (base `param.xml` fallback),
-interprets the supplied server's stock S1 composition/default/unit table,
+interprets the supplied server's stock S7 composition/default/unit table,
 and writes ignored `web-preview/assets/kart-physics.json`. Packet speed byte 0
-means S1; `Speed_00` final logs independently verify the four primary karts.
+means S1; the default S7 uses byte 7. `Speed_00` and `Speed_07` final logs
+independently verify four primary karts. `--speed S1` retains the earlier audit.
 Source file hashes are retained in the generated output. The Rust workspace
 declares AFL-3.0; its source is not copied into this repository.
 

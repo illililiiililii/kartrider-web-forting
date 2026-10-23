@@ -513,7 +513,42 @@ export function createPreviewRenderer(canvas) {
   }
   // Share original geometry/materials; no duplicate track conversion or guessed
   // bitmap scale. Layer 2 excludes the rider, sky, skids and effect sprites.
+  const peers=new Map();
+  function disposePeer(peer){scene.remove(peer.group);peer.group.traverse(n=>{n.geometry?.dispose();if(n.material){n.material.map?.dispose();n.material.dispose();}});}
+  async function setPeers(players){
+    const ids=new Set(players.map(p=>p.id));
+    for(const [id,peer] of peers)if(!ids.has(id)){peers.delete(id);disposePeer(peer);}
+    await Promise.all(players.map(async player=>{
+      const key=player.kart+'/'+player.character;
+      if(peers.get(player.id)?.key===key)return;
+      if(peers.has(player.id))disposePeer(peers.get(player.id));
+      const peer={key,group:new THREE.Group(),received:0};peers.set(player.id,peer);
+      const [body,rider]=await Promise.all([loadAsset(player.kart,'kart'),loadAsset(player.character,'character')]);
+      body.group.updateMatrixWorld(true);const bounds=new THREE.Box3().setFromObject(body.group),base=-bounds.min.y;
+      body.group.scale.setScalar(kartVisualScale);body.group.position.y=base*kartVisualScale;peer.group.add(body.group);
+      rider.group.traverse(node=>{if(!node.isMesh||node.name==='opaque-alpha-depth')return;
+        if(node.geometry.userData.seated){node.geometry.attributes.position.array.set(node.geometry.userData.seated);node.geometry.attributes.position.needsUpdate=true;}
+        if(node.geometry.userData.seatedNormals)node.geometry.setAttribute('normal',new THREE.Float32BufferAttribute(node.geometry.userData.seatedNormals,3));node.geometry.computeBoundingSphere();});
+      mountRider(rider.group,seatSurface(body.data.parts,body.data.kartMounts?.seat),rider.data.riderMounts,kartVisualScale,.80*kartVisualScale,base);peer.group.add(rider.group);
+      const label=document.createElement('canvas');label.width=256;label.height=48;const ctx=label.getContext('2d');ctx.fillStyle='#10243dcc';ctx.fillRect(0,0,256,48);ctx.fillStyle='#fff';ctx.font='bold 24px sans-serif';ctx.textAlign='center';ctx.fillText(player.nickname,128,32,246);
+      const sprite=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(label),depthTest:true}));sprite.scale.set(2,.375,1);sprite.position.y=2.5;peer.group.add(sprite);peer.wheels=body.nextWheels;
+      if(peers.get(player.id)!==peer){disposePeer(peer);return;}peer.group.visible=false;scene.add(peer.group);
+    }));
+  }
+  function updatePeers(players){for(const player of players){const peer=peers.get(player.id);if(!peer)continue;
+    peer.from=peer.visual?.slice()??player.state;peer.target=player.state;peer.received=performance.now();}}
+  function renderPeers(elapsed){for(const peer of peers.values()){
+    peer.group.visible=!lobbyMode&&Boolean(peer.target);if(!peer.group.visible)continue;
+    const t=Math.min(1,(performance.now()-peer.received)/50),state=peer.target.slice();
+    for(const i of [0,1,14])state[i]=peer.from[i]+(state[i]-peer.from[i])*t;
+    const sign=peer.from.slice(43,47).reduce((sum,v,i)=>sum+v*peer.target[43+i],0)<0?-1:1;
+    for(let i=43;i<47;i++)state[i]=peer.from[i]+(state[i]*sign-peer.from[i])*t;
+    peer.visual=state;peer.group.position.set(state[0],state[14],-state[1]);applyKartOrientation(peer.group,state);
+    for(const wheel of peer.wheels??[]){wheel.mesh.rotation.z-=state[6]*Math.min(elapsed,50)/1000/(wheel.radius*kartVisualScale);wheel.pivot.rotation.y=wheel.front?state[13]:0;}
+  }}
+
   function render(state, frameDeltaMs = 16) {
+    renderPeers(frameDeltaMs);
     const [x, y, heading, vx, vy, , speed, , boost, drifting] = state;
     const width = Math.max(canvas.clientWidth, 1);
     const height = Math.max(canvas.clientHeight, 1);
@@ -599,6 +634,8 @@ export function createPreviewRenderer(canvas) {
   return {
     render,
     setKart,
+    setPeers,
+    updatePeers,
     getKartCollisionFit:()=>kartBodyFit,
     setCharacter,
     setTrackDrive,

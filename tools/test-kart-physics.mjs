@@ -22,10 +22,10 @@ test('all local per-kart stock configurations apply and survive race reset',{ski
   }
 });
 
-test('Korean S1 changes genuine acceleration/steering config instead of keyboard sensitivity',{skip:!profiles},()=>{
+test('Korean S7 changes genuine acceleration/steering config instead of keyboard sensitivity',{skip:!profiles},()=>{
   const a=create(profiles.whiteKnightV1),b=create();drive(a.api,1500);drive(b.api,1500);
   assert.ok(a.state[6]<b.state[6]);assert.equal(a.api.demo_config_value(5),10);
-  assert.ok(Math.abs(a.api.demo_config_value(6)-25.09)<1e-5);
+  assert.ok(Math.abs(a.api.demo_config_value(6)-25.34)<1e-5);
   assert.notEqual(profiles.whiteKnightV1.values.SteerConstraint,profiles.saberV1.values.SteerConstraint);
 });
 
