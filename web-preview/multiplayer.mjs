@@ -1,5 +1,5 @@
 const $=id=>document.getElementById(id);
-const messages={HOST_REQUIRED:'방장만 실행할 수 있습니다.',PLAYERS_NOT_READY:'두 명 이상 입장하고 모두 준비해 주세요.',ROOM_LOCKED:'경기 중이거나 가득 찬 방입니다.',ROOM_NOT_FOUND:'방이 없어졌습니다.',ALREADY_IN_ROOM:'먼저 현재 방에서 나가 주세요.',RACE_VERSION_MISMATCH:'게임 파일이 변경되었습니다. 새로고침해 주세요.',MULTIPLAYER_UNAVAILABLE:'멀티플레이 서버·로컬 에셋을 확인해 주세요.',SIGN_IN_REQUIRED:'다시 로그인해 주세요.',CHAT_RATE_LIMIT:'메시지를 잠시 후 보내 주세요.'};
+const messages={HOST_REQUIRED:'방장만 실행할 수 있습니다.',PLAYERS_NOT_READY:'두 명 이상 입장하고 모두 준비해 주세요.',ROOM_LOCKED:'경기 중이거나 가득 찬 방입니다.',ROOM_NOT_FOUND:'방이 없어졌습니다.',ALREADY_IN_ROOM:'먼저 현재 방에서 나가 주세요.',RACE_VERSION_MISMATCH:'게임 파일이 변경되었습니다. 새로고침해 주세요.',KART_PHYSICS_SOURCE_MISSING:'원본 카트 성능 XML을 local-assets/client에 넣어 주세요.',MULTIPLAYER_UNAVAILABLE:'멀티플레이 서버·로컬 에셋을 확인해 주세요.',SIGN_IN_REQUIRED:'다시 로그인해 주세요.',CHAT_RATE_LIMIT:'메시지를 잠시 후 보내 주세요.'};
 export function createMultiplayerClient({catalog,userId,getCharacter,getControls,onPrepare,onStart,onFrame,onResults,onLeave,onDisconnect,onRoster,onDiagnostics,renderCharacterThumbnail}){
   let room=null,stream=null,preparedRace=null,runningRace=null,preparing=null,pendingFrame=null,sequence=0,sending=false,enabled=false,polling=false,lastTick=-1,lastRace=null,mutation=0;
   let rttMs=null,jitterMs=null,lastArrival=0,lastFrameTick=-1,missedSnapshots=0;

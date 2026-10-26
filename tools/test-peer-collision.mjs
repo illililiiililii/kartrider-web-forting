@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {readFileSync} from 'node:fs';
+import {readFileSync,existsSync} from 'node:fs';
 import {resolve,join} from 'node:path';
 import {contact,resolvePlayers} from '../peer-collision.mjs';
 import {courseDistances,rankPlayers} from '../race-ranking.mjs';
@@ -37,7 +37,8 @@ test('rank follows graph distance, branches, start crossing, laps, finishes and 
 test('original rank atlas wraps rank 8 onto the second row without another digit image',()=>{
   assert.deepEqual(spriteRect({size:[512,160],attributes:{fontSize:'64 80',fontStr:'0123456789'}},8),{w:64,h:80,x:0,y:80});
 });
-test('real WASM pair uses fitted sizes and native response with momentum sharing; no contact before GO',()=>{
+test('real WASM pair uses fitted sizes and native response with momentum sharing; no contact before GO',
+  {skip:!existsSync(new URL('../web-preview/assets/kart-physics.json',import.meta.url))},()=>{
   const root=resolve(import.meta.dirname,'../web-preview'),catalog=JSON.parse(readFileSync(join(root,'assets/catalog.json')));
   const factory=createRacePhysicsFactory(root,catalog),a=factory.create({track:'beach_I01',kart:'practiceV1',slot:0}),b=factory.create({track:'beach_I01',kart:'cottonV1',slot:1});
   assert.equal(a.body().active,false);const before=a.body().center;a.apply([0,0,0,0,0,0,100,0,0]);assert.deepEqual(a.body().center,before);

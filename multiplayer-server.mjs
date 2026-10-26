@@ -10,13 +10,20 @@ const fail=(message,status=400)=>{throw Object.assign(new Error(message),{status
 // Browser transport and simulation are ours. Room phases/8 slots follow the
 // supplied P5136_Rust world.rs / room_protocol.rs; no native TCP/UDP compatibility.
 export function createMultiplayer({players,root,catalogPath,now=Date.now,createPhysics,recordResult=()=>{},autoTick=true}){
-  const rooms=new Map(),membership=new Map(),streams=new Map();let factory,catalog,lastLoopAt=performance.now(),lastCpu=process.cpuUsage();
+  const rooms=new Map(),membership=new Map(),streams=new Map();let factory=createPhysics,catalog,lastLoopAt=performance.now(),lastCpu=process.cpuUsage();
   function assets(){
     if(!catalog)catalog=JSON.parse(readFileSync(catalogPath,'utf8'));
-    if(!factory)factory=createPhysics??createRacePhysicsFactory(root,catalog);
+    return catalog;
+  }
+  function physics(){
+    assets();
+    if(!factory){
+      try{factory=createRacePhysicsFactory(root,catalog);}
+      catch(error){if(error?.code==='ENOENT'&&error.path?.endsWith('kart-physics.json'))fail('KART_PHYSICS_SOURCE_MISSING',503);throw error;}
+    }
     return factory;
   }
-  function snapshot(room){return {id:room.id,revision:room.revision,name:room.name,track:room.track,host:room.host,phase:room.phase,race:room.race,autoStartAt:room.autoStartAt??null,speed:factory.speed,version:factory.version,
+  function snapshot(room){return {id:room.id,revision:room.revision,name:room.name,track:room.track,host:room.host,phase:room.phase,race:room.race,autoStartAt:room.autoStartAt??null,speed:factory?.speed??null,version:factory?.version??null,
     players:[...room.members.values()].map(p=>({id:p.id,nickname:p.nickname,kart:p.kart,character:p.character,slot:p.slot,ready:p.ready,loaded:p.loaded,finished:p.finished,time:p.time})),chat:room.chat,results:room.results};}
   function send(id,event,data,encoded=false){const stream=streams.get(id);if(!stream||stream.response.destroyed||stream.response.writableEnded)return;if(stream.response.writableLength>256*1024){stream.response.destroy();return;}stream.response.write(`event: ${event}\ndata: ${encoded?data:JSON.stringify(data)}\n\n`);}
   function broadcast(room,event='room',value){if(event==='room'){room.revision++;value=snapshot(room);}if(event==='frame')room.frame=value;const data=JSON.stringify(value);for(const id of room.members.keys())send(id,event,data,true);}
@@ -34,6 +41,7 @@ export function createMultiplayer({players,root,catalogPath,now=Date.now,createP
   function guestsReady(room){return room.members.size>=2&&[...room.members.values()].every(p=>p.id===room.host||p.ready);}
   function updateAutoStart(room){room.autoStartAt=room.phase==='lobby'&&guestsReady(room)?room.autoStartAt??now()+10000:null;}
   function beginLoading(room){
+    physics();
     room.phase='loading';room.autoStartAt=null;room.race=randomUUID();room.loadingAt=now();room.results=[];room.frame=null;
     for(const member of room.members.values()){member.loaded=member.finished=false;member.time=null;member.input=emptyInput();member.seq=-1;}
     broadcast(room);return snapshot(room);
@@ -45,7 +53,7 @@ export function createMultiplayer({players,root,catalogPath,now=Date.now,createP
   }
   function start(room){
     try{
-      const engines=new Map();for(const p of room.members.values())engines.set(p.id,assets().create({track:room.track,kart:p.kart,slot:p.slot}));
+      const engines=new Map();for(const p of room.members.values())engines.set(p.id,physics().create({track:room.track,kart:p.kart,slot:p.slot}));
       room.engines=engines;room.phase='running';room.started=now();room.simulated=0;room.lastTick=now();room.accumulator=0;room.firstFinish=null;broadcast(room);
     }catch{cancel(room,'트랙·출발 위치를 준비하지 못했습니다.');}
   }
@@ -56,7 +64,10 @@ export function createMultiplayer({players,root,catalogPath,now=Date.now,createP
     for(const [id,stream] of streams){if(time-stream.heartbeat>=10000){if(!stream.authenticate()){stream.response.end();continue;}stream.response.write(': heartbeat\n\n');stream.heartbeat=time;}}
     for(const room of rooms.values()){
       for(const p of [...room.members.values()])if(!streams.has(p.id)&&time-p.seen>30000)leave(p);
-      if(room.phase==='lobby'&&room.autoStartAt!==null&&time>=room.autoStartAt&&guestsReady(room)&&[...rooms.values()].filter(r=>['loading','running'].includes(r.phase)).length<4){beginLoading(room);continue;}
+      if(room.phase==='lobby'&&room.autoStartAt!==null&&time>=room.autoStartAt&&guestsReady(room)&&[...rooms.values()].filter(r=>['loading','running'].includes(r.phase)).length<4){
+        try{beginLoading(room);}catch{cancel(room,'카트별 원본 성능 자료가 없어 출발할 수 없습니다.');}
+        continue;
+      }
       if(room.phase==='loading'&&time-room.loadingAt>30000){cancel(room,'로딩 제한시간이 지났습니다.');continue;}
       if(room.phase!=='running')continue;
       room.accumulator+=Math.max(0,Math.min(250,time-room.lastTick));room.lastTick=time;
@@ -88,7 +99,7 @@ export function createMultiplayer({players,root,catalogPath,now=Date.now,createP
   }
   const timer=autoTick?setInterval(tick,25):null;timer?.unref();
   return {tick,
-    list(){assets();return {speed:factory.speed,rooms:[...rooms.values()].map(room=>({id:room.id,name:room.name,track:room.track,count:room.members.size,phase:room.phase}))};},
+    list(){assets();return {speed:factory?.speed??null,rooms:[...rooms.values()].map(room=>({id:room.id,name:room.name,track:room.track,count:room.members.size,phase:room.phase}))};},
     current(user){const room=rooms.get(membership.get(user.id));if(room)room.members.get(user.id).seen=now();return room?snapshot(room):null;},
     sync(user){const room=this.current(user);return {room,frame:room?rooms.get(room.id).frame??null:null};},
     connect(user,response,authenticate){

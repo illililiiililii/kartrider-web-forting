@@ -52,7 +52,9 @@ export async function syncLocalAssets({run=true}={}) {
   }
   if (!run) return {status:'stale',files:current.files};
   if (process.platform!=='win32') throw new Error('Automatic preparation currently requires Windows PowerShell');
-  const command = process.env.KART_POWERSHELL || 'powershell.exe';
+  // Windows PowerShell 5 promotes OpenUSD's native stderr warnings to terminating
+  // errors under the preparation script's ErrorActionPreference=Stop.
+  const command = process.env.KART_POWERSHELL || 'pwsh.exe';
   const preparation = spawnSync(command,['-NoProfile','-ExecutionPolicy','Bypass','-File',join(project,'tools','prepare-local-all.ps1')],
     {cwd:project,stdio:'inherit',windowsHide:true});
   if (preparation.error) throw preparation.error;

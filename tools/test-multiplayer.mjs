@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {mkdtempSync,writeFileSync,rmSync} from 'node:fs';
+import {mkdtempSync,writeFileSync,rmSync,existsSync,copyFileSync,mkdirSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import {join,resolve} from 'node:path';
 import {once} from 'node:events';
@@ -20,6 +20,22 @@ test('public tunnel preserves HTTPS cookies and per-client identity; LAN proxy s
 
 const project=resolve(import.meta.dirname,'..');
 const catalog={tracks:[{id:'beach_I01',ready:true,courseIndex:0,laps:3}],karts:[{id:'practiceV1',ready:true}],characters:[{id:'dao',ready:true}]};
+test('room browser remains available when original per-kart XML is missing',
+  {skip:!existsSync(join(project,'web-preview/demo_physics.wasm'))},t=>{
+    const dir=mkdtempSync(join(tmpdir(),'kart-no-params-'));
+    mkdirSync(join(dir,'assets'));
+    copyFileSync(join(project,'web-preview/demo_physics.wasm'),join(dir,'demo_physics.wasm'));
+    const catalogPath=join(dir,'assets/catalog.json');writeFileSync(catalogPath,JSON.stringify(catalog));
+    const manager=createMultiplayer({players:{profile:user=>({nickname:user.id,equippedKart:'practiceV1'})},root:dir,catalogPath,autoTick:false});
+    t.after(()=>{manager.close();rmSync(dir,{recursive:true,force:true});});
+    assert.equal(manager.list().speed,null);
+    const a={id:'host'},b={id:'guest'};
+    const room=manager.command(a,'create',{name:'원본 자료 대기',track:'beach_I01',character:'dao'});
+    manager.command(b,'join',{id:room.id,character:'dao'});
+    manager.command(b,'ready',{ready:true,character:'dao'});
+    assert.throws(()=>manager.command(a,'start'),/KART_PHYSICS_SOURCE_MISSING/);
+    assert.equal(manager.current(a).phase,'lobby');
+  });
 function fixture(t){
   const dir=mkdtempSync(join(tmpdir(),'kart-multi-')),path=join(dir,'catalog.json');writeFileSync(path,JSON.stringify(catalog));
   let clock=10000;const inputs=[],saved=[];
@@ -128,7 +144,7 @@ test('HTTP room API requires login, blocks foreign origins and streams both play
     assert.match(text,/multi_alpha/);assert.match(text,/multi_beta/);
   }
 });
-test('real authoritative WASM gives distinct original grid slots and advances both racers',()=>{
+test('real authoritative WASM gives distinct original grid slots and advances both racers',{skip:!existsSync(join(project,'web-preview/assets/kart-physics.json'))},()=>{
   const root=join(project,'web-preview'),fullCatalog=JSON.parse(readFileSync(join(root,'assets/catalog.json'))),factory=createRacePhysicsFactory(root,fullCatalog);
   assert.equal(factory.speed,'S7');
   const a=factory.create({track:'beach_I01',kart:'practiceV1',slot:0}),b=factory.create({track:'beach_I01',kart:'cottonV1',slot:1});
@@ -142,7 +158,7 @@ test('real authoritative WASM gives distinct original grid slots and advances bo
   }
 });
 
-test('server 5ms simulation actually resolves peer contacts and publishes ranked poll frames',t=>{
+test('server 5ms simulation actually resolves peer contacts and publishes ranked poll frames',{skip:!existsSync(join(project,'web-preview/assets/kart-physics.json'))},t=>{
   const root=join(project,'web-preview'),catalogPath=join(root,'assets/catalog.json'),catalog=JSON.parse(readFileSync(catalogPath)),factory=createRacePhysicsFactory(root,catalog);
   let clock=10000,contacts=0;const engines=[];
   const physics={...factory,create(args){const e=factory.create(args),apply=e.apply;engines.push(e);e.apply=delta=>{contacts++;apply(delta);};return e;}};
