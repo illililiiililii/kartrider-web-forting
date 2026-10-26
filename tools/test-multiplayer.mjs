@@ -48,6 +48,32 @@ test('8-slot admission, ready barrier, host authorization, ownership and host tr
   assert.equal(f.manager.current(users[0]).players[0].kart,'practiceV1');
   f.manager.command(users[0],'leave');assert.equal(f.manager.current(users[1]).host,users[1].id);
 });
+test('guest readiness starts a 10-second server countdown, resets on change, and host may start immediately',t=>{
+  const f=fixture(t),{users}=admit(f);
+  assert.equal(f.manager.current(users[0]).autoStartAt,null);
+  f.manager.command(users[1],'ready',{ready:true,character:'dao'});
+  assert.equal(f.manager.current(users[0]).autoStartAt,20000);
+  f.advance(9999);assert.equal(f.manager.current(users[0]).phase,'lobby');
+  f.manager.command(users[1],'ready',{ready:false,character:'dao'});
+  assert.equal(f.manager.current(users[0]).autoStartAt,null);
+  f.advance(1);assert.equal(f.manager.current(users[0]).phase,'lobby');
+  f.manager.command(users[1],'ready',{ready:true,character:'dao'});
+  assert.equal(f.manager.current(users[0]).autoStartAt,30000);
+  f.advance(10000);assert.equal(f.manager.current(users[0]).phase,'loading');
+  assert.equal(f.manager.current(users[0]).autoStartAt,null);
+  const g=fixture(t),another=admit(g);g.manager.command(another.users[1],'ready',{ready:true,character:'dao'});
+  assert.equal(g.manager.command(another.users[0],'start',{}).phase,'loading');
+});
+test('seven guests occupy eight original room slots and joining resets the ready countdown',t=>{
+  const f=fixture(t),{users,room}=admit(f,7);
+  for(const u of users.slice(1))f.manager.command(u,'ready',{ready:true,character:'dao'});
+  assert.equal(f.manager.current(users[0]).autoStartAt,20000);
+  const last={id:'last'};f.manager.command(last,'join',{id:room.id,character:'dao'});
+  assert.equal(f.manager.current(users[0]).autoStartAt,null);
+  f.manager.command(last,'ready',{ready:true,character:'dao'});
+  assert.equal(f.manager.current(users[0]).autoStartAt,20000);
+  f.advance(10000);assert.equal(f.manager.current(users[0]).phase,'loading');
+});
 test('all players must load the current race version; a missing loader cancels safely',t=>{
   const f=fixture(t),{users}=admit(f),room=readyStart(f,users);
   assert.throws(()=>f.manager.command(users[0],'loaded',{race:room.race,version:'old'}),/VERSION/);

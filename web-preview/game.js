@@ -21,7 +21,7 @@ document.addEventListener('keydown',()=>raceAudio.unlock(),{once:true,capture:tr
 document.addEventListener('click',event=>{
   const button=event.target.closest?.('button');
   if(!button||button.disabled)return;
-  raceAudio.click(button.matches('#start,#setup-start')?'start':'click');
+  raceAudio.click(button.matches('#start,#setup-start,#multi-start')?'start':button.matches('#multi-create-open,.shop-card button')?'popup':'click');
 },true);
 document.addEventListener('change',event=>{
   if(event.target.matches?.('#kart-choice,#character-choice,#track-choice'))raceAudio.click();
@@ -162,19 +162,56 @@ function applyProfile(profile) {
   populateOwnedKarts();
 }
 async function openShop() {
-  closeAllDialogs();$('#shop-dialog').classList.remove('hidden');$('#shop-status').textContent='';
-  const shop=await playerRequest('shop');renderShop(shop);
+  closeAllDialogs();$('#error').classList.add('hidden');$('#shop-dialog').classList.remove('hidden');$('#shop-status').textContent='';
+  shopKind='kart';$('#shop-search').value='';document.querySelectorAll('[data-shop-kind]').forEach(tab=>tab.classList.toggle('active',tab.dataset.shopKind==='kart'));
+  $('#shop-coin').textContent='—';
+  $('#shop-lucci').textContent=playerProfile.lucci.toLocaleString('ko-KR');
+  const preview=$('#shop-preview');preview.replaceChildren();
+  view.renderAssetThumbnail(playerProfile.equippedKart,'kart',()=>!$('#shop-dialog').classList.contains('hidden')).then(url=>{if(!url||$('#shop-dialog').classList.contains('hidden'))return;const image=document.createElement('img');image.src=url;image.alt='장착한 원본 카트바디';preview.replaceChildren(image);}).catch(()=>{});
+  try{renderShop(await playerRequest('shop'));}catch(error){$('#shop-status').textContent=`원본 카탈로그를 준비해 주세요: ${error.message}`;}
+}
+let shopKind='kart',shopSelected=null,shopImages;
+function closePurchase(){shopSelected=null;$('#shop-purchase').classList.add('hidden');}
+function showPurchase(item,imageUrl){
+  shopSelected=item;$('#purchase-name').textContent=item.label;
+  $('#purchase-price').textContent=`${item.price.toLocaleString('ko-KR')} 루찌`;
+  $('#purchase-current').textContent=playerProfile.lucci.toLocaleString('ko-KR');
+  $('#purchase-after').textContent=(playerProfile.lucci-item.price).toLocaleString('ko-KR');
+  const preview=$('#purchase-preview');preview.replaceChildren();
+  if(imageUrl){const img=document.createElement('img');img.src=imageUrl;img.alt=`${item.label} 원본 모델`;preview.append(img);}
+  $('#shop-purchase').classList.remove('hidden');
 }
 function renderShop(shop) {
   const search=$('#shop-search').value.trim().toLowerCase();
-  $('#shop-items').replaceChildren(...shop.items.filter(i=>(i.label+' '+i.id).toLowerCase().includes(search)).map(item=>{
-    const row=document.createElement('div');row.className='shop-row';const label=document.createElement('span');label.textContent=`${item.label} · ${item.price.toLocaleString('ko-KR')} 루찌`;
-    const button=document.createElement('button');button.textContent=item.owned?'보유 중':'구매';button.disabled=item.owned||playerProfile.lucci<item.price;
-    button.addEventListener('click',async()=>{button.disabled=true;try{applyProfile(await playerRequest('purchase',{id:item.id,kind:item.kind}));$('#shop-status').textContent=`${item.label} 구매 완료`;renderShop(await playerRequest('shop'));}catch(error){$('#shop-status').textContent=error.message;button.disabled=false;}});
-    row.append(label,button);return row;
+  shopImages?.disconnect();shopImages=new IntersectionObserver(entries=>{
+    for(const entry of entries){if(!entry.isIntersecting||entry.target.dataset.loading)return;
+      const card=entry.target;card.dataset.loading='true';
+      view.renderAssetThumbnail(card.dataset.model,'kart',()=>card.isConnected&&!$('#shop-dialog').classList.contains('hidden')).then(url=>{
+        if(!url||!card.isConnected)return;const image=card.querySelector('img');image.src=url;image.hidden=false;card.querySelector('.shop-image-status').hidden=true;shopImages?.unobserve(card);
+      }).catch(()=>{if(card.isConnected)card.querySelector('.shop-image-status').textContent='원본 모델 준비 필요';});
+    }
+  },{root:$('#shop-items'),rootMargin:'120px'});
+  $('#shop-items').replaceChildren(...shop.items.filter(i=>i.kind===shopKind&&(i.label+' '+i.id).toLowerCase().includes(search)).map(item=>{
+    const card=document.createElement('article');card.className='shop-card';card.dataset.model=item.id;
+    const title=document.createElement('strong');title.textContent=item.label;
+    const image=document.createElement('img');image.alt=`${item.label} 원본 모델`;image.hidden=true;
+    const waiting=document.createElement('span');waiting.className='shop-image-status';waiting.textContent='원본 모델 불러오는 중…';
+    const price=document.createElement('span');price.className='shop-card-price';price.textContent=`${item.price.toLocaleString('ko-KR')} 루찌`;
+    const buy=document.createElement('button');buy.textContent=item.owned?'보유 중':'구매';buy.disabled=item.owned||playerProfile.lucci<item.price;
+    buy.addEventListener('click',()=>showPurchase(item,image.hidden?'':image.src));
+    card.append(title,image,waiting,price,buy);if(item.kind==='kart')shopImages.observe(card);return card;
   }));
+  if(!$('#shop-items').children.length)$('#shop-items').textContent='판매 중인 원본 상품이 없습니다.';
+  $('#shop-lucci').textContent=playerProfile.lucci.toLocaleString('ko-KR');
 }
 $('#shop-search').addEventListener('input',async()=>{try{renderShop(await playerRequest('shop'));}catch(error){$('#shop-status').textContent=error.message;}});
+for(const button of document.querySelectorAll('[data-shop-kind]'))button.addEventListener('click',async()=>{shopKind=button.dataset.shopKind;for(const tab of document.querySelectorAll('[data-shop-kind]'))tab.classList.toggle('active',tab===button);try{renderShop(await playerRequest('shop'));}catch(error){$('#shop-status').textContent=error.message;}});
+for(const id of ['purchase-close','purchase-cancel'])$('#'+id).addEventListener('click',closePurchase);
+$('#purchase-confirm').addEventListener('click',async()=>{if(!shopSelected)return;const item=shopSelected,button=$('#purchase-confirm');button.disabled=true;
+  try{applyProfile(await playerRequest('purchase',{id:item.id,kind:item.kind}));closePurchase();$('#shop-status').textContent=`${item.label} 구매 완료`;renderShop(await playerRequest('shop'));}
+  catch(error){$('#shop-status').textContent=error.message;}finally{button.disabled=false;}
+});
+$('#shop-reset').addEventListener('click',()=>{$('#shop-search').value='';shopKind='kart';document.querySelectorAll('[data-shop-kind]').forEach(tab=>tab.classList.toggle('active',tab.dataset.shopKind==='kart'));playerRequest('shop').then(renderShop).catch(error=>{$('#shop-status').textContent=error.message;});});
 $('#daily-reward').addEventListener('click',async()=>{try{applyProfile(await playerRequest('daily',{}));$('#shop-status').textContent='출석 보상 500 루찌를 받았습니다.';renderShop(await playerRequest('shop'));}catch(error){$('#shop-status').textContent=error.message;}});
 $('#rename-form').addEventListener('submit',async event=>{event.preventDefault();try{applyProfile(await playerRequest('rename',{nickname:$('#new-nickname').value}));$('#shop-status').textContent='닉네임을 변경했습니다.';$('#new-nickname').value='';}catch(error){$('#shop-status').textContent=error.message;}});
 async function claimRaceReward(state) {
@@ -297,7 +334,7 @@ function goLobby(keepRoom=false) {
 }
 
 function closeAllDialogs() {
-  for (const id of ['single-setup', 'items-dialog', 'tracks-dialog', 'nexon-menu','shop-dialog']) {
+  for (const id of ['single-setup', 'items-dialog', 'tracks-dialog', 'nexon-menu','shop-dialog','shop-purchase']) {
     document.getElementById(id).classList.add('hidden');
   }
 }
@@ -565,10 +602,12 @@ for (const item of document.querySelectorAll('[data-lobby-action]')) {
     if (action === 'kart') { itemType = 'kart'; openItems(); }
     if (action === 'character') { itemType = 'character'; openItems(); }
     if (action === 'shop') openShop().catch(showError);
-    if (action === 'multi') {input.clear();closeAllDialogs();multiplayer?.open().catch(showError);}
+    if (action === 'multi') {input.clear();closeAllDialogs();$('#error').classList.add('hidden');if(multiplayer)multiplayer.open().catch(showError);else{$('#multi-dialog').classList.remove('hidden');$('#multi-status').textContent='원본 카탈로그와 카트 성능 파일을 준비해 주세요.';$('#multi-create-open').disabled=true;}}
   });
 }
 $('#close-selection').addEventListener('click', () => $('#selection-panel').classList.add('hidden'));
+$('#multi-close').addEventListener('click',()=>{if(!multiplayer)$('#multi-dialog').classList.add('hidden');});
+$('#multi-items').addEventListener('click',()=>{$('#multi-dialog').classList.add('hidden');openItems();});
 for (const button of document.querySelectorAll('[data-cycle]')) {
   button.addEventListener('click', () => {
     const select = document.getElementById(button.dataset.cycle);
@@ -608,6 +647,7 @@ try {
   applySelectedKartPhysics();
   await loadSelectedTrack();
   multiplayer=createMultiplayerClient({catalog:localCatalog,userId:accountUserId,getCharacter:()=>characterChoice.value,
+    renderCharacterThumbnail:(name,needed)=>view.renderAssetThumbnail(name,'character',needed),
     getControls:()=>{const reset=resetRequested;resetRequested=false;return {...controls,steer:input.steering(),reset};},
     async onPrepare(room){
       input.clear();multiRace=true;

@@ -16,7 +16,7 @@ export function createMultiplayer({players,root,catalogPath,now=Date.now,createP
     if(!factory)factory=createPhysics??createRacePhysicsFactory(root,catalog);
     return factory;
   }
-  function snapshot(room){return {id:room.id,revision:room.revision,name:room.name,track:room.track,host:room.host,phase:room.phase,race:room.race,speed:factory.speed,version:factory.version,
+  function snapshot(room){return {id:room.id,revision:room.revision,name:room.name,track:room.track,host:room.host,phase:room.phase,race:room.race,autoStartAt:room.autoStartAt??null,speed:factory.speed,version:factory.version,
     players:[...room.members.values()].map(p=>({id:p.id,nickname:p.nickname,kart:p.kart,character:p.character,slot:p.slot,ready:p.ready,loaded:p.loaded,finished:p.finished,time:p.time})),chat:room.chat,results:room.results};}
   function send(id,event,data,encoded=false){const stream=streams.get(id);if(!stream||stream.response.destroyed||stream.response.writableEnded)return;if(stream.response.writableLength>256*1024){stream.response.destroy();return;}stream.response.write(`event: ${event}\ndata: ${encoded?data:JSON.stringify(data)}\n\n`);}
   function broadcast(room,event='room',value){if(event==='room'){room.revision++;value=snapshot(room);}if(event==='frame')room.frame=value;const data=JSON.stringify(value);for(const id of room.members.keys())send(id,event,data,true);}
@@ -27,9 +27,17 @@ export function createMultiplayer({players,root,catalogPath,now=Date.now,createP
     room.members.delete(user.id);membership.delete(user.id);room.engines?.delete(user.id);send(user.id,'room',null);
     if(!room.members.size){rooms.delete(room.id);return;}
     if(room.host===user.id)room.host=room.members.keys().next().value;
+    updateAutoStart(room);
     if(room.phase==='loading')cancel(room,'플레이어가 나가 로딩을 취소했습니다.');else broadcast(room);
   }
-  function cancel(room,message){room.phase='lobby';room.engines=null;room.frame=null;room.results=[];room.chat.push({nickname:'안내',text:message});room.chat=room.chat.slice(-30);for(const p of room.members.values()){p.ready=false;p.loaded=false;}broadcast(room);}
+  function cancel(room,message){room.phase='lobby';room.autoStartAt=null;room.engines=null;room.frame=null;room.results=[];room.chat.push({nickname:'안내',text:message});room.chat=room.chat.slice(-30);for(const p of room.members.values()){p.ready=false;p.loaded=false;}broadcast(room);}
+  function guestsReady(room){return room.members.size>=2&&[...room.members.values()].every(p=>p.id===room.host||p.ready);}
+  function updateAutoStart(room){room.autoStartAt=room.phase==='lobby'&&guestsReady(room)?room.autoStartAt??now()+10000:null;}
+  function beginLoading(room){
+    room.phase='loading';room.autoStartAt=null;room.race=randomUUID();room.loadingAt=now();room.results=[];room.frame=null;
+    for(const member of room.members.values()){member.loaded=member.finished=false;member.time=null;member.input=emptyInput();member.seq=-1;}
+    broadcast(room);return snapshot(room);
+  }
   function settle(room){
     room.phase='results';room.engines=null;
     room.results=[...room.members.values()].sort((a,b)=>(a.time??Infinity)-(b.time??Infinity)||a.slot-b.slot).map((p,index)=>({id:p.id,nickname:p.nickname,rank:p.finished?index+1:null,time:p.time??null,dnf:!p.finished}));
@@ -48,6 +56,7 @@ export function createMultiplayer({players,root,catalogPath,now=Date.now,createP
     for(const [id,stream] of streams){if(time-stream.heartbeat>=10000){if(!stream.authenticate()){stream.response.end();continue;}stream.response.write(': heartbeat\n\n');stream.heartbeat=time;}}
     for(const room of rooms.values()){
       for(const p of [...room.members.values()])if(!streams.has(p.id)&&time-p.seen>30000)leave(p);
+      if(room.phase==='lobby'&&room.autoStartAt!==null&&time>=room.autoStartAt&&guestsReady(room)&&[...rooms.values()].filter(r=>['loading','running'].includes(r.phase)).length<4){beginLoading(room);continue;}
       if(room.phase==='loading'&&time-room.loadingAt>30000){cancel(room,'로딩 제한시간이 지났습니다.');continue;}
       if(room.phase!=='running')continue;
       room.accumulator+=Math.max(0,Math.min(250,time-room.lastTick));room.lastTick=time;
@@ -101,11 +110,11 @@ export function createMultiplayer({players,root,catalogPath,now=Date.now,createP
           const name=typeof fields.name==='string'?fields.name.trim():'';
           if(!name||name.length>40)fail('INVALID_ROOM_NAME');
           if(!catalog.tracks.some(t=>t.ready&&t.id===fields.track&&Number.isInteger(t.courseIndex)))fail('TRACK_UNAVAILABLE');
-          room={id:randomUUID(),revision:0,host:user.id,name,track:fields.track,phase:'lobby',race:null,members:new Map(),chat:[],results:[]};rooms.set(room.id,room);
+          room={id:randomUUID(),revision:0,host:user.id,name,track:fields.track,phase:'lobby',race:null,autoStartAt:null,members:new Map(),chat:[],results:[]};rooms.set(room.id,room);
         }else{room=rooms.get(fields.id);if(!room)fail('ROOM_NOT_FOUND',404);if(room.phase!=='lobby'||room.members.size>=8)fail('ROOM_LOCKED',409);}
         const slot=Array.from({length:8},(_,i)=>i).find(i=>![...room.members.values()].some(p=>p.slot===i));
         room.members.set(user.id,{id:user.id,user,nickname:profile.nickname,kart:profile.equippedKart,character:chosen,slot,ready:false,loaded:false,seen:now(),input:emptyInput(),inputAt:0,seq:-1,chatAt:-Infinity});
-        membership.set(user.id,room.id);broadcast(room);return snapshot(room);
+        membership.set(user.id,room.id);updateAutoStart(room);broadcast(room);return snapshot(room);
       }
       const room=roomFor(user),p=room.members.get(user.id);p.seen=now();
       if(action==='chat'){
@@ -115,15 +124,13 @@ export function createMultiplayer({players,root,catalogPath,now=Date.now,createP
       }
       if(action==='ready'){
         if(room.phase!=='lobby')fail('ROOM_LOCKED',409);
-        p.kart=players.profile(user).equippedKart;p.character=character(fields.character);p.ready=fields.ready===true;broadcast(room);return snapshot(room);
+        p.kart=players.profile(user).equippedKart;p.character=character(fields.character);p.ready=fields.ready===true;updateAutoStart(room);broadcast(room);return snapshot(room);
       }
       if(action==='start'){
         if(user.id!==room.host)fail('HOST_REQUIRED',403);
-        if(room.phase!=='lobby'||room.members.size<2||[...room.members.values()].some(p=>!p.ready))fail('PLAYERS_NOT_READY',409);
+        if(room.phase!=='lobby'||!guestsReady(room))fail('PLAYERS_NOT_READY',409);
         if([...rooms.values()].filter(r=>['loading','running'].includes(r.phase)).length>=4)fail('SERVER_BUSY',429);
-        room.phase='loading';room.race=randomUUID();room.loadingAt=now();room.results=[];room.frame=null;
-        for(const member of room.members.values()){member.loaded=member.finished=false;member.time=null;member.input=emptyInput();member.seq=-1;}
-        broadcast(room);return snapshot(room);
+        return beginLoading(room);
       }
       if(action==='loaded'){
         if(room.phase!=='loading'||fields.race!==room.race||fields.version!==factory.version)fail('RACE_VERSION_MISMATCH',409);

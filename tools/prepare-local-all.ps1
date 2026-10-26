@@ -29,5 +29,6 @@ if((Test-Path -LiteralPath $PhysicsClient) -and (Test-Path -LiteralPath $Physics
 & (Join-Path $PSScriptRoot 'build-demo-physics.ps1') -RhoRoot $RhoRoot -PythonExe $PythonExe
 & (Join-Path $PSScriptRoot 'prepare-local-effects.ps1') -AssetRoot $RhoRoot
 & (Join-Path $PSScriptRoot 'prepare-local-audio.ps1') -AssetRoot $RhoRoot
+& (Join-Path $PSScriptRoot 'prepare-local-lobby-gui.ps1') -AssetRoot $RhoRoot
 & node (Join-Path $PSScriptRoot 'validate-local-catalog.mjs')
 if ($LASTEXITCODE -ne 0) { throw 'Catalog Wasm validation failed' }
