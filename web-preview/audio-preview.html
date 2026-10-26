@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="ko"><meta charset="utf-8"><title>원본 5136 효과음 미리듣기</title>
+<style>body{font:16px system-ui;background:#142a3c;color:white;max-width:760px;margin:3rem auto;padding:1rem}button{margin:.3rem;padding:.5rem}small{color:#bad1df}li{margin:.7rem 0}</style>
+<h1>원본 5136 효과음 미리듣기</h1><p>버튼을 누르면 로컬에서 준비한 원본 파일만 재생합니다. 파일이 없으면 <code>tools/prepare-local-audio.ps1</code>을 실행하세요.</p>
+<ul id="sounds"></ul>
+<script type="module">
+const entries=(await (await fetch('./audio-map.json')).json()).entries.filter(entry=>entry.source);
+const list=document.querySelector('#sounds');
+let current;
+for(const entry of entries){
+  const item=document.createElement('li'),button=document.createElement('button'),note=document.createElement('small');
+  button.textContent=entry.event+' · '+entry.source.split('/').at(-1);
+  note.textContent=entry.status;
+  button.addEventListener('click',async()=>{
+    current?.pause();
+    current=new Audio('./assets/audio/'+(entry.prepared??entry.source.split('/').at(-1)));
+    const selected=current;
+    try{await selected.play();if(current===selected)note.textContent='재생 중 · '+entry.status;}
+    catch(error){note.textContent=current===selected?'재생 실패: '+error.message:entry.status;}
+  });
+  item.append(button,note);list.append(item);
+}
+</script>
+</html>

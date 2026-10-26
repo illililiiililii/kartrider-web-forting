@@ -1,0 +1,23 @@
+{
+  "source": "User-provided original 5136 rhoOut",
+  "entries": [
+    {"event":"start-count","source":"sound/fx/etc/count_n.flac","status":"connected; source filename, FLAC header and countdown state checked"},
+    {"event":"start-go","source":"sound/fx/etc/count_go.flac","status":"connected; source filename, FLAC header and race phase checked"},
+    {"event":"lap-complete","source":null,"status":"unverified; no general lap sound identified"},
+    {"event":"final-lap","source":"sound/fx/etc/final_lab.flac","status":"connected only on entry to final lap; original invocation not independently verified"},
+    {"event":"race-finish","source":"sound/fx/etc/race_over.flac","status":"connected on final race phase; original invocation not independently verified"},
+    {"event":"ui-click","source":"sound/fx/interface/click.flac","status":"connected to buttons and selection changes; original per-button mapping unverified"},
+    {"event":"ui-start","source":"sound/fx/interface/startButton.flac","status":"connected to start button; original invocation not independently verified"},
+    {"event":"race-end-ten-seconds","source":null,"status":"unconnected; current race has no end timer rule"},
+    {"event":"drift","source":"sound/fx/kart/drift.ogg","status":"previously connected"},
+    {"event":"normal-boost","source":"sound/fx/kart/engine_X/booster.ogg","prepared":"boost.ogg","status":"previously connected"},
+    {"event":"exceed","source":"sound/fx/kart/engine_V1/exceed.ogg","status":"previously connected"},
+    {"event":"transform-boost","source":"sound/fx/kart/transforming.ogg","status":"candidate only; transformation state unimplemented"},
+    {"event":"dual-boost","source":"sound/fx/kart/engine_common/dualBooster.ogg","status":"candidate only; dual boost state unimplemented"},
+    {"event":"wall-collision","source":"sound/fx/kart/crash.ogg","status":"candidate only; source callback unverified"},
+    {"event":"kart-collision","source":"sound/fx/kart/collide.ogg","status":"candidate only; source callback unverified"},
+    {"event":"item-and-gauge","source":null,"status":"unverified"},
+    {"event":"result-screen","source":null,"status":"unverified"},
+    {"event":"lobby-transition","source":"sound/fx/interface/popup.flac","status":"candidate only; source callback unverified"}
+  ]
+}

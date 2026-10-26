@@ -16,6 +16,16 @@ const rankBoard=createRankBoard($('.race-standing'));
 rankBoard.ready.catch(error=>console.error('원본 순위표:',error));
 mountV1Dashboard($('.tacho')).catch(error=>console.error('원본 V1 계기판:',error));
 const raceAudio = createRaceAudio();
+document.addEventListener('pointerdown',()=>raceAudio.unlock(),{once:true,capture:true});
+document.addEventListener('keydown',()=>raceAudio.unlock(),{once:true,capture:true});
+document.addEventListener('click',event=>{
+  const button=event.target.closest?.('button');
+  if(!button||button.disabled)return;
+  raceAudio.click(button.matches('#start,#setup-start')?'start':'click');
+},true);
+document.addEventListener('change',event=>{
+  if(event.target.matches?.('#kart-choice,#character-choice,#track-choice'))raceAudio.click();
+},true);
 const lobby = $('#lobby');
 const raceUi = $('#race-ui');
 const status = $('#load-status');
@@ -79,6 +89,15 @@ try {boostBlur=localStorage.getItem('kart.boostBlur')!=='false';} catch {}
 view.setBoostBlur(boostBlur);
 $('#boost-blur-setting').checked=boostBlur;
 $('#boost-blur-setting').addEventListener('change',event=>{boostBlur=event.target.checked;view.setBoostBlur(boostBlur);try{localStorage.setItem('kart.boostBlur',String(boostBlur));}catch{}});
+for(const id of ['music-volume','effects-volume']){
+  const control=$('#'+id);
+  try{const saved=localStorage.getItem('kart.'+id);if(saved!==null)control.value=saved;}catch{}
+  control.addEventListener('input',()=>{
+    raceAudio.setVolumes({music:$('#music-volume').value,effects:$('#effects-volume').value});
+    try{localStorage.setItem('kart.'+id,control.value);}catch{}
+  });
+}
+raceAudio.setVolumes({music:$('#music-volume').value,effects:$('#effects-volume').value});
 for(const button of document.querySelectorAll('[data-open-settings]'))button.addEventListener('click',()=>{input.clear();$('#settings-dialog').classList.remove('hidden');});
 let lastFrame = 0;
 let requestId = 0;
@@ -389,7 +408,7 @@ function renderSpriteDigits(element, value, className, glyphWidth, columns) {
 
 function draw(state, frameMs) {
   view.render(visual, frameMs);
-  if (active === 'race') raceAudio.update(state);
+  if (active === 'race') raceAudio.update(state,trackLaps[trackChoice.value]);
   if (active === 'race') liveMinimap.draw(visual);
   if (active !== 'race') return;
   updateExceedDashboard($('.tacho'),state);

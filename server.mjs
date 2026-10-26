@@ -17,7 +17,7 @@ const types = new Map([
   ['.mjs', 'text/javascript; charset=utf-8'], ['.css', 'text/css; charset=utf-8'],
   ['.json', 'application/json; charset=utf-8'], ['.wasm', 'application/wasm'],
   ['.png', 'image/png'], ['.jpg', 'image/jpeg'], ['.jpeg', 'image/jpeg'],
-  ['.ogg', 'audio/ogg'], ['.ktrk', 'application/octet-stream'],
+  ['.ogg', 'audio/ogg'], ['.flac', 'audio/flac'], ['.wav', 'audio/wav'], ['.ktrk', 'application/octet-stream'],
 ]);
 const sessionAgeSeconds = 7 * 24 * 60 * 60;
 const attempts = new Map();

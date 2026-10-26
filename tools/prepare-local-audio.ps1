@@ -17,6 +17,17 @@ $files = @{
   'drift.ogg' = 'sound\fx\kart\drift.ogg'
   'boost.ogg' = 'sound\fx\kart\engine_X\booster.ogg'
   'exceed.ogg' = 'sound\fx\kart\engine_V1\exceed.ogg'
+  'count_n.flac' = 'sound\fx\etc\count_n.flac'
+  'count_go.flac' = 'sound\fx\etc\count_go.flac'
+  'final_lab.flac' = 'sound\fx\etc\final_lab.flac'
+  'race_over.flac' = 'sound\fx\etc\race_over.flac'
+  'click.flac' = 'sound\fx\interface\click.flac'
+  'startButton.flac' = 'sound\fx\interface\startButton.flac'
+  'popup.flac' = 'sound\fx\interface\popup.flac'
+  'transforming.ogg' = 'sound\fx\kart\transforming.ogg'
+  'dualBooster.ogg' = 'sound\fx\kart\engine_common\dualBooster.ogg'
+  'crash.ogg' = 'sound\fx\kart\crash.ogg'
+  'collide.ogg' = 'sound\fx\kart\collide.ogg'
 }
 foreach ($name in $files.Keys) {
   $source = Join-Path $AssetRoot $files[$name]
