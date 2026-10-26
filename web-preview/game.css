@@ -275,15 +275,6 @@ canvas{position:relative;z-index:1;display:block;width:100%;height:100%}
 #experience{position:absolute;bottom:0;left:45px;width:178px;height:4px}
 #lucci{display:block;text-align:right;padding:9px 12px;font-weight:bold;color:#ffdf74}
 .shop-open{border:0;background:none;padding:0;cursor:pointer}.shop-open img{display:block}
-.shop-window{width:min(780px,96vw);height:min(565px,90vh);padding-bottom:10px;display:flex;flex-direction:column}
-.shop-tools{display:flex;justify-content:space-between;padding:10px;gap:12px}
-.shop-policy{padding:0 12px 8px;color:#254253}
-.shop-items{overflow:auto;flex:1;min-height:100px;padding:0 12px;color:#183247}
-.shop-row{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:44px;border-bottom:1px solid #91aabd}
-.shop-row button,.shop-tools button,#rename-form button{padding:5px 12px;cursor:pointer}
-.shop-row button:disabled{cursor:default;opacity:.6}
-#rename-form{display:flex;flex-wrap:wrap;align-items:center;gap:7px;padding:10px 12px;color:#183247}
-#rename-form small{width:100%}#shop-status{min-height:23px;padding:0 12px;color:#163955;font-size:13px}
 .result-reward{position:absolute;bottom:78px;left:20px;right:20px;text-align:center;color:#ffe581;font-size:14px}
 
 /* Reference HUD uses a 1080-line layout; preserve sprite aspect at all sizes. */
@@ -296,12 +287,6 @@ canvas{position:relative;z-index:1;display:block;width:100%;height:100%}
 .v1-ex-rail{position:absolute;left:72.5px;top:18px;width:146px;height:10px}
 .v1-ex-fill{position:absolute;left:74.5px;top:20px;height:6px;width:0;background-position:-2px -2px;background-repeat:no-repeat}
 .map-panel #live-minimap{transform:perspective(600px) rotateX(30deg);transform-origin:center center}
-.multi-window{width:min(760px,96vw);max-height:90vh;overflow:auto;padding:0 12px 12px;color:#17384c;font-size:14px}
-.multi-window button,.multi-window input,.multi-window select{padding:6px;margin:4px;max-width:100%}
-.multi-window button{cursor:pointer}.multi-window button:disabled{cursor:default;opacity:.5}
-#multi-rooms{display:grid;gap:4px;padding:10px 0}#multi-create{display:flex;flex-wrap:wrap;align-items:center}#multi-track{max-width:260px}
-#multi-members{min-height:65px;padding-left:25px;line-height:1.8}.multi-actions{display:flex;flex-wrap:wrap}
-#multi-chat-log{height:100px;overflow:auto;background:#edf5fa;padding:6px;border:1px solid #8da7b7}#multi-chat{display:flex}#multi-chat-input{flex:1;min-width:70px}#multi-status{min-height:20px}
 .original-rank-header{position:relative;width:229px;height:100px}
 .original-rank-sprite{position:absolute;display:block;background-repeat:no-repeat;top:0}
 .original-rank-row{position:relative;width:245px;height:31px}
@@ -313,49 +298,3 @@ canvas{position:relative;z-index:1;display:block;width:100%;height:100%}
 .map-panel #minimap,.map-panel #live-minimap{width:240px;height:236px;opacity:1}
 .race-standing{left:calc(26px * var(--race-hud-scale));scale:var(--race-hud-scale);transform-origin:top left}
 .time-panel{right:calc(26px * var(--race-hud-scale));top:calc(20px * var(--race-hud-scale));scale:var(--race-hud-scale);transform-origin:top right}
-
-/* P5136 stage/mainMenu/mq_window and stage/gameReady room layout. */
-.multi-window{position:absolute;z-index:8;left:50%;top:50%;transform:translate(-50%,-50%);width:min(790px,96vw);max-height:calc(100dvh - 80px);overflow:visible;padding:0;color:#f4f8ff;pointer-events:auto;font-size:13px}
-.multi-window button,.multi-window input,.multi-window select{font:inherit}
-.multi-browser{display:flex;gap:16px;align-items:flex-end;height:520px}
-.multi-modes{position:relative;flex:1;height:435px;padding:16px 12px;background:url('./assets/ui/stage/mainMenu/leftbg.png') center/100% 100% no-repeat}
-.multi-mode-tabs{position:absolute;top:-31px;left:7px;right:7px;display:flex;justify-content:space-around;text-shadow:1px 2px #14233a}
-.multi-mode-tabs strong{font-size:16px;color:#fff}
-.multi-mode{display:block;width:100%;height:57px;margin:6px 0;border:0;background:url('./assets/ui/stage/mainMenu/roomSlot_1.png') center/100% 100% no-repeat;color:#fff;font-size:17px!important;font-weight:700;text-shadow:1px 2px #123755}
-.multi-mode:disabled{opacity:.55}.multi-mode.active{outline:2px solid #49e9ff;outline-offset:-3px}
-.multi-mode-note{margin-top:8px;color:#e2effa;text-align:center}
-.multi-room-browser{position:relative;flex:none;width:365px;height:520px;padding:5px;background:#a6b8c9;border:3px solid #374154;border-radius:7px;box-shadow:0 0 0 2px #ecf5f9}
-.multi-room-browser .original-title{margin:0}.multi-rooms{height:409px;margin:4px 2px;overflow-y:auto;padding:6px;background:#c5d2dd;border:2px solid #80919f;color:#304b60}
-.multi-room-entry{display:block;width:100%;height:70px;margin:0 0 3px;border:0;padding:8px 10px;text-align:left;background:url('./assets/ui/stage/mainMenu/roomSlot_1.png') center/100% 100% no-repeat;color:#1d4160;font-size:12px!important;font-weight:700}
-.multi-browser-actions{display:flex;justify-content:space-between;height:53px;gap:5px}.multi-browser-actions button{flex:1;border:2px solid #6b8494;border-radius:5px;background:#128fe3;color:white;font-weight:700}.multi-browser-actions #multi-create-open{background:#53b421}
-.multi-room{height:520px;padding:5px;background:#dae8f0;border:3px solid #344356;border-radius:7px;box-shadow:0 0 0 2px #eef8fb;color:#f8fcff}
-.multi-room-header{height:27px;display:flex;align-items:center;gap:10px;padding:0 6px;background:#202a35;font-size:12px}
-.multi-room-header h3{font-size:12px;flex:1;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;text-align:center}.multi-room-header button{height:24px;border:1px solid #fff;background:#d72919;color:white}
-.multi-members{height:348px;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));grid-template-rows:repeat(2,1fr);gap:7px;padding:4px 0}
-#multi-room #multi-members{padding:4px 0;min-height:0;line-height:normal}
-#multi-browser #multi-rooms{display:block;padding:6px;gap:0}
-.multi-rider-card{position:relative;min-width:0;background:url('./assets/ui/gui/windowTemplate/card@zz.png') 0 0/400% 100% no-repeat;text-align:center;overflow:hidden;color:#123651}
-.multi-rider-card.occupied{background-image:url('./assets/ui/stage/gameReady/mycard_blue@zz.png');background-size:200% 100%}
-.multi-rider-card.host{outline:2px solid #04c9ea;outline-offset:-2px}
-.multi-rider-card strong{position:absolute;top:5px;left:17%;width:67%;height:20px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;border:1px solid #afc8d9;border-radius:12px;background:#f6fbfd;font-size:11px;line-height:18px}
-.multi-rider-avatar{position:absolute;inset:29px 10px 25px;display:grid;place-items:center}.multi-rider-avatar img{max-width:100%;max-height:100%;object-fit:contain}
-.multi-rider-badge{position:absolute;bottom:0;left:0;right:0;height:25px;line-height:25px;background:#739bb8;color:#fff;font-weight:700;text-shadow:1px 1px #2b3b54}
-.multi-rider-card.host .multi-rider-badge{background:#0dcde5;color:#efde00}.multi-rider-card.ready .multi-rider-badge{background:#efc21e;color:#64360b}
-.multi-room-bottom{display:grid;grid-template-columns:1.5fr 1fr .85fr;gap:6px;height:130px}
-.multi-chat-area{min-width:0}.multi-chat-area #multi-chat-log{height:102px;overflow:auto;padding:6px;background:#385777;border:2px solid #7f95ad;color:#e4edf4;font-size:11px}.multi-chat-area #multi-chat{display:flex;height:24px}.multi-chat-area input{flex:1;min-width:20px}.multi-chat-area button{padding:0 7px}
-.multi-track-card{position:relative;overflow:hidden;background:url('./assets/ui/gui/windowTemplate/trackcard.png') 0 0/100% 100% no-repeat}.multi-track-card img{width:100%;height:100%;object-fit:cover}.multi-track-card strong{position:absolute;bottom:0;left:0;right:0;background:#1b355ad9;text-align:center;font-size:11px}
-.multi-actions{display:flex;flex-direction:column;gap:5px}.multi-actions button{min-height:34px;border:2px solid #758ea2;border-radius:5px;background:#1d99df;color:white;font-weight:700}.multi-actions #multi-start{height:58px;background:#d82513;font-size:18px}.multi-actions button:disabled{filter:grayscale(1);opacity:.7}
-.multi-actions #multi-start{flex:none;width:100%;height:58px;border:0;background:url('./assets/ui/stage/timeAttackReady/btn_gameStart_1@kr.png') center/100% 100% no-repeat;color:transparent;font-size:0}
-.multi-action-tools{display:flex;gap:3px;height:49px}.multi-action-tools button{flex:1;min-width:0;min-height:0;padding:0;border:0;background:url('./assets/ui/stage/timeAttackReady/btn_myItem_1@kr.png') center/100% 100% no-repeat;color:transparent;font-size:0}.multi-action-tools #multi-track-change{background-image:url('./assets/ui/stage/timeAttackReady/btn_myItem_trackSelect_1@kr.png')}
-#multi-results{position:absolute;bottom:6px;left:8px;color:#263c50}#multi-status{min-height:19px;margin:1px 0;text-align:center;color:#fff;font-size:12px;text-shadow:1px 1px #15304c}
-.multi-create-popup{width:355px;min-height:235px;z-index:10;color:#193c57}.multi-create-popup::before,.purchase-window::before{content:'';position:fixed;inset:-100vh -100vw;background:#0714259c;z-index:-1}.multi-create-popup #multi-create{padding:12px;display:grid;gap:7px}.multi-create-popup label{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:12px}.multi-create-popup input,.multi-create-popup select{width:210px}.multi-popup-actions{display:flex;justify-content:center;gap:6px;margin-top:9px}.multi-popup-actions button{min-width:85px;padding:5px}
-
-/* P5136 stage/shop cards and currency strips. Prices come from the web account API. */
-.shop-window{position:absolute;z-index:8;left:50%;top:50%;transform:translate(-50%,-50%);width:min(785px,96vw);height:min(510px,76vh);display:flex;flex-direction:row;padding:0;gap:8px;color:#123b57;pointer-events:auto}
-.shop-side{width:280px;flex:none;padding:8px;background:#aec0cd;border:3px solid #465467;border-radius:6px;box-shadow:0 0 0 2px #e6eff5}.shop-wallet{height:90px;background:url('./assets/ui/stage/common/img_playerBG.png') center/100% 100% no-repeat;padding:5px}.shop-wallet div{height:38px;display:flex;justify-content:space-between;align-items:center;padding:0 8px;background:url('./assets/ui/stage/shop/shop_cash_bg.png') center/100% 100% no-repeat;font-size:11px}.shop-wallet div+div{background-image:url('./assets/ui/stage/shop/shop_lucci_bg.png')}.shop-preview{height:270px;margin:6px 0;background:url('./assets/ui/stage/common/img_playerBG.png') center/100% 100% no-repeat}.shop-preview img{width:100%;height:100%;object-fit:contain}.shop-side #shop-reset{display:block;margin:6px auto;padding:5px 22px;color:white;background:#118fd5;border:2px solid #30638f;border-radius:5px}.shop-account{font-size:11px}.shop-account button{padding:2px}.shop-account input{max-width:120px}
-.shop-main{flex:1;min-width:0;background:#d5e1e8;border:3px solid #475969;border-radius:6px;box-shadow:0 0 0 2px #f2f8fb}.shop-tabs{height:32px;background:#263a4b;display:flex;gap:2px;align-items:stretch;padding:2px 30px 0 6px;position:relative}.shop-tabs button:not(.dialog-close){border:0;padding:0 10px;background:#334e65;color:#dce6ee;font-size:12px}.shop-tabs button.active{background:url('./assets/ui/stage/mainMenu/img_titleBlue.png') center/100% 100% no-repeat;color:white}.shop-subtabs{height:31px;display:flex;align-items:center;gap:8px;padding:2px 6px;background:#aec0ce}.shop-subtabs button{background:#078fda;color:white;border:1px solid #56788f}.shop-subtabs input{margin-left:auto;width:135px}.shop-items{height:calc(100% - 91px);display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-auto-rows:145px;gap:4px;overflow:auto;padding:5px;color:#173849}.shop-card{position:relative;min-width:0;background:url('./assets/ui/gui/windowTemplate/card@zz.png') 0 0/400% 100% no-repeat;text-align:center}.shop-card strong{display:block;height:22px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;background:url('./assets/ui/stage/mainMenu/img_titleBlue.png') center/100% 100% no-repeat;color:white;font-size:11px;line-height:22px}.shop-card img{width:100%;height:89px;object-fit:contain}.shop-image-status{display:grid;height:89px;place-items:center;font-size:10px}.shop-card-price{position:absolute;bottom:6px;left:4px;font-size:10px;font-weight:700}.shop-card button{position:absolute;right:4px;bottom:3px;padding:2px 9px;background:#dfad17;border:1px solid #85620d;border-radius:3px;color:#503800;font-size:11px}.shop-card button:disabled{opacity:.65}.shop-main #shop-status{height:22px;padding:2px 6px;font-size:11px}
-.purchase-window{width:330px;min-height:305px;z-index:10;color:#183a55}.purchase-content{display:flex;gap:8px;padding:10px}.purchase-content #purchase-preview{width:135px;height:100px;display:grid;place-items:center;background:url('./assets/ui/gui/windowTemplate/card@zz.png') 0 0/400% 100% no-repeat}.purchase-content img{max-width:100%;max-height:100%;object-fit:contain}.purchase-details{display:grid;gap:3px;align-content:center;font-size:11px}.purchase-details strong{display:block;min-width:145px;padding:4px;background:#eef6fc}.purchase-balance{margin:0 10px;padding:9px;background:#d9effa;border:1px solid #87a4ba;font-size:11px}.purchase-balance div{display:flex;justify-content:space-between}.purchase-balance div+div{border-top:1px solid #91aec1;margin-top:5px;padding-top:5px}.purchase-note{margin:9px 12px;color:#4b6070;font-size:10px}.purchase-actions{display:flex;justify-content:center;gap:7px;padding:5px}.purchase-actions button{min-width:86px;padding:5px}
-.multi-popup-actions .original-confirm,.purchase-actions .original-confirm{border:0;background:url('./assets/ui/dialog2/userReport/report_btn_confirm_1.png') center/100% 100% no-repeat;color:#fff}.multi-popup-actions .original-cancel,.purchase-actions .original-cancel{border:0;background:url('./assets/ui/dialog2/userReport/report_btn_cancel_1.png') center/100% 100% no-repeat;color:#273f51}
-.shop-side #shop-reset{width:133px;height:37px;padding:0;border:0;background:url('./assets/ui/stage/shop/원래대로1@kr.png') center/100% 100% no-repeat;color:transparent;font-size:0}
-@media(max-width:850px){.multi-window{width:790px;transform:translate(-50%,-50%) scale(.8)}.shop-window{width:785px;height:510px;transform:translate(-50%,-50%) scale(.8)}.multi-create-popup,.purchase-window{transform:translate(-50%,-50%) scale(.85)}}
-@media(max-width:600px){.multi-window,.shop-window{transform:translate(-50%,-50%) scale(.55)}.multi-create-popup,.purchase-window{transform:translate(-50%,-50%) scale(.8)}}

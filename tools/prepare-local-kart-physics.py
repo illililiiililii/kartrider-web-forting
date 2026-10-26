@@ -1,7 +1,7 @@
-"""Read local Korean BodyParam XML and the supplied Rust server's composition table.
+"""Read Korean BodyParam XML and the pinned P5136_Rust stock composition.
 
-No client resources or third-party Rust source are copied into Git. These are
-stock, untuned parameters, NOT a port of the closed 5136 client integrator.
+The checked-in numeric snapshot works without an external Rust checkout.
+These are stock, untuned parameters, NOT the closed 5136 client integrator.
 """
 import argparse, hashlib, json, re, xml.etree.ElementTree as ET
 from decimal import Decimal
@@ -22,6 +22,15 @@ def decimal_expr(value):
     return Decimal(match[1].replace('_','')) * Decimal(10)**-int(match[2]) * (-1 if match[3]=='true' else 1)
 
 def source_tables(rust,speed_type=7):
+    snapshot=json.loads((ROOT/'tools/p5136-stock-spec.json').read_text(encoding='utf-8'))
+    if any(not (rust/path).is_file() or hashlib.sha256((rust/path).read_bytes()).hexdigest()!=digest
+           for path,digest in snapshot['sourceHashes'].items()):
+        label={0:'S1',7:'S7'}.get(speed_type)
+        if label is None: raise ValueError('Only audited stock S1/S7 supported')
+        speed={key:Decimal(value) for key,value in snapshot['stockSpeeds'][label].items()}
+        rules={key:(entry['member'],Decimal(entry['fallback']),Decimal(entry['default']),Decimal(entry['scale']))
+               for key,entry in snapshot['bodyParamRules'].items()}
+        return speed,rules,snapshot['sourceHashes']
     core = rust/'crates/p5136-core/src/kart_physics.rs'
     catalog = rust/'crates/p5136-profile/src/catalog.rs'
     text = core.read_text(encoding='utf-8')
@@ -82,6 +91,6 @@ def prepare(client,rust,speed_type=7):
 if __name__=='__main__':
     parser=argparse.ArgumentParser()
     parser.add_argument('--client',type=Path,default=Path.home()/'Documents/kart web/kartrider_5136')
-    parser.add_argument('--rust',type=Path,default=Path.home()/'Documents/kart web/P5136_Rust-main')
+    parser.add_argument('--rust',type=Path,default=ROOT/'.tools/P5136_Rust')
     parser.add_argument('--speed',choices=['S1','S7'],default='S7')
     args=parser.parse_args();prepare(args.client,args.rust,7 if args.speed=='S7' else 0)

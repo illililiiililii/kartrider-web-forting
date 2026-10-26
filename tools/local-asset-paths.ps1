@@ -3,12 +3,15 @@ function Resolve-LocalRhoRoot([string]$Override) {
   if ($Override) { return $Override }
   if ($env:KART_ASSET_ROOT) { return $env:KART_ASSET_ROOT }
   $project = Split-Path -Parent $PSScriptRoot
+  $local=Join-Path $project 'local-assets\rhoOut'
+  if ((Test-Path -LiteralPath (Join-Path $local 'gui') -PathType Container) -and
+      (Test-Path -LiteralPath (Join-Path $local 'stage') -PathType Container)) { return $local }
   $config = Join-Path $project 'local-data\asset-paths.json'
   if (Test-Path -LiteralPath $config) {
     $settings = Get-Content -LiteralPath $config -Raw | ConvertFrom-Json
     if ($settings.rhoRoot) { return [string]$settings.rhoRoot }
   }
-  return (Join-Path $project 'local-assets\rhoOut')
+  return $local
 }
 
 function Resolve-LocalTrackFile([string]$RhoRoot, [string]$Track, [string]$Name = 'track.1s') {

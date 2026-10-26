@@ -8,6 +8,13 @@ module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
 base=Path.home()/'Documents/kart web'
 
 class ImportTests(unittest.TestCase):
+ def test_pinned_source_snapshot(self):
+  embedded=module.source_tables(Path('missing-upstream-checkout'),7)
+  self.assertGreaterEqual(len(embedded[1]),50)
+  self.assertGreaterEqual(len(embedded[0]),18)
+  checkout=path.parent.parent/'.tools/P5136_Rust'
+  if (checkout/'crates/p5136-core/src/kart_physics.rs').exists():
+   self.assertEqual(module.source_tables(checkout,7),embedded)
  @unittest.skipUnless((base/'P5136_Rust-main').exists(),'local reference source missing')
  def test_final_korean_s1_logs(self):self.check_logs(0)
  @unittest.skipUnless((base/'P5136_Rust-main').exists(),'local reference source missing')

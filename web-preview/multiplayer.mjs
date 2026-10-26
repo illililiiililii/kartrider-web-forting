@@ -36,7 +36,7 @@ export function createMultiplayerClient({catalog,userId,getCharacter,getControls
       const badge=document.createElement('span');badge.className='multi-rider-badge';badge.textContent=p.id===room.host?'방장':p.loaded&&room.phase==='loading'?'로딩 완료':p.ready?'준비 완료':'대기';
       card.append(name,avatar,badge);return card;
     }));
-    $('multi-ready').hidden=host;$('multi-ready').textContent=self?.ready?'준비 취소':'준비';$('multi-ready').disabled=room.phase!=='lobby';
+    $('multi-ready').hidden=host;$('multi-ready-label').textContent=self?.ready?'준비 취소':'준비';$('multi-ready').disabled=room.phase!=='lobby';
     $('multi-start').hidden=!host;$('multi-start').disabled=room.phase!=='lobby'||room.players.length<2||room.players.some(p=>p.id!==room.host&&!p.ready);
     $('multi-return').hidden=!host||room.phase!=='results';
     $('multi-results').replaceChildren(...(room.results??[]).map(p=>{const row=document.createElement('p');row.textContent=`${p.rank??'미완주'} · ${p.nickname} · ${p.time===null?'DNF':(p.time/1000).toFixed(2)+'초'}`;return row;}));
@@ -100,7 +100,7 @@ export function createMultiplayerClient({catalog,userId,getCharacter,getControls
   $('multi-refresh').onclick=()=>refresh().catch(showError);
   $('multi-ready').onclick=()=>request('ready',{ready:!room.players.find(p=>p.id===userId)?.ready,character:getCharacter()}).then(accept).catch(showError);
   $('multi-start').onclick=()=>request('start',{}).then(accept).catch(showError);
-  window.addEventListener('keydown',event=>{if(event.code!=='F5'||event.repeat||panel.classList.contains('hidden')||!room||room.phase!=='lobby')return;
+  globalThis.window?.addEventListener('keydown',event=>{if(event.code!=='F5'||event.repeat||panel.classList.contains('hidden')||!room||room.phase!=='lobby')return;
     event.preventDefault();const button=$('multi-start');if(!button.hidden&&!button.disabled)button.click();
   });
   $('multi-return').onclick=()=>request('return',{}).then(accept).catch(showError);

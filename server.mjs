@@ -9,6 +9,7 @@ import { fileURLToPath } from 'node:url';
 import {createPlayerStore} from './player-store.mjs';
 import {createMultiplayer} from './multiplayer-server.mjs';
 import {requestTransport} from './request-transport.mjs';
+import {syncLocalAssets} from './tools/sync-local-assets.mjs';
 
 const scrypt = promisify(scryptCallback);
 const webRoot = resolve(dirname(fileURLToPath(import.meta.url)), 'web-preview');
@@ -226,6 +227,10 @@ export function createKartServer({
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  if (process.env.KART_SKIP_ASSET_SYNC !== '1') {
+    try { console.log(await syncLocalAssets()); }
+    catch (error) { console.error(`Local asset preparation failed: ${error.message}`); }
+  }
   const port = Number(process.env.KART_PORT || 4174);
   const databasePath=process.env.KART_DATABASE_PATH||resolve(webRoot,'..','local-data',port===4174?'accounts-4174.sqlite':'accounts.sqlite');
   const server = createKartServer({databasePath,sessionCookieName:`kart_session_${port}`,secureCookies:process.env.KART_COOKIE_SECURE === '1'});

@@ -1,3 +1,12 @@
+## 2026-10-27: 로컬 원본 GUI 재연결과 자동 에셋 준비 (검증 진행 중)
+
+- 사용자 정정에 따라 Google Drive를 조회하지 않고 이 저장소의 `local-assets/rhoOut`만 사용했다. 이전 항목의 "rhoOut이 미복구"라는 기록은 현재 상태가 아니다. 로컬 입력에는 rhoOut 103,149개, track 33,243개, kart 417개, character 126개 파일이 있다. 기존 `local-assets/README.md`의 사용자 변경은 건드리지 않았다.
+- 앞서 만든 멀티플레이/상점 CSS 패널·버튼·배지 도형 규칙을 제거했다. `stage/mainMenu/mq_window@kr.xml`, `stage/gameReady/stage_window@zz.xml`, `stage/shop/shop@kr.xml`, `dialog2/createRoomEx/dialog@kr.xml`, `dialog2/buyItem/mqBuyItem@zz.xml`에서 위치와 원본 텍스처를 확인했다. 새 화면은 원본 PNG와 `gui/frame/ui_01.png` 및 `frame.xml` UV로 늘린 프레임을 사용한다. CSS는 배치·텍스트·반응형 축소를 담당한다. 실제 6화면 육안 검증은 아직 남았다.
+- `P5136_Rust`의 `87de9460205cfd6818e1db56673b8ff13c92878e`에서 S1/S7 기본값과 BodyParam 합산 규칙 57개를 `tools/p5136-stock-spec.json`에 고정했다. 원본 소스의 SHA-256을 기록하고 다르면 고정 표를 사용한다. 구 PC의 `Documents/kart web/P5136_Rust-main` 절대 경로 의존성을 제거했다. 실제 카트별 `param@kr.xml`은 `local-assets/client/E/_rho5Out/kart_`에 있을 때만 변환한다. 현재 해당 클라이언트 입력은 없어 카트별 5136 성능 JSON은 미생성이다.
+- 서버 직접 실행 시 로컬 입력 파일의 경로·크기·수정 시각을 검사하고 변경되거나 웹 결과가 없으면 기존 `prepare-local-all.ps1`을 자동 실행하도록 했다. 프로젝트 내부 `.NET SDK`와 Python 패키지 위치를 빌드에 연결했다. 실패한 모델 캐시는 다음 실행에서 재시도한다. 원본 파일과 변환 출력은 계속 Git 제외다.
+- 확인한 테스트: 원본 GUI 파일 SHA 일치 2건, 고정 Rust 표 파서 1건, 멀티플레이 클라이언트 지연 폴링 1건 통과. 원본 모델 515개 카탈로그 생성 후 법선/나머지 준비와 실제 WASM 검증은 진행 중이다. 기존 서버 준비/7인/10초 자동 출발 테스트는 통과했으며, 카탈로그가 없을 때 실패했던 실제 WASM 2건은 완료 후 재실행해야 한다.
+- 남은 작업: 전체 준비 스크립트 종료 확인, 실제 카탈로그·오디오·GUI 검증, 실제 멀티 WASM 테스트, 커밋·푸시. 외부 PC 멀티플레이와 5136 물리 동등성은 검증되지 않았다.
+
 ## 2026-10-26: 멀티플레이·상점 GUI 6화면과 서버 자동 출발 (부분 완료)
 
 - 요청한 효과음 미리듣기 전용 `web-preview/audio-preview.html`을 삭제했다. 원본 카운트다운·출발·완주·버튼음은 기존 `game.js`/`race-audio.mjs`에서 실제 경기 상태와 버튼 입력에 연결된 상태를 유지한다. 일반 랩 완료음과 종료 10초음은 아직 원본 호출 근거가 없어 연결하지 않았다.

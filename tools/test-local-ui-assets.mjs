@@ -7,11 +7,12 @@ import { test } from 'node:test';
 const project = resolve(import.meta.dirname, '..');
 const configPath = join(project, 'local-data', 'asset-paths.json');
 const config = existsSync(configPath) ? JSON.parse(readFileSync(configPath, 'utf8').replace(/^\uFEFF/, '')) : {};
-const original = process.env.KART_ASSET_ROOT || config.rhoRoot || join(project, 'local-assets', 'rhoOut');
+const local = join(project, 'local-assets', 'rhoOut');
+const original = process.env.KART_ASSET_ROOT || (existsSync(join(local,'gui')) && existsSync(join(local,'stage')) ? local : config.rhoRoot || local);
 const preview = join(project, 'web-preview');
 
 test('game/login UI references unchanged original P5136 GUI assets', { skip: !existsSync(join(original, 'gui', 'tachometer', 'default', 'tachometer.png')) }, () => {
-  const sourceFiles = ['game.css', 'index.html', 'login.css', 'login.html'];
+  const sourceFiles = ['game.css', 'native-lobby.css', 'native-gui.mjs', 'index.html', 'login.css', 'login.html'];
   const references = new Set();
   for (const file of sourceFiles) {
     const source = readFileSync(join(preview, file), 'utf8');

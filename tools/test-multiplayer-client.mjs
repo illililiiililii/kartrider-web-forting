@@ -5,7 +5,7 @@ import {createMultiplayerClient} from '../web-preview/multiplayer.mjs';
 test('delayed public poll still delivers frames while concurrent driving inputs are sent',async t=>{
   const saved=Object.fromEntries(['document','location','fetch','setInterval','setTimeout','Option'].map(k=>[k,globalThis[k]]));
   t.after(()=>Object.assign(globalThis,saved));
-  const node=()=>({classList:{add(){},remove(){}},replaceChildren(){},add(){},scrollHeight:0,value:''}),nodes=new Map();
+  const node=()=>({classList:{add(){},remove(){}},replaceChildren(){},append(){},add(){},scrollHeight:0,value:''}),nodes=new Map();
   globalThis.document={getElementById(id){if(!nodes.has(id))nodes.set(id,node());return nodes.get(id);},createElement:node};
   globalThis.Option=class {};
   globalThis.location={hostname:'qa.trycloudflare.com',search:''};

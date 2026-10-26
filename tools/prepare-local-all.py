@@ -17,7 +17,7 @@ def prepare(job):
  if cache.is_file():
   try:
    old=json.loads(cache.read_text(encoding='utf-8'))
-   if old['fingerprint']==fingerprint and (not old['entry']['ready'] or (target/'model.mesh.json').is_file()):return kind,old['entry']
+   if old['fingerprint']==fingerprint and old['entry']['ready'] and (target/'model.mesh.json').is_file():return kind,old['entry']
   except (ValueError,KeyError):pass
  try:
   with log.open('w',encoding='utf-8') as stream,contextlib.redirect_stdout(stream),contextlib.redirect_stderr(stream):

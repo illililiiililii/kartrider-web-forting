@@ -5,6 +5,8 @@ param(
 
 $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'local-asset-paths.ps1')
+. (Join-Path $PSScriptRoot 'local-python.ps1')
+Enable-LocalPython $PythonExe
 $AssetRoot = Resolve-LocalRhoRoot $AssetRoot
 if (-not (Get-ChildItem -LiteralPath $AssetRoot -Force | Where-Object Name -ne '.gitkeep' | Select-Object -First 1)) {
   Write-Output 'WAITING: put original P5136 resources in local-assets/rhoOut.'

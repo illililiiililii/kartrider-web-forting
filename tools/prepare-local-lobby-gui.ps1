@@ -53,13 +53,24 @@ $files = @(
   'stage/gameReady/mycard_blue@zz.png',
   'stage/gameReady/mycard_red@zz.png',
   'gui/windowTemplate/card@zz.png',
+  'gui/windowTemplate/img_itemTooltopBoxBG.png',
   'gui/windowTemplate/trackcard.png',
   'dialog2/userReport/report_btn_confirm_1.png',
   'dialog2/userReport/report_btn_cancel_1.png',
   'stage/shop/shop_cash_bg.png',
   'stage/shop/shop_lucci_bg.png',
   'stage/shop/루찌구입1@zz.png',
-  'stage/shop/원래대로1@kr.png'
+  'stage/shop/원래대로1@kr.png',
+  'gui/frame/ui_01.png',
+  'stage/gameReady/theme/grandprix/ridercard.png',
+  'stage/gameReady/theme/super02/roomboss@zz.png',
+  'zeta/kr/stage/mainMenu/btn_start_1.png',
+  'zeta/kr/stage/mainMenu/btn_myItem1_1.png',
+  'zeta/kr/stage/mainMenu/btn_createRoom_1.png',
+  'zeta/kr/stage/mainMenu/btn_speedIndi_1.png',
+  'dialog2/createRoomEx/speedIndi_01@zz.png',
+  'dialog2/buyItem/img_slot2.png',
+  'dialog2/buyItem/bt_lucci_1.png'
 )
 foreach ($relative in $files) {
   $source = Join-Path $AssetRoot ($relative -replace '/', [IO.Path]::DirectorySeparatorChar)

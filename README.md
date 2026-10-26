@@ -14,6 +14,10 @@
 node server.mjs
 ```
 
+`node server.mjs`는 시작할 때 `local-assets/{rhoOut,track,kart,character}`의 파일 경로·크기·수정 시각을 확인합니다. 새 파일이나 변경이 감지되면 `prepare-local-all.ps1`을 실행해 원본 모델 카탈로그, GUI, 오디오, 충돌 자료를 Git 제외 웹 경로에 다시 준비합니다. 실행 중 에셋을 넣었다면 서버를 다시 시작하세요. 준비에 실패하면 오류를 표시하고 원본이 없는 기능은 미준비 상태로 남깁니다. 자동 동기화만 건너뛰려면 `KART_SKIP_ASSET_SYNC=1`을 설정할 수 있습니다.
+
+카트별 성능 변환에 사용하는 [P5136_Rust](https://github.com/ILoveKartrider/P5136_Rust) 기본 수치·BodyParam 합산 표는 `tools/p5136-stock-spec.json`에 리비전 `87de9460205cfd6818e1db56673b8ff13c92878e` 기준으로 고정했습니다. 변환 코드는 `tools/prepare-local-kart-physics.py`에 포함되어 있어 별도 Rust 체크아웃이 없어도 작동합니다. 실제 카트별 `param@kr.xml`은 원본 클라이언트의 `E/_rho5Out/kart_`에 있어야 합니다. 이를 `local-assets/client/E/_rho5Out/kart_`에 넣으면 자동 준비 대상이 됩니다. XML이 없으면 카트별 5136 성능은 생성하지 않습니다.
+
 `-Bootstrap` 옵션을 사용하면 Zig 0.13.0 버전이 `.tools/` 디렉토리(Git 관리 대상에서 제외됨)로 다운로드되며, 공식 SHA-256 해시값을 통해 무결성이 검증됩니다. 이미 설치된 Zig를 사용하려면 `-ZigExe` 옵션을 통해 경로를 지정할 수 있습니다. 게임 에셋이 없는 경우 `/debug.html`을 통해 물리 연산만 단독으로 실행할 수 있으며, 전체 게임 및 로비 기능을 사용하려면 로컬 에셋이 필요합니다. 빌드 도구는 리소스가 없을 경우 5136 게이트를 생성하지 않으며, 3개 트랙 중 일부만 입력되는 경우 처리를 거부합니다. 데모 버전의 2004년형 게이트 데이터를 5136 트랙에 대신 사용하는 일은 결코 발생하지 않습니다. 원본 파일은 [`local-assets/`](local-assets/README.md) 디렉토리에 배치해야 하며, 모든 준비(prepare) 스크립트는 기본적으로 이 디렉토리를 참조합니다. 입력 데이터가 없는 경우, 과거 다운로드 데이터를 검색하지 않고 `WAITING` 상태를 표시합니다. 서버를 시작하기 전에, 사용자가 압축을 해제한 원본 파일(`local-assets/rhoOut/` 경로)에서 트랙 카드와 미니맵을 준비해야 합니다:
 
 ```powershell

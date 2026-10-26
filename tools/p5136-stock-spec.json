@@ -1,0 +1,404 @@
+{
+  "source": "https://github.com/ILoveKartrider/P5136_Rust",
+  "revision": "87de9460205cfd6818e1db56673b8ff13c92878e",
+  "sourceHashes": {
+    "crates\\p5136-core\\src\\kart_physics.rs": "961b40875ad1bb021daea1e5630638271e071c7844ad47ba245929325d948545",
+    "crates\\p5136-profile\\src\\catalog.rs": "aa874f79b09b5768f0e532a00914c276e2cccc70124f7faf5919235980637cbf"
+  },
+  "stockSpeeds": {
+    "S1": {
+      "add_spec_steer_constraint": "1.7",
+      "add_spec_drift_escape_force": "150.0",
+      "add_spec_trans_accel_factor": "0.199",
+      "mass": "100.0",
+      "air_friction": "3.0",
+      "drag_factor": "0.735",
+      "forward_accel_force": "1950.0",
+      "backward_accel_force": "1500.0",
+      "grip_brake_force": "1800.0",
+      "slip_brake_force": "1250.0",
+      "max_steer_angle": "10.0",
+      "steer_constraint": "22.0",
+      "front_grip_factor": "5.0",
+      "rear_grip_factor": "5.0",
+      "drift_trigger_factor": "0.2",
+      "drift_trigger_time": "0.2",
+      "drift_slip_factor": "0.2",
+      "drift_escape_force": "2350.0",
+      "corner_draw_factor": "0.15",
+      "drift_max_gauge": "3970.0",
+      "trans_accel_factor": "-0.006"
+    },
+    "S7": {
+      "mass": "100.0",
+      "air_friction": "3.0",
+      "drag_factor": "0.75",
+      "forward_accel_force": "2150.0",
+      "backward_accel_force": "1725.0",
+      "grip_brake_force": "2070.0",
+      "slip_brake_force": "1415.0",
+      "max_steer_angle": "10.0",
+      "steer_constraint": "22.25",
+      "add_spec_steer_constraint": "1.95",
+      "front_grip_factor": "5.0",
+      "rear_grip_factor": "5.0",
+      "drift_trigger_factor": "0.2",
+      "drift_trigger_time": "0.2",
+      "drift_slip_factor": "0.2",
+      "drift_escape_force": "2600.0",
+      "add_spec_drift_escape_force": "400.0",
+      "corner_draw_factor": "0.18",
+      "steer_lean_factor": "0.0",
+      "drift_max_gauge": "4300.0",
+      "normal_booster_time": "0.0",
+      "team_booster_time": "0.0",
+      "trans_accel_factor": "-0.0045",
+      "add_spec_trans_accel_factor": "0.2005",
+      "boost_accel_factor": "-0.006"
+    }
+  },
+  "bodyParamRules": {
+    "draftMulAccelFactor": {
+      "member": "draft_mul_accel_factor",
+      "fallback": "0",
+      "default": "1",
+      "scale": "1"
+    },
+    "draftTick": {
+      "member": "draft_tick",
+      "fallback": "0",
+      "default": "0",
+      "scale": "1"
+    },
+    "driftBoostMulAccelFactor": {
+      "member": "drift_boost_mul_accel_factor",
+      "fallback": "0",
+      "default": "1.31",
+      "scale": "1"
+    },
+    "driftBoostTick": {
+      "member": "drift_boost_tick",
+      "fallback": "0",
+      "default": "0",
+      "scale": "1"
+    },
+    "chargeBoostBySpeed": {
+      "member": "charge_boost_by_speed",
+      "fallback": "0",
+      "default": "2",
+      "scale": "1"
+    },
+    "SpeedSlotCapacity": {
+      "member": "speed_slot_capacity",
+      "fallback": "0",
+      "default": "2",
+      "scale": "1"
+    },
+    "ItemSlotCapacity": {
+      "member": "item_slot_capacity",
+      "fallback": "0",
+      "default": "2",
+      "scale": "1"
+    },
+    "SpecialSlotCapacity": {
+      "member": "special_slot_capacity",
+      "fallback": "0",
+      "default": "1",
+      "scale": "1"
+    },
+    "Mass": {
+      "member": "mass",
+      "fallback": "0",
+      "default": "0",
+      "scale": "1"
+    },
+    "AirFriction": {
+      "member": "air_friction",
+      "fallback": "0",
+      "default": "0",
+      "scale": "1"
+    },
+    "DragFactor": {
+      "member": "drag_factor",
+      "fallback": "0",
+      "default": "0",
+      "scale": "1"
+    },
+    "ForwardAccelForce": {
+      "member": "forward_accel_force",
+      "fallback": "0",
+      "default": "0",
+      "scale": "1"
+    },
+    "BackwardAccelForce": {
+      "member": "backward_accel_force",
+      "fallback": "0",
+      "default": "0",
+      "scale": "1"
+    },
+    "GripBrakeForce": {
+      "member": "grip_brake_force",
+      "fallback": "0",
+      "default": "0",
+      "scale": "1"
+    },
+    "SlipBrakeForce": {
+      "member": "slip_brake_force",
+      "fallback": "0",
+      "default": "0",
+      "scale": "1"
+    },
+    "MaxSteerAngle": {
+      "member": "max_steer_angle",
+      "fallback": "0",
+      "default": "0",
+      "scale": "1"
+    },
+    "SteerConstraint": {
+      "member": "steer_constraint",
+      "fallback": "0",
+      "default": "0",
+      "scale": "1"
+    },
+    "FrontGripFactor": {
+      "member": "front_grip_factor",
+      "fallback": "0",
+      "default": "0",
+      "scale": "1"
+    },
+    "RearGripFactor": {
+      "member": "rear_grip_factor",
+      "fallback": "0",
+      "default": "0",
+      "scale": "1"
+    },
+    "DriftTriggerFactor": {
+      "member": "drift_trigger_factor",
+      "fallback": "0",
+      "default": "0",
+      "scale": "1"
+    },
+    "DriftTriggerTime": {
+      "member": "drift_trigger_time",
+      "fallback": "0",
+      "default": "0",
+      "scale": "1"
+    },
+    "DriftSlipFactor": {
+      "member": "drift_slip_factor",
+      "fallback": "0",
+      "default": "0",
+      "scale": "1"
+    },
+    "DriftEscapeForce": {
+      "member": "drift_escape_force",
+      "fallback": "0",
+      "default": "0",
+      "scale": "1"
+    },
+    "CornerDrawFactor": {
+      "member": "corner_draw_factor",
+      "fallback": "0",
+      "default": "0",
+      "scale": "1"
+    },
+    "DriftLeanFactor": {
+      "member": "drift_lean_factor",
+      "fallback": "0.07",
+      "default": "0.07",
+      "scale": "1"
+    },
+    "SteerLeanFactor": {
+      "member": "steer_lean_factor",
+      "fallback": "0.01",
+      "default": "0.01",
+      "scale": "1"
+    },
+    "DriftMaxGauge": {
+      "member": "drift_max_gauge",
+      "fallback": "0",
+      "default": "0",
+      "scale": "1"
+    },
+    "NormalBoosterTime": {
+      "member": "normal_booster_time",
+      "fallback": "3000",
+      "default": "3000",
+      "scale": "1"
+    },
+    "ItemBoosterTime": {
+      "member": "item_booster_time",
+      "fallback": "3000",
+      "default": "3000",
+      "scale": "1"
+    },
+    "TeamBoosterTime": {
+      "member": "team_booster_time",
+      "fallback": "4500",
+      "default": "4500",
+      "scale": "1"
+    },
+    "AnimalBoosterTime": {
+      "member": "animal_booster_time",
+      "fallback": "4000",
+      "default": "4000",
+      "scale": "1"
+    },
+    "SuperBoosterTime": {
+      "member": "super_booster_time",
+      "fallback": "3500",
+      "default": "3500",
+      "scale": "1"
+    },
+    "TransAccelFactor": {
+      "member": "trans_accel_factor",
+      "fallback": "0",
+      "default": "1.5",
+      "scale": "1"
+    },
+    "BoostAccelFactor": {
+      "member": "boost_accel_factor",
+      "fallback": "0",
+      "default": "1.5",
+      "scale": "1"
+    },
+    "StartBoosterTimeItem": {
+      "member": "start_booster_time_item",
+      "fallback": "0",
+      "default": "1000",
+      "scale": "1"
+    },
+    "StartBoosterTimeSpeed": {
+      "member": "start_booster_time_speed",
+      "fallback": "0",
+      "default": "1000",
+      "scale": "1"
+    },
+    "StartForwardAccelFactorItem": {
+      "member": "start_forward_accel_factor_item",
+      "fallback": "0",
+      "default": "0",
+      "scale": "1"
+    },
+    "StartForwardAccelFactorSpeed": {
+      "member": "start_forward_accel_factor_speed",
+      "fallback": "0",
+      "default": "0",
+      "scale": "1"
+    },
+    "DriftGaguePreservePercent": {
+      "member": "drift_gauge_preserve_percent",
+      "fallback": "0",
+      "default": "0",
+      "scale": "1"
+    },
+    "BoostAccelFactorOnlyItem": {
+      "member": "boost_accel_factor_only_item",
+      "fallback": "0",
+      "default": "1.5",
+      "scale": "1"
+    },
+    "antiCollideBalance": {
+      "member": "anti_collide_balance",
+      "fallback": "0",
+      "default": "1",
+      "scale": "1"
+    },
+    "dualBoosterTickMin": {
+      "member": "dual_booster_tick_min",
+      "fallback": "0",
+      "default": "40",
+      "scale": "1"
+    },
+    "dualBoosterTickMax": {
+      "member": "dual_booster_tick_max",
+      "fallback": "0",
+      "default": "60",
+      "scale": "1"
+    },
+    "dualMulAccelFactor": {
+      "member": "dual_mul_accel_factor",
+      "fallback": "0",
+      "default": "1.1",
+      "scale": "1"
+    },
+    "dualTransLowSpeed": {
+      "member": "dual_trans_low_speed",
+      "fallback": "0",
+      "default": "100",
+      "scale": "1"
+    },
+    "chargeInstAccelGaugeByBoost": {
+      "member": "charge_inst_accel_gauge_by_boost",
+      "fallback": "0",
+      "default": "0.02",
+      "scale": "1"
+    },
+    "chargeInstAccelGaugeByGrip": {
+      "member": "charge_inst_accel_gauge_by_grip",
+      "fallback": "0",
+      "default": "0.02",
+      "scale": "1"
+    },
+    "chargeInstAccelGaugeByWall": {
+      "member": "charge_inst_accel_gauge_by_wall",
+      "fallback": "0",
+      "default": "0.2",
+      "scale": "1"
+    },
+    "instAccelFactor": {
+      "member": "inst_accel_factor",
+      "fallback": "0",
+      "default": "1.25",
+      "scale": "1"
+    },
+    "instAccelGaugeCooldownTime": {
+      "member": "inst_accel_gauge_cooldown_time",
+      "fallback": "0",
+      "default": "0",
+      "scale": "1000"
+    },
+    "instAccelGaugeLength": {
+      "member": "inst_accel_gauge_length",
+      "fallback": "0",
+      "default": "0",
+      "scale": "1000"
+    },
+    "instAccelGaugeMinVelBound": {
+      "member": "inst_accel_gauge_min_vel_bound",
+      "fallback": "0",
+      "default": "200",
+      "scale": "1"
+    },
+    "instAccelGaugeMinVelLoss": {
+      "member": "inst_accel_gauge_min_vel_loss",
+      "fallback": "0",
+      "default": "50",
+      "scale": "1"
+    },
+    "wallCollGaugeCooldownTime": {
+      "member": "wall_coll_gauge_cooldown_time",
+      "fallback": "0",
+      "default": "0",
+      "scale": "1000"
+    },
+    "wallCollGaugeMaxVelLoss": {
+      "member": "wall_coll_gauge_max_vel_loss",
+      "fallback": "0",
+      "default": "200",
+      "scale": "1"
+    },
+    "wallCollGaugeMinVelBound": {
+      "member": "wall_coll_gauge_min_vel_bound",
+      "fallback": "0",
+      "default": "200",
+      "scale": "1"
+    },
+    "wallCollGaugeMinVelLoss": {
+      "member": "wall_coll_gauge_min_vel_loss",
+      "fallback": "0",
+      "default": "50",
+      "scale": "1"
+    }
+  }
+}

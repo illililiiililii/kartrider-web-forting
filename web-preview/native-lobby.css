@@ -1,0 +1,99 @@
+/* Layout follows rhoOut stage XML. Every visible panel/button uses a source PNG
+   or the source gui/frame/ui_01.png frame atlas rendered by native-gui.mjs. */
+.native-frame-canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0}
+[data-native-frame]{position:relative;background:none!important;border:0!important;border-radius:0!important;box-shadow:none!important}
+[data-native-frame]>*:not(.native-frame-canvas){position:relative;z-index:1}
+.original-modal[data-native-frame]{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);pointer-events:auto}
+.original-title{position:relative;height:30px;margin:3px 6px 0;padding:5px 27px 0 6px;background:none;text-align:center;color:#fff;font-size:12px}
+.dialog-close{background:url('./assets/ui/stage/common/btn_닫기1.png') center/contain no-repeat;border:0}
+.multi-window,.shop-window{position:absolute;z-index:8;left:50%;top:50%;transform:translate(-50%,-50%);width:810px;height:585px;padding:0;pointer-events:auto;font-size:12px}
+.multi-window button,.shop-window button,.original-modal button{cursor:pointer;font:inherit}
+.multi-window button:disabled,.shop-window button:disabled{opacity:.55;cursor:default}
+#multi-browser[hidden],#multi-room[hidden]{display:none!important}
+.multi-browser{position:absolute;inset:0;display:block}
+.multi-modes{position:absolute;left:0;top:95px;width:406px;height:440px;background:url('./assets/ui/stage/mainMenu/leftbg.png') 0 0/406px 440px no-repeat}
+.multi-mode-tabs{position:absolute;top:-30px;left:9px;display:flex;gap:10px;color:#fff}
+.multi-mode-tabs>*{display:block;padding:3px 10px;background:url('./assets/ui/stage/mainMenu/img_titleBlue.png') center/100% 100% no-repeat}
+.multi-mode{position:absolute;left:13px;top:10px;width:188px;height:53px;padding:0;border:0;background:url('./assets/ui/zeta/kr/stage/mainMenu/btn_speedIndi_1.png') 0 0/100% 100% no-repeat;color:transparent;font-size:0}
+.multi-mode:not(.active){display:none}
+.multi-room-browser{position:absolute;left:416px;top:0;width:378px;height:525px;color:#183750}
+.multi-room-browser .original-title{color:#fff}
+.multi-rooms{position:absolute;left:13px;top:63px;width:348px;height:410px;overflow-y:auto;padding:5px;background:url('./assets/ui/stage/mainMenu/leftbg.png') 0 0/100% 100% no-repeat}
+.multi-room-entry{display:block;position:relative;width:326px;height:67px;margin:0 0 5px;padding:7px 12px 7px 70px;text-align:left;border:0;background:url('./assets/ui/stage/mainMenu/roomSlot_1.png') 0 0/326px 67px no-repeat;color:#244260;font-size:12px}
+.multi-browser-actions{position:absolute;left:5px;top:474px;width:365px;height:54px;display:flex;gap:5px}
+.multi-browser-actions button{padding:0;border:0;color:transparent;font-size:0}
+#multi-refresh{width:160px;height:54px;color:#243f50;font-size:12px}
+#multi-create-open{width:92px;height:54px;margin-left:auto;background:url('./assets/ui/zeta/kr/stage/mainMenu/btn_createRoom_1.png') 0 0/100% 100% no-repeat}
+#multi-status{position:absolute;left:419px;top:529px;width:373px;min-height:19px;color:#fff;text-align:center}
+.multi-room{position:absolute;left:0;top:0;width:810px;height:585px;color:#fff}
+.multi-room-header{position:absolute!important;left:8px;top:4px;width:790px;height:26px;display:flex;align-items:center;gap:8px;padding:0 5px;color:#fff}
+.multi-room-header h3{flex:1;margin:0;text-align:center;font-size:12px;overflow:hidden;white-space:nowrap}
+.multi-room-header button{width:70px;height:21px;border:0;background:url('./assets/ui/dialog2/userReport/report_btn_cancel_1.png') center/100% 100% no-repeat;color:#233e52}
+.multi-members{position:absolute!important;left:88px;top:52px;width:704px;height:443px;display:grid;grid-template-columns:repeat(4,131px);grid-template-rows:repeat(2,220px);column-gap:45px;row-gap:0;padding:0!important;line-height:normal!important}
+.multi-rider-card{position:relative;width:131px;height:220px;overflow:hidden;background:url('./assets/ui/stage/gameReady/theme/grandprix/ridercard.png') 0 0/200% 100% no-repeat;text-align:center;color:#172f4c}
+.multi-rider-card.occupied{background-image:url('./assets/ui/stage/gameReady/mycard_blue@zz.png')}
+.multi-rider-card strong{position:absolute;left:11px;top:4px;width:108px;height:23px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;font-size:11px;line-height:22px}
+.multi-rider-avatar{position:absolute;left:6px;top:34px;width:119px;height:153px;display:flex;align-items:center;justify-content:center}
+.multi-rider-avatar img{max-width:100%;max-height:100%;object-fit:contain}
+.multi-rider-badge{position:absolute;left:5px;bottom:4px;width:121px;height:26px;line-height:24px;color:#fff;font-weight:bold}
+.multi-rider-card.host .multi-rider-badge{color:#ffe500}
+.multi-rider-card.ready .multi-rider-badge{color:#ffe500}
+.multi-room-bottom{position:absolute!important;left:8px;top:488px;width:790px;height:94px;display:flex;gap:8px}
+.multi-chat-area{width:345px;min-width:0}
+#multi-chat-log{height:68px;overflow-y:auto;padding:3px 7px;background:url('./assets/ui/stage/mainMenu/leftbg.png') 0 0/100% 100% no-repeat;font-size:10px;color:#fff}
+#multi-chat{display:flex;height:24px}
+#multi-chat-input{flex:1;min-width:0}
+#multi-chat button{width:55px}
+.multi-track-card{position:relative;width:220px;height:94px;background:url('./assets/ui/gui/windowTemplate/trackcard.png') 0 0/100% 100% no-repeat}
+.multi-track-card img{width:100%;height:100%;object-fit:cover}
+.multi-track-card strong{position:absolute;left:5px;right:5px;bottom:2px;text-align:center;color:#fff;font-size:10px}
+.multi-actions{width:196px;display:flex;flex-direction:column;gap:2px}
+#multi-start{width:196px;height:64px;border:0;background:url('./assets/ui/stage/timeAttackReady/btn_gameStart_1@kr.png') 0 0/100% 100% no-repeat;color:transparent;font-size:0}
+#multi-ready{width:196px;height:54px;color:#243f50}
+.multi-action-tools{height:28px;display:flex;gap:3px}
+.multi-action-tools button{width:95px;height:28px;padding:0;border:0;background:url('./assets/ui/stage/timeAttackReady/btn_myItem_1@kr.png') 0 0/100% 100% no-repeat;color:transparent;font-size:0}
+.multi-action-tools #multi-track-change{background-image:url('./assets/ui/stage/timeAttackReady/btn_myItem_trackSelect_1@kr.png')}
+#multi-results{position:absolute!important;left:8px;top:70px;color:#fff}
+.multi-create-popup{z-index:10;width:365px;height:242px;color:#233e52}
+.multi-create-popup .original-title{color:#fff}
+#multi-create{padding:14px 13px;display:grid;gap:7px}
+#multi-create label{display:flex;align-items:center;justify-content:space-between;gap:6px;font-size:11px}
+#multi-create input,#multi-create select{width:220px;height:23px}
+.multi-popup-actions,.purchase-actions{display:flex;justify-content:center;gap:6px;margin-top:5px}
+.multi-popup-actions button,.purchase-actions button{width:85px;height:27px;border:0}
+.original-confirm{background:url('./assets/ui/dialog2/userReport/report_btn_confirm_1.png') center/100% 100% no-repeat;color:#fff}
+.original-cancel{background:url('./assets/ui/dialog2/userReport/report_btn_cancel_1.png') center/100% 100% no-repeat;color:#233e52}
+.shop-window{display:flex;align-items:flex-start;gap:5px}
+.shop-side{width:265px;height:575px;color:#203b4e}
+.shop-wallet{position:absolute!important;left:15px;top:35px;width:231px;height:60px}
+.shop-wallet div{width:230px;height:22px;margin-bottom:5px;padding:3px 7px;display:flex;justify-content:space-between;background:url('./assets/ui/stage/shop/shop_cash_bg.png') 0 0/230px 22px no-repeat;font-size:11px}
+.shop-wallet div+div{background-image:url('./assets/ui/stage/shop/shop_lucci_bg.png')}
+.shop-preview{position:absolute!important;left:17px;top:105px;width:231px;height:355px;background:url('./assets/ui/stage/common/img_playerBG.png') 0 0/100% 100% no-repeat}
+.shop-preview img{width:100%;height:100%;object-fit:contain}
+#shop-reset{position:absolute;left:68px;top:475px;width:133px;height:37px;border:0;background:url('./assets/ui/stage/shop/원래대로1@kr.png') 0 0/100% 100% no-repeat;color:transparent;font-size:0}
+.shop-account{position:absolute!important;left:15px;top:520px;width:225px;font-size:10px}
+.shop-account:not([open])>*:not(summary){display:none}
+.shop-main{width:545px;height:575px;color:#183649}
+.shop-tabs{height:45px;padding:7px 26px 0 15px;display:flex;gap:5px}
+.shop-tabs button:not(.dialog-close){min-width:76px;height:24px;border:0;background:url('./assets/ui/stage/mainMenu/img_titleBlue.png') center/100% 100% no-repeat;color:#fff;font-size:11px}
+.shop-subtabs{height:26px;padding:0 15px;display:flex;gap:8px}
+.shop-subtabs button{width:48px;height:22px;border:0;background:url('./assets/ui/stage/mainMenu/img_titleBlue.png') center/100% 100% no-repeat;color:#fff}
+#shop-search{margin-left:auto;width:124px;height:21px}
+.shop-items{height:480px;padding:5px 16px;display:grid;grid-template-columns:repeat(3,126px);grid-auto-rows:200px;gap:6px 25px;overflow-y:auto}
+.shop-card{position:relative;width:126px;height:200px;text-align:center;background:url('./assets/ui/gui/windowTemplate/card@zz.png') 0 0/400% 100% no-repeat}
+.shop-card strong{position:absolute;left:5px;top:7px;width:116px;height:23px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;color:#183b54;font-size:11px}
+.shop-card img,.shop-image-status{position:absolute;left:8px;top:35px;width:109px;height:89px;object-fit:contain;font-size:10px}
+.shop-card-price{position:absolute;left:7px;top:149px;font-size:10px}
+.shop-card button{position:absolute;left:6px;top:174px;width:63px;height:20px;border:0;background:url('./assets/ui/stage/shop/루찌구입1@zz.png') 0 0/100% 100% no-repeat;color:transparent;font-size:0}
+#shop-status{position:absolute!important;left:16px;bottom:2px;width:515px;min-height:17px;font-size:10px}
+.purchase-window{z-index:10;width:340px;height:340px;color:#173950}
+.purchase-window .original-title{color:#fff}
+.purchase-content{display:flex;gap:9px;padding:13px 10px 3px}
+#purchase-preview{width:146px;height:96px;background:url('./assets/ui/dialog2/buyItem/img_slot2.png') 0 0/146px 86px no-repeat}
+#purchase-preview img{width:100%;height:100%;object-fit:contain}
+.purchase-details{display:grid;align-content:center;gap:4px;font-size:11px}
+.purchase-balance{margin:3px 10px;font-size:11px}
+.purchase-balance div{display:flex;justify-content:space-between;height:23px}
+.purchase-note{margin:9px 11px 0;font-size:10px}
+@media(max-width:850px){.multi-window,.shop-window{transform:translate(-50%,-50%) scale(.75)}.multi-create-popup,.purchase-window{transform:translate(-50%,-50%) scale(.85)}}
+@media(max-width:600px){.multi-window,.shop-window{transform:translate(-50%,-50%) scale(.48)}.multi-create-popup,.purchase-window{transform:translate(-50%,-50%) scale(.8)}}
