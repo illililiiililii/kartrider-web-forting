@@ -7,6 +7,7 @@ import { addOpaqueDepthPass } from './material-depth.mjs';
 import { createRaceEffects } from './race-effects.mjs';
 import {seatSurface,mountRider} from './rider-mount.mjs';
 import {collisionFit} from './kart-physics.mjs';
+import {samplePeerState} from './peer-interpolation.mjs';
 
 // Rendering only: position and heading come from the C/Wasm demo state.
 export function createPreviewRenderer(canvas) {
@@ -522,7 +523,7 @@ export function createPreviewRenderer(canvas) {
       const key=player.kart+'/'+player.character;
       if(peers.get(player.id)?.key===key)return;
       if(peers.has(player.id))disposePeer(peers.get(player.id));
-      const peer={key,group:new THREE.Group(),received:0};peers.set(player.id,peer);
+      const peer={key,group:new THREE.Group(),snapshots:[],clockOffset:null};peers.set(player.id,peer);
       const [body,rider]=await Promise.all([loadAsset(player.kart,'kart'),loadAsset(player.character,'character')]);
       body.group.updateMatrixWorld(true);const bounds=new THREE.Box3().setFromObject(body.group),base=-bounds.min.y;
       body.group.scale.setScalar(kartVisualScale);body.group.position.y=base*kartVisualScale;peer.group.add(body.group);
@@ -535,15 +536,14 @@ export function createPreviewRenderer(canvas) {
       if(peers.get(player.id)!==peer){disposePeer(peer);return;}peer.group.visible=false;scene.add(peer.group);
     }));
   }
-  function updatePeers(players){for(const player of players){const peer=peers.get(player.id);if(!peer)continue;
-    peer.from=peer.visual?.slice()??player.state;peer.target=player.state;peer.received=performance.now();}}
+  function updatePeers(players,tick){for(const player of players){const peer=peers.get(player.id);if(!peer||!Number.isFinite(tick))continue;
+    if(peer.snapshots.length&&tick<=peer.snapshots.at(-1).tick)continue;
+    peer.clockOffset??=performance.now()-tick;
+    peer.snapshots.push({tick,state:player.state});if(peer.snapshots.length>8)peer.snapshots.shift();}}
   function renderPeers(elapsed){for(const peer of peers.values()){
-    peer.group.visible=!lobbyMode&&Boolean(peer.target);if(!peer.group.visible)continue;
-    const t=Math.min(1,(performance.now()-peer.received)/50),state=peer.target.slice();
-    for(const i of [0,1,14])state[i]=peer.from[i]+(state[i]-peer.from[i])*t;
-    const sign=peer.from.slice(43,47).reduce((sum,v,i)=>sum+v*peer.target[43+i],0)<0?-1:1;
-    for(let i=43;i<47;i++)state[i]=peer.from[i]+(state[i]*sign-peer.from[i])*t;
-    peer.visual=state;peer.group.position.set(state[0],state[14],-state[1]);applyKartOrientation(peer.group,state);
+    peer.group.visible=!lobbyMode&&peer.snapshots.length>0;if(!peer.group.visible)continue;
+    const state=samplePeerState(peer.snapshots,performance.now()-peer.clockOffset-100);
+    peer.group.position.set(state[0],state[14],-state[1]);applyKartOrientation(peer.group,state);
     for(const wheel of peer.wheels??[]){wheel.mesh.rotation.z-=state[6]*Math.min(elapsed,50)/1000/(wheel.radius*kartVisualScale);wheel.pivot.rotation.y=wheel.front?state[13]:0;}
   }}
 

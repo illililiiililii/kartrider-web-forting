@@ -1,7 +1,18 @@
 const $=id=>document.getElementById(id);
 const messages={HOST_REQUIRED:'방장만 실행할 수 있습니다.',PLAYERS_NOT_READY:'두 명 이상 입장하고 모두 준비해 주세요.',ROOM_LOCKED:'경기 중이거나 가득 찬 방입니다.',ROOM_NOT_FOUND:'방이 없어졌습니다.',ALREADY_IN_ROOM:'먼저 현재 방에서 나가 주세요.',RACE_VERSION_MISMATCH:'게임 파일이 변경되었습니다. 새로고침해 주세요.',MULTIPLAYER_UNAVAILABLE:'멀티플레이 서버·로컬 에셋을 확인해 주세요.',SIGN_IN_REQUIRED:'다시 로그인해 주세요.',CHAT_RATE_LIMIT:'메시지를 잠시 후 보내 주세요.'};
-export function createMultiplayerClient({catalog,userId,getCharacter,getControls,onPrepare,onStart,onFrame,onResults,onLeave,onDisconnect,onRoster}){
+export function createMultiplayerClient({catalog,userId,getCharacter,getControls,onPrepare,onStart,onFrame,onResults,onLeave,onDisconnect,onRoster,onDiagnostics}){
   let room=null,stream=null,preparedRace=null,runningRace=null,preparing=null,pendingFrame=null,sequence=0,sending=false,enabled=false,polling=false,lastTick=-1,lastRace=null,mutation=0;
+  let rttMs=null,jitterMs=null,lastArrival=0,lastFrameTick=-1,missedSnapshots=0;
+  function deliverFrame(frame){
+    const arrival=performance.now();
+    if(lastFrameTick>=0&&frame.race===lastRace&&frame.tick>lastFrameTick){
+      const interval=frame.tick-lastFrameTick;
+      missedSnapshots+=Math.max(0,Math.round(interval/50)-1);
+      if(lastArrival){const deviation=Math.abs(arrival-lastArrival-interval);jitterMs=jitterMs===null?deviation:jitterMs*.8+deviation*.2;}
+    }
+    lastFrameTick=frame.tick;lastArrival=arrival;lastRace=frame.race;
+    onFrame(frame);onDiagnostics?.({rttMs,jitterMs,missedSnapshots,server:frame.metrics??null});
+  }
   const panel=$('multi-dialog'),status=$('multi-status');
   async function request(action,fields){
     if(fields!==undefined&&action!=='input')mutation++;
@@ -35,8 +46,8 @@ export function createMultiplayerClient({catalog,userId,getCharacter,getControls
     }
     if(room.phase==='running'&&runningRace!==room.race){
       const race=room.race;await preparing;if(room?.race!==race||room.phase!=='running'||runningRace===race)return;
-      runningRace=race;sequence=0;onStart(room);panel.classList.add('hidden');
-      if(pendingFrame){onFrame(pendingFrame);pendingFrame=null;}
+      runningRace=race;sequence=0;lastFrameTick=-1;lastArrival=0;missedSnapshots=0;jitterMs=null;onStart(room);panel.classList.add('hidden');
+      if(pendingFrame){deliverFrame(pendingFrame);pendingFrame=null;}
     }
     if(room.phase==='results'&&runningRace){runningRace=null;onResults(room);panel.classList.remove('hidden');}
     if(room.phase==='lobby'&&runningRace){runningRace=null;preparedRace=null;onResults(room);panel.classList.remove('hidden');}
@@ -51,7 +62,7 @@ export function createMultiplayerClient({catalog,userId,getCharacter,getControls
         if(result.room?.id!==room?.id||result.room?.revision!==room?.revision)await accept(result.room);
         const frame=result.frame;
         if(frame&&frame.race===room?.race&&(frame.race!==lastRace||frame.tick>lastTick)){
-          lastRace=frame.race;lastTick=frame.tick;if(runningRace===frame.race)onFrame(frame);else pendingFrame=frame;
+          lastRace=frame.race;lastTick=frame.tick;if(runningRace===frame.race)deliverFrame(frame);else pendingFrame=frame;
         }
       }catch(error){onDisconnect();showError(error);}finally{if(polling)setTimeout(poll,50);}};
       poll();return;
@@ -60,7 +71,7 @@ export function createMultiplayerClient({catalog,userId,getCharacter,getControls
     stream.onopen=()=>{status.textContent='연결되었습니다.';};
     stream.addEventListener('room',event=>accept(JSON.parse(event.data)).catch(showError));
     stream.addEventListener('frame',event=>{const frame=JSON.parse(event.data);if(frame.race!==room?.race)return;
-      if(runningRace===frame.race)onFrame(frame);else pendingFrame=frame;});
+      if(runningRace===frame.race)deliverFrame(frame);else pendingFrame=frame;});
     stream.addEventListener('replaced',()=>{enabled=false;stream.close();stream=null;onDisconnect();status.textContent='다른 탭에서 이 계정을 사용 중입니다.';});
     stream.onerror=()=>{onDisconnect();status.textContent='연결이 끊겨 재접속 중입니다.';};
   }
@@ -79,7 +90,8 @@ export function createMultiplayerClient({catalog,userId,getCharacter,getControls
   $('multi-leave').onclick=()=>leave().catch(showError);
   $('multi-close').onclick=()=>{if(room?.phase==='running')panel.classList.add('hidden');else if(room)leave().then(()=>panel.classList.add('hidden')).catch(showError);else panel.classList.add('hidden');};
   setInterval(async()=>{if(!enabled||!runningRace||sending)return;sending=true;
-    try{await request('input',{...getControls(),race:runningRace,seq:sequence++});}catch(error){showError(error);}finally{sending=false;}
+    const sent=performance.now();
+    try{await request('input',{...getControls(),race:runningRace,seq:sequence++});const sample=performance.now()-sent;rttMs=rttMs===null?sample:rttMs*.8+sample*.2;}catch(error){showError(error);}finally{sending=false;}
   },50);
   return {async open(){connect();panel.classList.remove('hidden');await accept(await request('current'));await refresh();},leave,
     show(){panel.classList.remove('hidden');},get room(){return room;}};

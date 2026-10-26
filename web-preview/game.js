@@ -31,6 +31,19 @@ const courseIndices = { beach_I01: 0, beach_I02: 1, village_R01: 2 };
 let localCatalog, playerProfile, lapNotices;
 let kartPhysics;
 let multiplayer,multiRace=false,accountUserId,resetRequested=false;
+const netPanel=document.createElement('pre');netPanel.hidden=true;netPanel.setAttribute('aria-label','멀티플레이 진단');
+Object.assign(netPanel.style,{position:'fixed',top:'8px',left:'8px',zIndex:'9999',margin:'0',padding:'10px',background:'#091523e8',color:'#d8f6ff',font:'12px/1.45 monospace',pointerEvents:'none'});
+document.body.append(netPanel);
+let netDiagnostics=null,frameMs=0,renderMs=0,lastPanelUpdate=0;
+const measured=value=>Number.isFinite(value)?value.toFixed(1):'—';
+function updateNetPanel(time){if(netPanel.hidden||time-lastPanelUpdate<500)return;lastPanelUpdate=time;
+  const d=netDiagnostics??{},s=d.server??{};
+  netPanel.textContent=`F4 멀티플레이 진단\nFPS ${frameMs?measured(1000/frameMs):'—'} · 프레임 ${measured(frameMs)} ms · 렌더 ${measured(renderMs)} ms\n`+
+    `입력 RTT ${measured(d.rttMs)} ms · 프레임 지터 ${measured(d.jitterMs)} ms · 건너뛴 상태 ${d.missedSnapshots??'—'}\n`+
+    `서버 50ms 작업 ${measured(s.workMs)} ms (물리 ${measured(s.physicsMs)} / 충돌 ${measured(s.collisionMs)}) · 접촉 ${s.contacts??'—'}\n`+
+    `이벤트 루프 지연 ${measured(s.loopDelayMs)} ms · CPU ${s.cpuPercent??'—'}% · RSS ${s.rssMb??'—'} MB · 상태 ${s.payloadBytes??'—'} B\n`+
+    '동기화 오차 — (클라이언트 예측 없음) · 패킷 손실 — (HTTP/SSE에서 직접 측정 불가)';
+}
 function requestReset(){if(multiRace)resetRequested=true;else{wasm.demo_request_reset();syncState();}}
 function applySelectedKartPhysics(){
   applyKartPhysics(wasm,kartPhysics.karts[kartChoice.value]);
@@ -441,6 +454,7 @@ function draw(state, frameMs) {
 }
 
 function frame(time) {
+  const actualFrameMs=lastFrame?time-lastFrame:0;
   if (!lastFrame) lastFrame = time;
   const elapsed = demoElapsedMilliseconds(lastFrame, time);
   lastFrame = time;
@@ -451,12 +465,17 @@ function frame(time) {
     current.set(new Float32Array(wasm.memory.buffer, statePointer, wasm.demo_state_count()));
   }
   visual.set(current); // C owns the chase filter; render the actual latest pose.
+  const renderStart=performance.now();
   draw(current, elapsed);
+  if(actualFrameMs>0)frameMs=frameMs?frameMs*.9+actualFrameMs*.1:actualFrameMs;
+  const renderSample=performance.now()-renderStart;renderMs=renderMs?renderMs*.9+renderSample*.1:renderSample;
+  updateNetPanel(time);
   requestAnimationFrame(frame);
 }
 
 for (const type of ['keydown', 'keyup']) {
   window.addEventListener(type, (event) => {
+    if(type==='keydown'&&event.code==='F4'){event.preventDefault();netPanel.hidden=!netPanel.hidden;updateNetPanel(performance.now());return;}
     if(event.target.closest?.('input,textarea,[contenteditable="true"]'))return;
     if (type === 'keydown' && event.code === 'F3') {
       event.preventDefault(); view.toggleCollision().catch(showError); return;
@@ -586,9 +605,10 @@ try {
     },
     onFrame(frame){
       const self=frame.players.find(p=>p.id===accountUserId);if(self&&self.state.length===current.length&&self.state.every(Number.isFinite))current.set(self.state);
-      view.updatePeers(frame.players.filter(p=>p.id!==accountUserId));
+      view.updatePeers(frame.players.filter(p=>p.id!==accountUserId),frame.tick);
       rankBoard.update(frame.players.map(p=>({id:p.id,rank:p.rank,nickname:multiplayer.room?.players.find(m=>m.id===p.id)?.nickname??''})),accountUserId);
     },
+    onDiagnostics(value){netDiagnostics=value;},
     onResults(){goLobby(true);closeAllDialogs();},
     onRoster(room){view.setPeers(room.players.filter(p=>p.id!==accountUserId)).catch(showError);},
     onLeave(){if(multiRace){goLobby(true);closeAllDialogs();}},onDisconnect(){input.clear();}

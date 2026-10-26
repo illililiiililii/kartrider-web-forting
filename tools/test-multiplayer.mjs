@@ -60,6 +60,9 @@ test('server tick owns movement; replayed inputs and position uploads are reject
   f.manager.command(users[0],'input',{race:room.race,seq:1,steer:0,throttle:true});
   assert.throws(()=>f.manager.command(users[0],'input',{race:room.race,seq:1,steer:0}),/INVALID_INPUT/);
   f.advance(50);assert.equal(f.inputs[0].throttle,true);assert.equal(f.inputs[1].throttle,false);
+  const diagnostics=f.manager.sync(users[0]).frame.metrics;
+  assert.ok(diagnostics.payloadBytes>0&&diagnostics.workMs>=0&&diagnostics.physicsMs>=0&&diagnostics.collisionMs>=0);
+  assert.equal(diagnostics.contacts,0);
   f.advance(500);assert.ok(f.inputs.slice(-2).every(input=>!input.throttle));
 });
 test('server results persist once, then host can return everyone to waiting',t=>{

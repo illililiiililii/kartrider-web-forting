@@ -3,13 +3,14 @@ import {readFileSync} from 'node:fs';
 import {createRacePhysicsFactory} from './server-physics.mjs';
 import {resolvePlayers} from './peer-collision.mjs';
 import {rankPlayers} from './race-ranking.mjs';
+import {performance} from 'node:perf_hooks';
 
 const emptyInput=()=>({throttle:false,brake:false,steer:0,drift:false,boost:false,exceed:false,reset:false});
 const fail=(message,status=400)=>{throw Object.assign(new Error(message),{status});};
 // Browser transport and simulation are ours. Room phases/8 slots follow the
 // supplied P5136_Rust world.rs / room_protocol.rs; no native TCP/UDP compatibility.
 export function createMultiplayer({players,root,catalogPath,now=Date.now,createPhysics,recordResult=()=>{},autoTick=true}){
-  const rooms=new Map(),membership=new Map(),streams=new Map();let factory,catalog;
+  const rooms=new Map(),membership=new Map(),streams=new Map();let factory,catalog,lastLoopAt=performance.now(),lastCpu=process.cpuUsage();
   function assets(){
     if(!catalog)catalog=JSON.parse(readFileSync(catalogPath,'utf8'));
     if(!factory)factory=createPhysics??createRacePhysicsFactory(root,catalog);
@@ -17,8 +18,8 @@ export function createMultiplayer({players,root,catalogPath,now=Date.now,createP
   }
   function snapshot(room){return {id:room.id,revision:room.revision,name:room.name,track:room.track,host:room.host,phase:room.phase,race:room.race,speed:factory.speed,version:factory.version,
     players:[...room.members.values()].map(p=>({id:p.id,nickname:p.nickname,kart:p.kart,character:p.character,slot:p.slot,ready:p.ready,loaded:p.loaded,finished:p.finished,time:p.time})),chat:room.chat,results:room.results};}
-  function send(id,event,data){const stream=streams.get(id);if(!stream||stream.response.destroyed||stream.response.writableEnded)return;if(stream.response.writableLength>256*1024){stream.response.destroy();return;}stream.response.write(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`);}
-  function broadcast(room,event='room',value){if(event==='room'){room.revision++;value=snapshot(room);}if(event==='frame')room.frame=value;for(const id of room.members.keys())send(id,event,value);}
+  function send(id,event,data,encoded=false){const stream=streams.get(id);if(!stream||stream.response.destroyed||stream.response.writableEnded)return;if(stream.response.writableLength>256*1024){stream.response.destroy();return;}stream.response.write(`event: ${event}\ndata: ${encoded?data:JSON.stringify(data)}\n\n`);}
+  function broadcast(room,event='room',value){if(event==='room'){room.revision++;value=snapshot(room);}if(event==='frame')room.frame=value;const data=JSON.stringify(value);for(const id of room.members.keys())send(id,event,data,true);}
   function roomFor(user){const room=rooms.get(membership.get(user.id));if(!room)fail('ROOM_REQUIRED',409);return room;}
   function character(value){if(!catalog.characters.some(c=>c.ready&&c.id===value))fail('CHARACTER_UNAVAILABLE');return value;}
   function leave(user){
@@ -41,7 +42,9 @@ export function createMultiplayer({players,root,catalogPath,now=Date.now,createP
     }catch{cancel(room,'트랙·출발 위치를 준비하지 못했습니다.');}
   }
   function tick(){
-    const time=now();
+    const time=now(),wall=performance.now(),loopDelayMs=autoTick?Math.max(0,wall-lastLoopAt-25):null;lastLoopAt=wall;
+    const cpu=process.cpuUsage(lastCpu);lastCpu=process.cpuUsage();
+    const cpuPercent=tick.lastWall===undefined?0:Math.round(100*(cpu.user+cpu.system)/Math.max(1,(wall-tick.lastWall)*1000));tick.lastWall=wall;
     for(const [id,stream] of streams){if(time-stream.heartbeat>=10000){if(!stream.authenticate()){stream.response.end();continue;}stream.response.write(': heartbeat\n\n');stream.heartbeat=time;}}
     for(const room of rooms.values()){
       for(const p of [...room.members.values()])if(!streams.has(p.id)&&time-p.seen>30000)leave(p);
@@ -49,14 +52,15 @@ export function createMultiplayer({players,root,catalogPath,now=Date.now,createP
       if(room.phase!=='running')continue;
       room.accumulator+=Math.max(0,Math.min(250,time-room.lastTick));room.lastTick=time;
       try{while(room.accumulator>=50&&room.phase==='running'){
-        room.accumulator-=50;room.simulated+=50;const states=[];
+        room.accumulator-=50;room.simulated+=50;const states=[],batchStart=performance.now();let physicsMs=0,collisionMs=0,contacts=0;
         // Advance all racers together at the native 5ms step before contacts.
         for(let step=0;step<10;step++){
           const previous=new Map([...room.engines].flatMap(([id,e])=>{const b=e.body?.();return b?.active?[[id,b.center]]:[];}));
-          for(const p of room.members.values()){
+          const physicsStart=performance.now();for(const p of room.members.values()){
             const input=time-p.inputAt<=350?p.input:emptyInput();room.engines.get(p.id).step(input,5);p.input.reset=false;
           }
-          resolvePlayers(room.engines,previous);
+          physicsMs+=performance.now()-physicsStart;
+          const collisionStart=performance.now();contacts+=resolvePlayers(room.engines,previous);collisionMs+=performance.now()-collisionStart;
         }
         for(const p of room.members.values()){
           const engine=room.engines.get(p.id);
@@ -65,7 +69,10 @@ export function createMultiplayer({players,root,catalogPath,now=Date.now,createP
           if(!p.finished&&state[19]===3){p.finished=true;p.time=Math.round(state[24]*1000);room.firstFinish??=room.simulated;}
           states.push({id:p.id,state,progress:engine.progress?.()??0});
         }
-        broadcast(room,'frame',{race:room.race,tick:room.simulated,players:rankPlayers(states,room.members)});
+        const frame={race:room.race,tick:room.simulated,players:rankPlayers(states,room.members)};
+        frame.metrics={workMs:Math.round((performance.now()-batchStart)*100)/100,physicsMs:Math.round(physicsMs*100)/100,collisionMs:Math.round(collisionMs*100)/100,contacts,loopDelayMs:loopDelayMs===null?null:Math.round(loopDelayMs*100)/100,cpuPercent,rssMb:Math.round(process.memoryUsage().rss/1048576),payloadBytes:0};
+        for(let bytes=0;;){const next=Buffer.byteLength(JSON.stringify(frame));if(next===bytes)break;frame.metrics.payloadBytes=bytes=next;}
+        broadcast(room,'frame',frame);
         if([...room.members.values()].every(p=>p.finished)||(room.firstFinish!==null&&room.simulated-room.firstFinish>=60000)||room.simulated>=600000)settle(room);
       }}catch(error){console.error('Multiplayer race stopped:',error.message);cancel(room,'경기 처리에 실패해 대기실로 돌아왔습니다.');}
     }
